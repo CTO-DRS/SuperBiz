@@ -1,0 +1,12 @@
+fav_title|المفضلات|Favorites
+fav_empty|لا مفضّلون بعد — أضف عملاء وموردين للوصول السريع وموقعهم الجغرافي|No favorites yet — add customers and suppliers for quick access and their location
+fav_add_section|إضافة إلى المفضلة|Add to favorites
+fav_open|المفضلات|Favorites
+fav_no_location|لا موقع بعد|No location yet
+fav_pick_location|تحديد الموقع|Set location
+fav_open_maps|فتح في الخرائط|Open in Maps
+fav_clear_location|إزالة الموقع|Remove location
+fav_location_saved|تم حفظ الموقع الجغرافي|Location saved
+fav_location_failed|تعذر تحديد الموقع — تأكد من تشغيل GPS|Could not get location — make sure GPS is on
+fav_loc_rationale|إذن الموقع يُستخدم لتسجيل موقع العميل المفضّل فقط — لا شيء يُرسل من جهازك|Location permission is used only to record the favorite customer's location — nothing leaves your device
+fav_search_hint|بحث بالاسم أو الرقم|Search by name or number

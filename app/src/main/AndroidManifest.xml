@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- [P18-int] قناة البريد المباشر SMTP (عميل Kotlin نقي على SSLSocket) —
+         الإرسال الحقيقي لكشوف الحساب عبر البريد لا يعمل بلا إذن الإنترنت -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- استيراد جهات الاتصال كأطراف (عملاء/موردين) — قراءة الأسماء والأرقام فقط -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+
+    <!-- [P11-b] التصدير العكسي: حفظ أطراف التطبيق في جهات اتصال الجهاز -->
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+
+    <!-- [P11-b] الموقع الجغرافي لبطاقات العملاء المفضلين (يستخدمه محرّك المفضلات) -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- [P11-b] تنبيهات دقيقة لتذكيرات الأقساط (API 31+، تُمنح من شاشة النظام) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <!-- البيومتريا: بصمة الإصبع والوجه (BiometricPrompt) -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" android:maxSdkVersion="28" />
+
+    <!-- الطباعة الحرارية عبر Bluetooth SPP -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+
+    <application
+        android:name=".SuperBizApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:localeConfig="@xml/locales_config"
+        android:theme="@style/Theme.SuperBiz">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- [P19] deep-link التحقق من الكشف — QR المطبوع في PDF يشير إلى
+                 superbiz://verify/<رقم التحقق> فيفتح شاشة التحقق داخل التطبيق.
+                 الرابط لا يحمل أي بيانات مالية — رقم تحقق فقط يُفحص ضد قاعدة البيانات. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="superbiz" android:host="verify" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".work.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- [P11-b] متلقي التنبيهات الدقيقة — داخلي فقط، يطلق إشعار القسط في وقته -->
+        <receiver android:name=".work.ExactReminderReceiver" android:exported="false" />
+
+        <!-- [P14-a] متلقي تذكير «العملاء الذين لم يُزاروا» — منبّه يومي وحيد، داخلي فقط -->
+        <receiver android:name=".work.VisitReminderReceiver" android:exported="false" />
+
+        <!-- ويدجت الشاشة الرئيسية لرصيد الذمم -->
+        <receiver
+            android:name=".widget.ReceivablesWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.superbiz.app.WIDGET_REFRESH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/receivables_widget_info" />
+        </receiver>
+
+        <!-- ويدجت مبيعات اليوم -->
+        <receiver
+            android:name=".widget.SalesTodayWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_sales_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.superbiz.app.WIDGET_REFRESH_SALES" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/sales_widget_info" />
+        </receiver>
+
+        <!-- ويدجت النقد في الصندوق -->
+        <receiver
+            android:name=".widget.CashWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_cash_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.superbiz.app.WIDGET_REFRESH_CASH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/cash_widget_info" />
+        </receiver>
+
+        <!-- ويدجت المخزون المنخفض -->
+        <receiver
+            android:name=".widget.LowStockWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_stock_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.superbiz.app.WIDGET_REFRESH_STOCK" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/lowstock_widget_info" />
+        </receiver>
+
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.superbiz.app.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="com.superbiz.app.androidx-startup"
+            android:exported="false"
+            tools:node="merge"
+            xmlns:tools="http://schemas.android.com/tools" />
+    </application>
+</manifest>

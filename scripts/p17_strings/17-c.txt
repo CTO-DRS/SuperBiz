@@ -1,0 +1,131 @@
+st_title|كشف حساب|Account Statement
+st_open_statement|كشف حساب PDF|Account statement PDF
+st_empty_tx|لا حركات على الطرف في الفترة المختارة|No transactions for this party in the selected period
+st_period|الفترة|Period
+st_period_range|من %1$s إلى %2$s|From %1$s to %2$s
+st_p_today|اليوم|Today
+st_p_this_week|هذا الأسبوع|This week
+st_p_last_week|الأسبوع الماضي|Last week
+st_p_this_month|هذا الشهر|This month
+st_p_last_month|الشهر الماضي|Last month
+st_p_l3m|آخر 3 أشهر|Last 3 months
+st_p_l6m|آخر 6 أشهر|Last 6 months
+st_p_this_year|هذه السنة|This year
+st_p_last_year|السنة الماضية|Last year
+st_p_custom|مخصص|Custom
+st_template|القالب|Template
+st_change_template|تغيير القالب|Change template
+st_edit_copy|إنشاء نسخة للتحرير|Create editable copy
+st_elements|عناصر الكشف|Statement elements
+st_none|بلا|None
+st_manage|إدارة|Manage
+st_notes|الملاحظات|Notes
+st_notes_hint|ملاحظة تظهر أسفل الكشف|A note shown at the bottom of the statement
+st_lang|لغة الكشف|Statement language
+st_lang_ar|عربي|Arabic
+st_lang_en|إنجليزي|English
+st_lang_bi|ثنائي اللغة|Bilingual
+st_preview|المعاينة الحية|Live preview
+st_generate_save|إصدار وحفظ|Issue and save
+st_saving|جارٍ الإصدار|Issuing
+st_saved|تم الإصدار — رقم التحقق: %1$s|Issued - verification ID: %1$s
+st_fail_reason|فشل الإصدار: %1$s|Issue failed: %1$s
+st_share|مشاركة|Share
+st_print|طباعة|Print
+st_send|إرسال|Send
+st_history|السجل|History
+st_verification_short|رقم التحقق|Verification ID
+st_generate_first|أصدر الكشف أولاً|Issue the statement first
+st_whatsapp_missing|واتساب غير مثبت على هذا الجهاز|WhatsApp is not installed on this device
+st_file_missing|ملف الكشف غير موجود|Statement file not found
+st_duplicate|نسخة جديدة|New copy
+st_edit|تحرير|Edit
+st_el_logo|الشعار|Logo
+st_el_party|بيانات الطرف|Party info
+st_el_period|الفترة|Period
+st_el_table|جدول الحركات|Transactions table
+st_el_summary|الرصيد النهائي|Final balance
+st_el_notes|الملاحظات|Notes
+st_el_signature|التوقيع|Signature
+st_el_stamp|الختم|Stamp
+st_note_templates|قوالب الملاحظات|Note templates
+st_field_email|البريد الإلكتروني|Email
+st_field_address|العنوان|Address
+st_field_tax_number|الرقم الضريبي|Tax number
+st_field_city|المدينة|City
+st_field_country|الدولة|Country
+st_field_website|الموقع الإلكتروني|Website
+st_field_cr_number|السجل التجاري|Commercial registration
+st_field_account_number|رقم الحساب|Account number
+st_hub_signatures|إدارة التواقيع|Signature manager
+st_hub_signatures_sub|توقيع يُطبع على كشوف الحساب|Signature printed on account statements
+st_hub_stamps|إدارة الأختام|Stamp manager
+st_hub_stamps_sub|ختم يُطبع على كشوف الحساب|Stamp printed on account statements
+st_signatures_title|التواقيع|Signatures
+st_signatures_sub|اختر توقيعاً يُطبع أسفل الكشف|Pick a signature to print at the bottom of the statement
+st_stamps_title|الأختام|Stamps
+st_stamps_sub|اختر ختماً يُطبع على الكشف|Pick a stamp to print on the statement
+st_add_signature|إضافة توقيع|Add signature
+st_add_stamp|إضافة ختم|Add stamp
+st_pick_image|اختيار صورة|Pick image
+st_pick_failed|تعذر نسخ الصورة|Could not copy the image
+st_image_ready|تم اختيار الصورة|Image selected
+st_job_title|المسمى الوظيفي|Job title
+st_signature_empty|لا تواقيع بعد — أضف توقيعك ليظهر على الكشف|No signatures yet - add yours to show it on the statement
+st_stamp_empty|لا أختام بعد — أضف ختمك ليظهر على الكشف|No stamps yet - add yours to show it on the statement
+st_default|الافتراضي|Default
+st_set_default|تعيين افتراضي|Set as default
+st_default_note|الملاحظة الافتراضية للكشف|Default statement note
+st_company_photo|صورة الشركة أو السجل|Company or CR photo
+st_company_photo_set|صورة الشركة — انقر للتغيير|Company photo - tap to change
+st_studio|استوديو القوالب|Template studio
+st_search|بحث بالاسم أو المعرّف|Search by name or ID
+st_category_all|الكل|All
+st_favorites|المفضلة|Favorites
+st_custom|مخصصات|Custom
+st_new_custom|قالب مخصص جديد|New custom template
+st_studio_count|القوالب: %1$d|Templates: %1$d
+st_use|استخدام|Use
+st_category_classic|كلاسيكي|Classic
+st_category_modern|حديث|Modern
+st_category_minimal|مبسط|Minimal
+st_category_business|أعمال|Business
+st_category_elegant|أنيق|Elegant
+st_category_bold|جسور|Bold
+st_category_compact|مضغوط|Compact
+st_category_formal|رسمي|Formal
+st_category_colorful|ملون|Colorful
+st_category_table|جدولي|Tabular
+st_template_missing|القالب غير موجود|Template not found
+st_editor_title|محرر القالب|Template editor
+st_editor_builtin|قالب مدمج — أنشئ نسخة من الاستوديو لتحريرها|Built-in template - create a copy from the studio to edit it
+st_editor_colors|الألوان|Colors
+st_color_primary|اللون الأساسي|Primary color
+st_color_accent|اللون الثانوي|Accent color
+st_color_text|لون النص|Text color
+st_color_header_bg|خلفية رأس الجدول|Table header background
+st_color_row_alt|تظليل الصف البديل|Alternate row shading
+st_editor_fonts|الأحجام والهوامش|Sizes and margins
+st_font_title|حجم العنوان|Title size
+st_font_body|حجم المتن|Body size
+st_margin|الهامش|Margin
+st_spacing|التباعد|Spacing
+st_editor_landscape|صفحة أفقية|Landscape page
+st_editor_sections|أنماط الأقسام|Section styles
+st_el_header_style|نمط الترويسة|Header style
+st_el_table_style|نمط الجدول|Table style
+st_el_summary_style|نمط الملخص|Summary style
+st_el_footer_style|نمط التذييل|Footer style
+st_signature|التوقيع والختم|Signature and stamp
+st_corner|زاوية التوقيع|Signature corner
+st_stamp_size|حجم التوقيع|Signature size
+st_stamp_opacity|شفافية التوقيع|Signature opacity
+st_opt_classic|كلاسيكي|Classic
+st_opt_modern|حديث|Modern
+st_opt_compact|مضغوط|Compact
+st_opt_gradient|متدرج|Gradient
+st_opt_minimal|بسيط|Minimal
+st_no_sample|لا بيانات معاينة — أضف طرفاً أولاً|No preview data - add a party first
+st_saved_simple|تم الحفظ|Saved
+st_delete|حذف القالب|Delete template
+st_delete_confirm|سيتم حذف القالب %1$s نهائياً|Template %1$s will be deleted permanently

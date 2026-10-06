@@ -1,0 +1,21 @@
+st4_verify_title|التحقق من كشف الحساب|Verify statement
+st4_verify_hint|أدخل رقم التحقق المطبوع أسفل الكشف، أو امسح رمز QR في الكشف بالكاميرا لفتح هذه الشاشة تلقائيا|Enter the verification number printed on the statement, or scan its QR code to open this screen automatically
+st4_verify_label|رقم التحقق|Verification number
+st4_verify_button|تحقق|Verify
+st4_verify_checking|جارٍ التحقق|Verifying
+st4_verify_notfound|لا يوجد كشف مسجل بهذا الرقم — تأكد من كتابته كما هو مطبوع|No statement is registered with this number - type it exactly as printed
+st4_verify_ok|كشف مسجل ومطابق للسجل|Statement registered and matching the record
+st4_sec_record|بيانات السجل|Record details
+st4_sec_integrity|سلامة المستند|Document integrity
+st4_statement_no|رقم الكشف|Statement number
+st4_party|الطرف|Party
+st4_period|الفترة|Period
+st4_currency|العملة|Currency
+st4_lang|اللغة|Language
+st4_template|القالب|Template
+st4_issued_at|تاريخ الإصدار|Issued at
+st4_content_hash|بصمة المحتوى|Content hash
+st4_file_present|ملف PDF موجود|PDF file present
+st4_file_missing|ملف PDF غير موجود على هذا الجهاز|PDF file missing on this device
+st4_file_none|لا ملف محلي|No local file
+st4_verify_footer|بصمة SHA-256 تحسب من بايتات ملف PDF الحالية — أي تعديل للملف يغيّرها|SHA-256 is computed from the current PDF bytes - any file change alters it

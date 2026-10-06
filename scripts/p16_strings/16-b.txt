@@ -1,0 +1,8 @@
+perm_reminder_t|التذكير اليومي — متابعة الزيارات المتأخرة|Daily visit reminders
+perm_reminder_d|تنبيه يومي في الوقت المحدد لمتابعة العملاء الذين لم تُزرهم منذ تجاوز عتبة الأيام|A daily nudge to follow up on overdue customers
+perm_reminder_time|وقت التذكير|Reminder time
+perm_reminder_threshold|عدد الأيام قبل التنبيه|Days ahead
+perm_reminder_off_note|موقوف — شغّل المفتاح لتجدول التذكير|Off — flip the switch to schedule
+perm_reminder_exact_warn|التذكير مجدول — بعض الأجهزة تحتاج إذن التنبيهات الدقيقة ليطلق في وقته تماماً|Scheduled; some devices need the exact-alarm permission to fire on time
+perm_reminder_pick|اختر وقت التذكير والعتبة|Pick time and threshold
+perm_reminder_days|%1$d يوماً|%1$d day(s)

@@ -1,0 +1,94 @@
+# [جولة M0 — حلقة النشر] أول سطر نشر آلي في تاريخ المستودع:
+# عند دفع وسم v* يُبنى APK/AAB، يُوقَّع إن توفرت أسرار keystore، ويُرفع أثراً (احتفاظ 30 يوماً)،
+# وتُنشأ مسودة Release بملاحظات مأخوذة آلياً من أعلى CHANGELOG.md.
+# بلا أسرار: يُبنى غير موقّع (release-unsigned) ويلزم توقيعه محلياً قبل التثبيت.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build, sign and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle (caching)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode signing keystore from secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/superbiz.keystore"
+            {
+              echo "storeFile=$RUNNER_TEMP/superbiz.keystore"
+              echo "storePassword=$KEYSTORE_PASSWORD"
+              echo "keyAlias=$KEY_ALIAS"
+              echo "keyPassword=$KEY_PASSWORD"
+            } > keystore.properties
+            echo "SIGNING=signed" >> "$GITHUB_ENV"
+          else
+            echo "SIGNING=unsigned" >> "$GITHUB_ENV"
+            echo "::notice::No keystore secrets found — building unsigned release"
+          fi
+
+      - name: Build release APK + AAB
+        run: |
+          ./gradlew :app:assembleRelease :app:bundleRelease --stacktrace
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p out
+          find app/build/outputs/apk/release -name '*.apk' -exec cp {} out/ \;
+          find app/build/outputs/bundle/release -name '*.aab' -exec cp {} out/ \;
+          ls -la out/
+
+      - name: Upload APK/AAB artifacts (30-day retention)
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-packages
+          path: out/
+          retention-days: 30
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          python3 - <<'PY'
+          import re
+          text = open('CHANGELOG.md', encoding='utf-8').read()
+          m = re.search(r'^## .+$.*?(?=^## |\Z)', text, re.M | re.S)
+          open('release_notes.md', 'w', encoding='utf-8').write(
+              (m.group(0).strip() if m else 'SuperBiz release') )
+          PY
+
+      - name: Create draft GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          body_path: release_notes.md
+          files: |
+            out/*.apk
+            out/*.aab
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false

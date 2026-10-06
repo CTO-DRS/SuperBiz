@@ -1,0 +1,5 @@
+zat_title|بصمة ZATCA للفاتورة (مرحلة-2)|ZATCA invoice stamp (phase-2)
+zat_desc|إضافة بصمة التوقيع الرقمي والهاش والمفتاح العام إلى رمز QR في الفاتورة — توقيع محلي بمفتاح الجهاز (التوثيق الرسمي يتطلب تكامل ZATCA)|Adds the digital signature, hash and public key to the invoice QR — signed locally with a device key (official onboarding requires ZATCA integration)
+zat_on_note|المفتاح جاهز — التوقيع EC P-256 على الجهاز|Key ready — EC P-256 signing on device
+zat_status_off|موقوف — رمز QR يحمل حقول المرحلة الأولى الخمسة فقط|Off — the QR carries the five phase-1 fields only
+zat_key_fail|تعذّر تجهيز مفتاح التوقيع على هذا الجهاز — لم تُفعَّل البصمة|Could not prepare the signing key on this device — stamp not enabled

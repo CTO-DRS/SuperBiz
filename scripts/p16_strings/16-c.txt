@@ -1,0 +1,7 @@
+map_title|خريطة شاملة|Overview map
+map_list_toggle|القائمة|List
+map_view_btn|الخريطة|Map
+map_hint|انقر على النقطة لعرض العميل|Tap a pin to inspect
+map_span|النطاق حوالي %1$s|Span about %1$s
+map_selected|المحدد|Selected
+map_empty|لا عملاء مفضّلين بإحداثيات بعد|No favorite customers with locations yet

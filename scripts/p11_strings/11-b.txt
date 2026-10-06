@@ -1,0 +1,13 @@
+perm_location_t|الموقع الجغرافي — موقع العملاء المفضلين|Location — favorite customers' location
+perm_location_d|تسجيل الموقع الجغرافي للعملاء المفضلين لعرضه في بطاقة المفضلات — لا شيء يُرسل من جهازك|Record the geographic location of favorite customers in the favorites card — nothing leaves your device
+perm_wcontacts_t|كتابة جهات الاتصال — التصدير العكسي|Write contacts — reverse export
+perm_wcontacts_d|حفظ عملاء وموردي التطبيق في جهات اتصال الجهاز — الاسم والرقم فقط|Save the app's customers and suppliers into device contacts — name and number only
+perm_exact_t|التنبيهات الدقيقة — تذكيرات في وقتها|Exact alarms — on-time reminders
+perm_exact_d|إطلاق تذكيرات الأقساط والاستحقاق في الدقيقة المحددة تماماً بدل التأخير المحتمل|Fire installment and due-date reminders at the exact minute instead of possible delays
+contacts_mode_import|استيراد|Import
+contacts_mode_export|تصدير عكسي|Reverse export
+contacts_wexport_rationale|سيُكتب العملاء والموردون المحددون في جهات اتصال الجهاز — الاسم والرقم فقط|Selected customers and suppliers will be written into device contacts — name and number only
+contacts_export_btn|تصدير إلى جهات الاتصال|Export to contacts
+contacts_export_none|لا أطراف لديهم أرقام لتصديرها|No parties with numbers to export
+contacts_exported_summary|صُدّر %1$d إلى جهات الاتصال، %2$d موجود مسبقاً|Exported %1$d to contacts, %2$d already exist
+contacts_export_failed_count|فشل تصدير %1$d|Failed to export %1$d
