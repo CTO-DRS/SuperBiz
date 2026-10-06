@@ -1,0 +1,242 @@
+# [P7-L16 إصلاح] أول CI حقيقي في تاريخ المستودع — كان وعداً في README/ROADMAP (بند 8-13 من تقرير الفحص:
+# «فاحص arity/تنسيق للسلاسل في CI — كان سيمنع C-1 وH-1 فوراً»).
+# بلا أي اعتماديات خارجية: checkout + python قياسي فقط.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  strings:
+    name: Strings format & ar/en arity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.x
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # فاحص المقامات: arity متطابق ar/en، لا مزج موضعي، لا % شاردة مع مقامات (صنف C-1/H-1)
+      - name: String format scanner
+        run: python tools/check_strings_format.py
+
+      # خطوة ثانية اختيارية: سلامة بنية XML لكلا ملفي strings.xml (تلتقط مثل تهريب & غير المهرب)
+      - name: strings.xml well-formedness
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+
+          paths = [
+              "app/src/main/res/values/strings.xml",
+              "app/src/main/res/values-en/strings.xml",
+          ]
+          for p in paths:
+              root = ET.parse(p).getroot()
+              print("OK", p, "-", len(root.findall("string")), "<string> entries")
+          print("XML well-formedness: PASS")
+          PY
+
+  # [P20-FIX agent20]: CI الحقيقي — كان يفحص السلاسل فقط دون تجميع أو اختبار أبداً،
+  # فتصل انحدارات Kotlin/R8/Room إلى main بلا كاشف. يجري على استضافة GitHub (بلا قيود الذاكرة المحلية)
+  build-test:
+    name: Unit tests + debug build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: strings
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle (caching)
+        uses: gradle/actions/setup-gradle@v4
+
+      # نسخ التطوير لا تتطلب keystore.properties — حارس التوقيع يرجع للمفتاح الافتراضي
+      # [P37-CI]: اختبارات نسخة debug على JDK 17 (المسار الأساسي)
+      - name: Unit tests (debug, JDK 17)
+        run: ./gradlew :app:testDebugUnitTest --stacktrace --profile
+
+      - name: Assemble debug (no signing needed)
+        run: ./gradlew :app:assembleDebug
+
+      # [P40-M5] التقرير يُرفع دائماً لا عند الفشل فقط — كان الفحص اليدوي للأداء
+      # يعني تنزيل السجل، والآن أثر دائم للتقارير + تقرير توقيت البناء (--profile)
+      - name: Upload test results (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-jdk17
+          path: app/build/reports/tests/
+          retention-days: 30
+
+      - name: Upload Gradle build profile (timing)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-profile-jdk17
+          path: app/build/reports/profile/
+          retention-days: 14
+
+  # [P37-CI — جدران الاختبارات وCI أعمق]: مصفوفة JDK (17 + 21) — نفس الحزمة الكاملة
+  # على نسخة release أيضاً (testReleaseUnitTest تلتقط انحدارات تكوين الإصدار التي
+  # لا تراها debug: minify/R8 قريباً، BuildConfig المختلفة، وmerge موارد release)
+  # — عمق إضافي بلا اعتماديات خارجية، وJDK 21 يحمي مطوري التطوير ذوي البيئات الأحدث.
+  build-test-matrix:
+    name: Unit tests (release) on JDK ${{ matrix.jdk }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: strings
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: ['17', '21']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ matrix.jdk }} (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.jdk }}
+
+      - name: Setup Gradle (caching)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests (release variant)
+        run: ./gradlew :app:testReleaseUnitTest --stacktrace
+
+      # [P40-M5] رفع دائم أيضاً في المصفوفة (كان failure فقط)
+      - name: Upload test results (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-release-jdk${{ matrix.jdk }}
+          path: app/build/reports/tests/
+          retention-days: 30
+
+  # [P40-M5 — تقرير تغطية أسماء، بلا بوابة فشل]: Jacoco خفيف على JDK 17 فقط
+  # (يستثمر بذات جولة release، فيُدمج معها لا يكررها) — HTML/XML في أثر دائم،
+  # ولا عتبات فشل في أول دورتين (قرار المرحلة 5).
+  coverage:
+    name: JaCoCo coverage report (light, no gate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: strings
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle (caching)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Release unit tests + JaCoCo report
+        run: ./gradlew :app:jacocoUnitTestReport --stacktrace
+
+      - name: Upload coverage report (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: app/build/reports/jacoco/
+          retention-days: 30
+
+  # [P37-CI — كاشف انحدار السلاسل بعد كل موجة]: توازن عدد المفاتيح ar/en يُفحص
+  # في الخطوة الأولى ضمن arity، وهنا حارس إضافي: منع التراجع عن مفاتيح موجودة
+  # (مفتاح محذوف من values/strings.xml بينما باقٍ في الكود = انهيار وقت التشغيل)
+  strings-guard:
+    name: Strings usage guard
+    runs-on: ubuntu-latest
+    needs: strings
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.x
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: R.string usage vs resources
+        run: |
+          python - <<'PY'
+          import re, pathlib, sys
+
+          root = pathlib.Path("app/src/main")
+          defined = set(re.findall(
+              r'<string name="([^"]+)"',
+              (root / "res/values/strings.xml").read_text(encoding="utf-8"),
+          ))
+          en_defined = set(re.findall(
+              r'<string name="([^"]+)"',
+              (root / "res/values-en/strings.xml").read_text(encoding="utf-8"),
+          ))
+          used = set()
+          for kt in root.rglob("*.kt"):
+              used |= set(re.findall(r'R\.string\.(\w+)', kt.read_text(encoding="utf-8")))
+
+          missing = used - defined
+          en_gap = defined ^ en_defined
+          ok = True
+          if missing:
+              ok = False
+              print("MISSING in values/strings.xml (used in code):")
+              for k in sorted(missing): print("  -", k)
+          if en_gap:
+              ok = False
+              print("AR/EN key sets differ:")
+              for k in sorted(en_gap): print("  -", k)
+          print(f"defined={len(defined)} used={len(used)}")
+          print("R.string usage guard:", "PASS" if ok else "FAIL")
+          sys.exit(0 if ok else 1)
+          PY
+
+  # [جولة M0 — lintRelease إجبارية]: كان lint معطلاً في build.gradle.kts لبيئة البناء
+  # المحدودة القرص محلياً — على استضافة GitHub (14GB) يعمل كاملاً كحاجز قبل أي رفع للمتجر.
+  lint:
+    name: lintRelease
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: strings
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle (caching)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: lintRelease
+        run: ./gradlew :app:lintRelease --stacktrace
+
+      - name: Upload lint report (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: app/build/reports/lint-results-release.*
+          retention-days: 30
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true

@@ -1,0 +1,5 @@
+bk_desc3|تصدير جميع البيانات إلى ملف JSON أو استعادة العملاء والمنتجات والزيارات والمصروفات والشيكات وخطط الأقساط من نسخة سابقة|Export all data to a JSON file, or restore parties, products, visits, expenses, checks and installment plans from a previous backup
+bk_import_checks_line|الشيكات: أُضيف %1$d، وتخطي %2$d|Checks: added %1$d, skipped %2$d
+bk_import_plans_line|خطط الأقساط: أُضيفت %1$d، وتخطي %2$d|Installment plans: added %1$d, skipped %2$d
+bk_import_installments_line|الأقساط: أُضيف %1$d، وتخطي %2$d|Installments: added %1$d, skipped %2$d
+bk_warn3|الاستعادة تضيف العملاء والمنتجات والزيارات والمصروفات والشيكات وخطط الأقساط والأقساط غير الموجودة فقط — لا تعدّل الفواتير أو المدفوعات أو القيود|Restore only adds parties, products, visits, expenses, checks, installment plans and installments that do not exist yet — invoices, payments and journal entries are never touched

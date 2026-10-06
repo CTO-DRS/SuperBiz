@@ -1,0 +1,118 @@
+st3_settings_title|إعدادات كشف الحساب|Statement settings
+st3_sec_smtp|البريد الصادر SMTP|Outgoing email SMTP
+st3_sec_smtp_sub|إعدادات إرسال الكشوف بالبريد من الجهاز مباشرة|Settings for sending statements by email directly from the device
+st3_smtp_enabled|تفعيل البريد الصادر|Outgoing email enabled
+st3_smtp_host|المضيف|Host
+st3_smtp_port|المنفذ|Port
+st3_smtp_security|نوع الأمان|Security type
+st3_sec_ssl_tls|SSL/TLS (465)|SSL/TLS (465)
+st3_sec_starttls|STARTTLS (587)|STARTTLS (587)
+st3_sec_none|بدون تشفير (25)|Plain (25)
+st3_smtp_auth|تسجيل دخول باسم مستخدم وكلمة مرور|Sign in with username and password
+st3_smtp_user|اسم المستخدم|Username
+st3_smtp_pass|كلمة المرور|Password
+st3_smtp_from|بريد المرسل|From address
+st3_smtp_from_name|اسم المرسل|From name
+st3_show_pass|إظهار كلمة المرور|Show password
+st3_hide_pass|إخفاء كلمة المرور|Hide password
+st3_save|حفظ الإعدادات|Save settings
+st3_saved_ok|تم حفظ الإعدادات|Settings saved
+st3_saving|جارٍ الحفظ|Saving
+st3_test_title|بريد تجريبي|Test email
+st3_test_sub|أرسل رسالة اختبار للتأكد من الإعداد قبل إرسال الكشوف|Send a test message to verify the setup before sending statements
+st3_test_to|بريد المستلم التجريبي|Test recipient email
+st3_test_send|إرسال تجريبي|Send test
+st3_test_ok|وصلت رسالة الاختبار بنجاح|Test message sent
+st3_test_fail|فشل الإرسال: %1$s|Send failed: %1$s
+st3_test_subject|رسالة اختبار من SuperBiz|Test message from SuperBiz
+st3_test_body|رسالة اختبار لإعدادات بريد كشف الحساب. وصولها يعني أن الإعداد صحيح.|Test message for the statement email settings. Receiving it means the setup works.
+st3_smtp_not_ready|أكمل المضيف والمرسل وفعّل البريد أولاً|Fill the host and sender and enable email first
+st3_email_invalid|أدخل بريد مستلم صحيحاً|Enter a valid recipient email
+st3_sec_auto|الإرسال التلقائي|Automatic sending
+st3_auto_enabled|تفعيل الإرسال التلقائي للكشوف|Enable automatic statement sending
+st3_auto_retry|أقصى محاولات الإرسال|Maximum send attempts
+st3_auto_retry_val|المحاولات: %1$d|Attempts: %1$d
+st3_auto_note|المجدول يقيّم القواعد كل 15 دقيقة|The scheduler evaluates rules every 15 minutes
+st3_auto_tz|الجدولة بتوقيت الجهاز المحلي|Scheduling uses the local device time zone
+st3_sec_rules|قواعد التوليد التلقائي|Auto-generation rules
+st3_rule_new|قاعدة جديدة|New rule
+st3_rules_empty|لا قواعد بعد — أنشئ قاعدة ليولّد المجدول الكشوف تلقائياً|No rules yet - create one so the scheduler generates statements automatically
+st3_rule_enabled|مفعّلة|Enabled
+st3_rule_disabled|موقوفة|Paused
+st3_rule_delete_confirm|سيتم حذف القاعدة %1$s نهائياً|Rule %1$s will be deleted permanently
+st3_rule_deleted|تم حذف القاعدة|Rule deleted
+st3_rule_next_run|الموعد القادم: %1$s|Next run: %1$s
+st3_rule_event_mode|تُفحص الأحداث في كل دورة|Events are checked every cycle
+st3_rule_editor|محرر القاعدة|Rule editor
+st3_rule_name|اسم القاعدة|Rule name
+st3_rule_mode|نطاق الأطراف|Party scope
+st3_mode_all|كل الأطراف|All parties
+st3_mode_selected|أطراف محددة|Selected parties
+st3_mode_single|طرف واحد|Single party
+st3_pick_parties|اختر الأطراف|Select parties
+st3_mode_parties_label|الأطراف المختارة: %1$d|Selected parties: %1$d
+st3_pick_party|اختر الطرف|Select party
+st3_no_parties|لا أطراف بعد — أضف أطرافاً من شاشة الذمم|No parties yet - add parties from the debts screen
+st3_rule_freq|التكرار|Frequency
+st3_freq_daily|يومي|Daily
+st3_freq_weekly|أسبوعي|Weekly
+st3_freq_monthly|شهري|Monthly
+st3_freq_quarterly|ربع سنوي|Quarterly
+st3_freq_yearly|سنوي|Yearly
+st3_freq_custom|كل عدة أيام|Every N days
+st3_freq_event|عند حدث|On event
+st3_weekday|يوم الإطلاق|Run day
+st3_dow_1|الأحد|Sunday
+st3_dow_2|الاثنين|Monday
+st3_dow_3|الثلاثاء|Tuesday
+st3_dow_4|الأربعاء|Wednesday
+st3_dow_5|الخميس|Thursday
+st3_dow_6|الجمعة|Friday
+st3_dow_7|السبت|Saturday
+st3_day_of_month|يوم الشهر بين 1 و31|Day of month 1 to 31
+st3_time_hour|الساعة 0 إلى 23|Hour 0 to 23
+st3_time_minute|الدقيقة 0 إلى 59|Minute 0 to 59
+st3_period|فترة الكشف|Statement period
+st3_period_today|اليوم|Today
+st3_period_this_week|هذا الأسبوع|This week
+st3_period_last_week|الأسبوع الماضي|Last week
+st3_period_this_month|هذا الشهر|This month
+st3_period_last_month|الشهر الماضي|Last month
+st3_period_l3m|آخر 3 أشهر|Last 3 months
+st3_period_l6m|آخر 6 أشهر|Last 6 months
+st3_period_this_year|هذه السنة|This year
+st3_period_last_year|السنة الماضية|Last year
+st3_rule_template|قالب الكشف|Statement template
+st3_template_default|افتراضي النظام|System default
+st3_rule_channel|قناة التسليم|Delivery channel
+st3_ch_email|بريد|Email
+st3_ch_smtp|بريد مباشر|Direct SMTP
+st3_ch_whatsapp|واتساب|WhatsApp
+st3_ch_print|طباعة|Print
+st3_ch_share|مشاركة|Share
+st3_sec_events|أحداث الإطلاق|Trigger events
+st3_ev_month_end|نهاية الشهر|Month end
+st3_ev_new_tx|حركة دفتر جديدة|New ledger entry
+st3_ev_balance_due|رصيد مستحق على العميل|Balance due from customer
+st3_ev_threshold|الرصيد بلغ حداً محدداً|Balance reaches a threshold
+st3_ev_unpaid|فاتورة بيع غير مسددة|Unpaid sales invoice
+st3_ev_overdue|فاتورة بيع متأخرة|Overdue sales invoice
+st3_threshold_value|حد الرصيد|Balance threshold
+st3_custom_days|عدد الأيام بين الكشوف من 1 إلى 3650|Days between statements 1 to 3650
+st3_rule_save|حفظ القاعدة|Save rule
+st3_rule_saved|تم حفظ القاعدة|Rule saved
+st3_rule_name_required|اكتب اسم القاعدة|Type the rule name
+st3_rule_needs_party|اختر طرفاً واحداً على الأقل|Pick at least one party
+st3_rule_needs_event|اختر حدثاً واحداً على الأقل|Pick at least one event
+st3_rule_time_invalid|الساعة بين 0 و23 والدقيقة بين 0 و59|Hour 0 to 23 and minute 0 to 59
+st3_rule_day_invalid|يوم الشهر بين 1 و31|Day of month must be 1 to 31
+st3_rule_days_invalid|الأيام بين 1 و3650|Days must be 1 to 3650
+st3_rule_threshold_invalid|أدخل حداً رقماً صحيحاً|Enter a valid numeric threshold
+st3_card_deliveries|سجل التسليمات|Delivery history
+st3_card_deliveries_sub|حالة كل إرسال وإعادة المحاولة والإلغاء|Status of every send, retry and cancellation
+st3_card_audit|سجل التدقيق|Audit log
+st3_card_audit_sub|أثر كل إصدار وإرسال وتعديل قاعدة|Trace of every issue, send and rule change
+st3_card_signatures|إدارة التواقيع|Signature manager
+st3_card_signatures_sub|توقيع يُطبع أسفل الكشف|Signature printed at the bottom of the statement
+st3_card_stamps|إدارة الأختام|Stamp manager
+st3_card_stamps_sub|ختم يُطبع على الكشف|Stamp printed on the statement

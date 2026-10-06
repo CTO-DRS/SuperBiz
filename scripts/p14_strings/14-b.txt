@@ -1,0 +1,4 @@
+bk_desc2|تصدير جميع البيانات إلى ملف JSON أو استعادة العملاء والمنتجات والزيارات والمصروفات من نسخة سابقة|Export all data to a JSON file, or restore parties, products, visits and expenses from a previous backup
+bk_import_visits_line|الزيارات: أُضيف %1$d، وتخطي %2$d|Visits: added %1$d, skipped %2$d
+bk_import_expenses_line|المصروفات: أُضيف %1$d، وتخطي %2$d|Expenses: added %1$d, skipped %2$d
+bk_warn2|الاستعادة تضيف العملاء والمنتجات والزيارات والمصروفات غير الموجودة فقط — لا تعدّل الفواتير أو المدفوعات أو القيود|Restore only adds parties, products, visits and expenses that do not exist yet — invoices, payments and journal entries are never touched

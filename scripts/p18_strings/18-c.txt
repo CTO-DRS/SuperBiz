@@ -1,0 +1,48 @@
+st2_deliveries_title|سجل التسليمات|Delivery history
+st2_filter_all|الكل|All
+st2_status_pending|بانتظار الإرسال|Pending
+st2_status_processing|قيد الإرسال|Processing
+st2_status_sent|أُرسل|Sent
+st2_status_failed|فشل|Failed
+st2_status_retrying|مُعاد الجدولة|Retrying
+st2_status_cancelled|ملغى|Cancelled
+st2_attempts|المحاولات: %1$d|Attempts: %1$d
+st2_error_label|آخر خطأ|Last error
+st2_scheduled_wait|مجدولة لاحقاً: %1$s|Scheduled later: %1$s
+st2_exhausted|استُنفدت المحاولات|Attempts exhausted
+st2_retry_now|إعادة الإرسال الآن|Retry now
+st2_retry_ok|أُرسل الكشف بنجاح|Statement sent successfully
+st2_retry_fail|فشل الإرسال: %1$s|Send failed: %1$s
+st2_open_channel|فتح القناة|Open channel
+st2_not_retryable_channel|هذه القناة تُفتح من شاشة الكشف|This channel opens from the statement screen
+st2_cancel_delivery|إلغاء|Cancel
+st2_cancelled_ok|أُلغي سطر التسليم|Delivery line cancelled
+st2_channel_email|بريد|Email
+st2_channel_smtp|بريد مباشر|Direct SMTP
+st2_channel_whatsapp|واتساب|WhatsApp
+st2_channel_print|طباعة|Print
+st2_channel_share|مشاركة|Share
+st2_no_deliveries|لا سطور تسليم بعد|No delivery lines yet
+st2_backoff_15m|بعد 15 دقيقة|In 15 minutes
+st2_backoff_1h|بعد ساعة|In 1 hour
+st2_backoff_6h|بعد 6 ساعات|In 6 hours
+st2_backoff_24h|بعد 24 ساعة|In 24 hours
+st2_rel_now|الآن|Now
+st2_rel_min|قبل %1$d دقيقة|%1$d min ago
+st2_rel_hour|قبل %1$d ساعة|%1$d h ago
+st2_rel_day|قبل %1$d يوم|%1$d d ago
+st2_rel_future|بعد %1$d دقيقة|In %1$d min
+st2_rel_never|لم يُرسل قط|Never sent
+st2_audit_title|سجل التدقيق|Audit log
+st2_audit_readonly|سجل للقراءة فقط يوثق كل إصدار وإرسال وتعديل — لا يُعدل ولا يُحذف|Read-only log tracing every issue, send and change — never edited or deleted
+st2_audit_empty|لا سجلات بعد|No audit records yet
+st2_audit_details|التفاصيل|Details
+st2_audit_act_issue|إصدار كشف|Statement issued
+st2_audit_act_reissue|إصدار بلا كشف|Statement forced
+st2_audit_act_send|إرسال كشف|Statement sent
+st2_audit_act_auto|توليد تلقائي|Auto-generated
+st2_audit_act_rule_save|حفظ قاعدة|Rule saved
+st2_audit_act_rule_del|حذف قاعدة|Rule deleted
+st2_audit_act_rule_run|تنفيذ قاعدة|Rule ran
+st2_audit_act_delete|حذف سجل|Record deleted
+st2_audit_act_tpl|تعديل قالب|Template changed

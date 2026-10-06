@@ -1,0 +1,4 @@
+route_sort_chip|الأقرب أولاً|Nearest first
+route_no_location|بلا موقع|No location
+visit_delete_title|حذف الزيارة؟|Delete visit?
+visit_delete_body|سيتم حذف سجل الزيارة نهائياً.|The visit record will be permanently deleted.

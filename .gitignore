@@ -1,0 +1,32 @@
+# Gradle
+.gradle/
+build/
+app/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Kotlin
+.kotlin/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Local machine config (never commit)
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# SECURITY: signing keys & passwords — NEVER commit
+signing/
+*.jks
+*.keystore
+keystore.properties
+!keystore.properties.example
+
+# Backups / temp
+*.bak
+*.tmp
+*~

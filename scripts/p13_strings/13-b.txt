@@ -1,0 +1,19 @@
+bk_title|النسخ الاحتياطي والاستعادة|Backup & restore
+bk_desc|تصدير جميع البيانات إلى ملف JSON أو استعادة العملاء والمنتجات من نسخة سابقة|Export all data to a JSON file, or restore parties and products from a previous backup
+bk_export_btn|تصدير نسخة احتياطية|Export backup
+bk_import_btn|استعادة من ملف|Restore from file
+bk_busy_export|جارٍ التصدير…|Exporting…
+bk_busy_import|جارٍ الاستعادة…|Restoring…
+bk_export_ok|تم تصدير %1$d سجلاً|%1$d records exported
+bk_import_ok_title|اكتملت الاستعادة|Restore complete
+bk_import_ok_line|أُضيف %1$d عميلاً، وتخطي %2$d، وأُضيف %3$d منتجاً، وتخطي %4$d|Added %1$d parties (skipped %2$d) and %3$d products (skipped %4$d)
+bk_import_failed_rows|تم تجاهل %1$d صفاً تالفاً|%1$d invalid rows were ignored
+bk_tables_line|الجداول المكتشفة: %1$s|Tables found: %1$s
+bk_warn|الاستعادة تضيف العملاء والمنتجات غير الموجودة فقط — لا تعدّل الفواتير أو القيود|Restore only adds parties and products that do not exist yet — invoices and journal entries are never touched
+bk_fail_title|فشل العملية|Operation failed
+bk_ok|حسناً|OK
+bk_err_unsupported|صيغة الملف غير مدعومة — هذا ليس ملف نسخة SuperBiz صالحاً|Unsupported file — this is not a valid SuperBiz backup file
+bk_err_newer|نسخة أحدث غير مدعومة — حدّث التطبيق أولاً|A newer backup version — update the app first
+bk_err_too_large|الملف أكبر من الحد المسموح (50 ميغابايت)|File exceeds the 50 MB limit
+bk_err_io|تعذّر الوصول إلى الملف: %1$s|Could not access the file: %1$s
+bk_err_generic|حدث خطأ غير متوقع: %1$s|Unexpected error: %1$s

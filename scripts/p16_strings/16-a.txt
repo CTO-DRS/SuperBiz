@@ -1,0 +1,6 @@
+zat_export_t|تصدير المفتاح العام|Export public key
+zat_export_d|شارك مفتاحك العام كي يتمكن المدقّقون والعملاء من التحقق من توقيع الفواتير|Share your public key so verifiers can check invoice signatures
+zat_fp_label|بصمة المفتاح العام (SHA-256)|Public key fingerprint (SHA-256)
+zat_copied|نُسخ المفتاح العام بصيغة PEM إلى الحافظة|Public key PEM copied to clipboard
+zat_share_chooser|مشاركة مفتاح ZATCA العام|Share ZATCA public key
+zat_fp_fail|تعذّر قراءة المفتاح العام على هذا الجهاز|Could not read the public key on this device

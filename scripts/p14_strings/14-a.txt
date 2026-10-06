@@ -1,0 +1,11 @@
+vr_title|تنبيه الزيارات المتأخرة|Overdue visits reminder
+vr_desc|يومياً في الوقت المحدد — يفحص العملاء الذين مضى على آخر زيارة لهم أكثر من العتبة|Daily at the set time — checks customers whose last visit is older than the threshold
+vr_status_on|مُفعَّل — تنبيه يومي في %1$s|Enabled — daily reminder at %1$s
+vr_status_off|موقوف|Off
+vr_row_time|وقت التنبيه اليومي|Daily reminder time
+vr_threshold|عتبة التأخير: %1$d يوماً|Overdue threshold: %1$d days
+vr_need_notif_perm|يلزم إذن الإشعارات كي يظهر التنبيه — امنحه من إعدادات التطبيق|Notification permission is required for the reminder to appear
+vr_need_exact|التنبيهات الدقيقة غير ممنوحة — قد يصل التنبيه بتأخير|Exact alarms are not allowed — the reminder may arrive late
+vr_time_dialog_title|اختر وقت التنبيه اليومي|Pick the daily reminder time
+vr_notif_title|%1$d عملاء لم يُزاروا منذ أكثر من %2$d يوماً|%1$d customers not visited for more than %2$d days
+vr_notif_body|افتح شاشة المفضلات لعرض القائمة وترتيبها بالأقرب أولاً|Open the Favorites screen to view the list and sort it nearest first

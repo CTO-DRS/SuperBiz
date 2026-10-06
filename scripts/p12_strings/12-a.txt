@@ -1,0 +1,8 @@
+fav_gps_off|خدمات الموقع معطّلة — فعّلها لتحديد الموقع|Location services are off — turn them on to set a location
+fav_open_location_settings|فتح إعدادات الموقع|Open location settings
+fav_locating|جارٍ تحديد الموقع…|Getting location…
+fav_log_visit|تسجيل زيارة|Log visit
+visit_logged_toast|تم تسجيل الزيارة|Visit logged
+fav_export_csv|تصدير CSV|Export CSV
+fav_exported_toast|صُدّرت المفضلات إلى ملف CSV|Favorites exported to CSV
+fav_export_failed|فشل تصدير CSV|CSV export failed

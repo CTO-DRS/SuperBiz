@@ -1,0 +1,15 @@
+visit_report_title|تقرير زيارات العملاء|Customer visit report
+visit_report_sub|سجل الزيارات بموقعها الجغرافي وربطها بموقع الطرف المحفوظ|Visit log with locations, linked to each party's saved location
+visit_sum_total|إجمالي الزيارات|Total visits
+visit_sum_30|آخر 30 يوماً|Last 30 days
+visit_sum_overdue|متأخرة عن الزيارة|Overdue visits
+visit_last_days|قبل %1$d يوم|%1$d days ago
+visit_last_today|اليوم|Today
+visit_last_yesterday|أمس|Yesterday
+visit_row_log|زيارة|Visit
+visit_empty|لا زيارات مسجلة بعد — سجّل زيارة من بطاقة أي مفضّل|No visits yet — log one from any favorite's card
+visit_more_rows|و%1$d أطراف أخرى…|%1$d more parties…
+visit_distance_line|المسافة عن الموقع المحفوظ: %1$s|%1$s from saved location
+visit_overdue_hint|لم يُزر منذ أكثر من %1$d يوم|Not visited for more than %1$d days
+fav_gps_off|خدمات الموقع معطّلة — فعّلها لتحديد الموقع|Location services are off — turn them on to set a location
+fav_open_location_settings|فتح إعدادات الموقع|Open location settings

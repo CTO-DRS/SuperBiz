@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- [P40-M5] المرحلة 5 — بيان نسخة release فقط:
+     تسجيل androidx.activity.ComponentActivity كنافذة اختبار لمحاكاة Compose
+     (Robolectric-Compose فوق testReleaseUnitTest). نسخة debug تحصل على نفس
+     التسجيل من androidx.compose.ui:ui-test-manifest (debugImplementation)،
+     أما release فلا يوجد لها معادل — وهذا البيان يملأ الفجوة بلا نقطة دخول
+     ولا intent-filter ولا أي أثر تشغيلي على الإنتاج (نشاط غير مُصدَّر
+     لا يستدعيه الكود). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+
+        <activity
+            android:name="androidx.activity.ComponentActivity"
+            android:exported="false" />
+    </application>
+
+</manifest>

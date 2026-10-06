@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path name="pdfs" path="pdfs/" />
+    <!-- [P38-Z4] تصدير XML الضريبي للفاتورة — مسار مشاركة مستقل عن PDFs -->
+    <files-path name="xmls" path="xmls/" />
+    <files-path name="backups" path="backups/" />
+    <cache-path name="shared" path="shared/" />
+</paths>
