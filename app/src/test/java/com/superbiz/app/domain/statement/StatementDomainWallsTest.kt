@@ -59,6 +59,11 @@ class StatementDomainWallsTest {
     private val originalTz: TimeZone = TimeZone.getDefault()
     private val originalLocale: Locale = Locale.getDefault()
 
+    // [تدقيق H-6] حفظ SMTP يشفّر الآن بمفتاح Keystore — مفتاح AES حقيقي محقون
+    // (نمط SecurityWaveTest) لأن Robolectric بلا AndroidKeyStore،
+    // والاختبارات هنا تفحص عقد statement_prefs لا خزنة العتاد نفسها
+    private val testKey = javax.crypto.spec.SecretKeySpec(ByteArray(32) { it.toByte() }, "AES")
+
     private companion object {
         const val DAY_MS = 86_400_000L
     }
@@ -67,12 +72,15 @@ class StatementDomainWallsTest {
     fun `تثبيت المنطقة الزمنية واللغة لضمان الحتمية`() {
         TimeZone.setDefault(TimeZone.getTimeZone("Asia/Riyadh"))
         Locale.setDefault(Locale.US)
+        com.superbiz.app.security.PinVault.keyProvider = { testKey }
     }
 
     @After
     fun `استعادة المنطقة الزمنية واللغة الأصليتين`() {
         TimeZone.setDefault(originalTz)
         Locale.setDefault(originalLocale)
+        com.superbiz.app.security.PinVault.keyProvider =
+            { com.superbiz.app.security.PinVault.masterKey() }
     }
 
     // ───────── أدوات ─────────
@@ -520,7 +528,14 @@ class StatementDomainWallsTest {
         assertEquals("NONE", p.getString("smtpSecurity", null))
         assertFalse(p.getBoolean("smtpAuth", true))
         assertEquals("u", p.getString("smtpUser", null))
-        assertEquals("p", p.getString("smtpPass", null))
+        // [تدقيق H-6] العقد تغيّر: كلمة المرور لا تُخزَّن نصاً عارياً أبداً —
+        // صيغة ks: في smtpPassVault، والمفتاح العاري القديم غائب تماماً
+        assertNull("لا نص عاري في الملف (تدقيق H-6)", p.getString("smtpPass", null))
+        val vaultBlob = p.getString("smtpPassVault", null)
+        assertTrue("الصيغة ks:", vaultBlob != null && vaultBlob.startsWith("ks:"))
+        assertTrue("النص العاري غير موجود داخل المخزن", !vaultBlob!!.contains("p"))
+        // round-trip: الحمل يفك التشفير ويعيد القيمة نفسها
+        assertEquals("p", StatementPrefs.load(context).pass)
         assertEquals("f", p.getString("smtpFrom", null))
         assertEquals("n", p.getString("smtpFromName", null))
         assertTrue(p.getBoolean("autoSendEnabled", false))

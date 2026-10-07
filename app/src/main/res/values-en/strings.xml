@@ -2032,7 +2032,10 @@
     <string name="st3_smtp_from_name">From name</string>
     <string name="st3_show_pass">Show password</string>
     <string name="st3_hide_pass">Hide password</string>
+    <string name="st3_sec_none_warn_title">Confirm unencrypted sending</string>
+    <string name="st3_sec_none_warn_body">Plain mode sends your login credentials and financial statements as cleartext that is easy to intercept on the network. Use it only on trusted internal networks — continue?</string>
     <string name="st3_save">Save settings</string>
+    <string name="st3_save_failed">Could not save settings — credentials could not be encrypted on this device</string>
     <string name="st3_saved_ok">Settings saved</string>
     <string name="st3_saving">Saving</string>
     <string name="st3_test_title">Test email</string>

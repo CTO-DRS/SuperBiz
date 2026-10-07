@@ -707,6 +707,12 @@ interface StatementDao {
     @Query("DELETE FROM statements WHERE id = :id")
     suspend fun delete(id: Long)
 
+    /**نقل كشوف طرف مكرر إلى الطرف الموحّد (دمج) —
+ * كان FK=RESTRICT يرمي SQLiteConstraintException عند حذف الطرف المكرر،
+ * فيفشل الدمج كلياً لزبائن صادروا كشوفاً [تدقيق H-2] */
+    @Query("UPDATE statements SET partyId = :toId WHERE partyId = :fromId")
+    suspend fun moveParty(fromId: Long, toId: Long)
+
     // ── التسليمات (statement_deliveries) — findByDedupKey يستفسر الجدول التابع بحسب العقد ──
 
     @Insert
@@ -1055,6 +1061,12 @@ interface VisitDao {
      */
     @Query("DELETE FROM visits WHERE id = :id")
     suspend fun deleteVisit(id: Long)
+
+    /**نقل زيارات طرف مكرر إلى الطرف الموحّد (دمج) —
+ * الزيارات بلا FK عن قصد (سجل تاريخي) لكن تركها على المكرر
+ * يجعل تاريخه يختفي من بطاقة الطرف الباقي بعد الدمج [تدقيق H-2] */
+    @Query("UPDATE visits SET partyId = :toId WHERE partyId = :fromId")
+    suspend fun moveParty(fromId: Long, toId: Long)
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -1095,6 +1107,12 @@ interface LoyaltyDao {
 
     @Query("DELETE FROM loyalty_entries")
     suspend fun wipe()
+
+    /**نقل نقاط ولاء طرف مكرر إلى الطرف الموحّد (دمج) —
+ * كان FK=CASCADE يمحو النقاط التاريخية كلياً عند حذف الطرف المكرر بعد الدمج،
+ * فيضيع رصيد الزبون بصمت رغم نجاح الدمج المُعلن [تدقيق H-1] */
+    @Query("UPDATE loyalty_entries SET partyId = :toId WHERE partyId = :fromId")
+    suspend fun moveParty(fromId: Long, toId: Long)
 }
 
 /** الكوبونات — إدارة كاملة (إضافة/حذف/تفعيل) واستهلاك ذرّي مشروط */

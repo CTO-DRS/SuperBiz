@@ -1,6 +1,7 @@
 package com.superbiz.app.domain.statement
 
 import android.content.Context
+import com.superbiz.app.security.PinVault
 
 /**
  * [P18-c][P18-int] تفضيلات منظومة الكشف «statement_prefs» — الملف نفسه الذي تستخدمه
@@ -43,7 +44,8 @@ object StatementPrefs {
     private const val K_SMTP_SECURITY = "smtpSecurity"
     private const val K_SMTP_AUTH = "smtpAuth"
     private const val K_SMTP_USER = "smtpUser"
-    private const val K_SMTP_PASS = "smtpPass"
+    private const val K_SMTP_PASS = "smtpPass"               // [تدقيق H-6] مفتاح قديم — قراءة للترحيل فقط ثم يُحذف
+    private const val K_SMTP_PASS_VAULT = "smtpPassVault"    // صيغة ks: من PinVault — الوحيدة التي تُكتب منذ الإصلاح
     private const val K_SMTP_FROM = "smtpFrom"
     private const val K_SMTP_FROM_NAME = "smtpFromName"
 
@@ -66,7 +68,7 @@ object StatementPrefs {
             security = security,
             authEnabled = p.getBoolean(K_SMTP_AUTH, true),
             user = p.getString(K_SMTP_USER, "") ?: "",
-            pass = p.getString(K_SMTP_PASS, "") ?: "",
+            pass = readPassword(p),
             from = p.getString(K_SMTP_FROM, "") ?: "",
             fromName = p.getString(K_SMTP_FROM_NAME, "") ?: "",
             autoSendEnabled = p.getBoolean(K_AUTO_SEND, false),
@@ -74,21 +76,50 @@ object StatementPrefs {
         )
     }
 
+    /**
+     * [تدقيق H-6] قراءة كلمة مرور SMTP — النقطة الوحيدة التي تلمس المادة:
+     * ① صيغة ks: (PinVault — مفتاح Keystore غير قابل للتصدير): فك التشفير،
+     *   والفشل يعيد "" صادقاً (لا إخفاء ولا بديل) — المستخدم يعيد الإدخال.
+     * ② الترحيل عند القراءة: تثبيت قديم بنص عاري في smtpPass يُرقّى شفافياً:
+     *   تُشفَّر وتُخزَّن في smtpPassVault ويُحذف المفتاح العاري من القرص فوراً —
+     *   بلا أي إدخال من المستخدم (نمط rewrap الشفاف لخزنة PIN).
+     */
+    private fun readPassword(p: android.content.SharedPreferences): String {
+        val blob = p.getString(K_SMTP_PASS_VAULT, null)
+        if (blob != null) return PinVault.decrypt(blob) ?: ""
+        val legacy = p.getString(K_SMTP_PASS, null)
+        if (legacy.isNullOrEmpty()) return ""
+        return try {
+            val encrypted = PinVault.encrypt(legacy)
+            p.edit().putString(K_SMTP_PASS_VAULT, encrypted).remove(K_SMTP_PASS).apply()
+            legacy
+        } catch (_: Exception) {
+            // فشل مغلق في الترقية: لا تُترك النص العاري ولا تُخزَّن صيغة بديلة ضعيفة —
+            // نجاح فارغ يُجبر إعادة الإدخال وترقية نظيفة في الحفظ التالي
+            ""
+        }
+    }
+
     fun save(context: Context, ui: SmtpPrefsUi) {
         val sec = SmtpPrefsUi.securityEnum(ui.security)
-        p(context).edit()
+        // [تدقيق H-6] كلمة المرور لا تُلمس القرص إلا مشفّرة بصيغة ks: من PinVault —
+        // فشل Keystore يرمي PinVaultException (فشل مغلق — لا نص عاري ولا بديل قابل للكسر)،
+        // والمفتاح العاري القديم يُحذف مع كل حفظ ناجح (طهارة نهائية لأي تثبيت قديم)
+        val vaultBlob = if (ui.pass.isEmpty()) null else PinVault.encrypt(ui.pass)
+        val editor = p(context).edit()
             .putBoolean(K_SMTP_ENABLED, ui.smtpEnabled)
             .putString(K_SMTP_HOST, ui.host.trim())
             .putInt(K_SMTP_PORT, if (ui.port in 1..65535) ui.port else SmtpConfig.defaultPort(sec))
             .putString(K_SMTP_SECURITY, sec.name)
             .putBoolean(K_SMTP_AUTH, ui.authEnabled)
             .putString(K_SMTP_USER, ui.user.trim())
-            .putString(K_SMTP_PASS, ui.pass)
             .putString(K_SMTP_FROM, ui.from.trim())
             .putString(K_SMTP_FROM_NAME, ui.fromName.trim())
             .putBoolean(K_AUTO_SEND, ui.autoSendEnabled)
             .putInt(K_AUTO_RETRY_MAX, ui.autoRetryMax.coerceIn(1, 5))
-            .apply()
+        if (vaultBlob != null) editor.putString(K_SMTP_PASS_VAULT, vaultBlob)
+        else editor.remove(K_SMTP_PASS_VAULT)   // كلمة مرور مُصفّاة = لا مخزن مشفّر يبقى
+        editor.remove(K_SMTP_PASS).apply()      // حذف نص التثبيتات القديمة العاري دائماً
     }
 
     /**

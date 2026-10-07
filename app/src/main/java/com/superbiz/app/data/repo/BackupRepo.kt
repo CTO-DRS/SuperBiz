@@ -65,6 +65,10 @@ class BackupRepo(
         root.put("app", "SuperBiz")
         root.put("format", FORMAT_VERSION)
         root.put("exportedAt", System.currentTimeMillis())
+        // [تدقيق H-3] القراءة الشاملة داخل معاملة Room واحدة — عزل اللقطة (snapshot isolation)
+        // يجعل النسخة متسقة: عملية أُلصقت أثناء التصدير تُدرج كاملة (فاتورة + بنودها + قيدها)
+        // أو لا تُدرج إطلاقاً — لا نسخة ممزقة تعيد دفتراً غير متوازن بعد الاستعادة.
+        db.withTransaction {
         // exportOnce تشمل المؤرشف — كان allOnce() يفلتره فيُحذف نهائياً بعد الاستعادة
         root.put("parties", JSONArray(db.parties().exportOnce().map { partyJson(it) }))
         root.put("products", JSONArray(db.products().exportOnce().map { productJson(it) }))
@@ -106,8 +110,10 @@ class BackupRepo(
         // [P46-W1] جولة 7 — جدولا الولاء والكوبونات (اكتمال 25/25)
         root.put("loyalty_entries", JSONArray(db.loyalty().allOnce().map { loyaltyEntryJson(it) }))
         root.put("coupons", JSONArray(db.coupons().allOnce().map { couponJson(it) }))
+        } // [تدقيق H-3] نهاية معاملة اللقطة المتسقة
         // أرشيف الشيكات (DataStore مستقل) لم يكن يُصدَّر — بعد الاستعادة
         // كانت كل الشيكات المؤرشفة تعود إلى القائمة النشطة
+        // (قراءة DataStore خارج معاملة Room عمداً — لا يشتركان المعاملة)
         root.put("checks_archive", JSONArray(com.superbiz.app.data.repo.ChecksArchiveStore(context)
             .ids.first().sorted()))
         val s = settings.snapshot()

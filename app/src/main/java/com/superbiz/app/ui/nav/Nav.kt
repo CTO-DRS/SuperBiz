@@ -122,8 +122,23 @@ val StartRouteWhitelist: Set<String> = setOf(
     // [P15-c] المفضّلات وجهة وصول عميق مشروعة — إشعار تذكير الزيارات يفتحها مباشرة
     Routes.FAVORITES,
     // [P30-A] مركز الإعدادات — نقرة إشعار فشل النسخ الاحتياطي تفتحه مباشرة
-    Routes.SETTINGS_HUB
+    Routes.SETTINGS_HUB,
+    // [تدقيق H-4] شاشة التحقق من الكشف — كانت الوجهة مسجّلة وفلتر superbiz://verify
+    // في الـmanifest يعمل، لكن هذه القائمة أسقطت المسار فكانت حلقة QR ميتة من الطرف
+    // للطرف (يُستهلك المسار بلا تنقل). العضوية تُكتتب بالمسار الأساسي —
+    // لاحقة الاستعلام تُطبَّع عند الفحص في isStartRouteAllowed أدناه.
+    Routes.STATEMENT_VERIFY
 )
+
+/**
+ * [تدقيق H-4] بوابة مسار البدء — تطبّع لاحقة الاستعلام ("statement_verify?vid=…"
+ * من رابط التحقق → "statement_verify") قبل فحص العضوية، فتصلح للمسارين:
+ * الثوابت العادية من الإشعارات/الويدجت والروابط العميقة المعامَلة من MainActivity.
+ * القائمة نفسها هي حاجز الأمان (المسارات الحسّاسة ليست أعضاء) — التطبيع لا يوسّعها
+ * لوجهة واحدة غير معلنة فيها.
+ */
+fun isStartRouteAllowed(route: String): Boolean =
+    route.substringBefore('?') in StartRouteWhitelist
 
 object Routes {
     const val HOME = "home"
@@ -237,7 +252,10 @@ fun SuperBizRoot(
     LaunchedEffect(startRoute) {
         if (startRoute != null) {
             // [P30-A]: القائمة البيضاء مُخرَّجة إلى StartRouteWhitelist لتُختبر وحدوياً
-            if (startRoute in StartRouteWhitelist) nav.navigate(startRoute) { launchSingleTop = true }
+            // [تدقيق H-4]: الفحص عبر isStartRouteAllowed (تطبيع لاحقة الاستعلام) —
+            // كان الفحص بالمطابقة الحرفية فيُسقط "statement_verify?vid=…" القادم من
+            // رابط superbiz://verify ويُستهلك بلا تنقل (حلقة QR ميتة).
+            if (isStartRouteAllowed(startRoute)) nav.navigate(startRoute) { launchSingleTop = true }
             onRouteConsumed()
         }
     }

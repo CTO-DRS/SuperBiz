@@ -543,6 +543,18 @@ class SmtpSession(
  */
 object SmtpClient : EmailSender {
 
+    /**
+     * [تدقيق M-1] فرض التحقق من هوية نقطة النهاية (endpoint identification) على مقبس TLS —
+     * كان كلا مساري TLS (SSL_TLS وترقية STARTTLS) يتحققان من سلسلة الشهادات فقط دون مطابقة
+     * اسم المضيف، فأي شهادة صالحة من أي CA كان يكفي لاعتراض بيانات الدخول والكشوف (MITM).
+     * تفعيل خوارزمية HTTPS يجعل فك المقبس يرفض شهادة لا تطابق المضيف المتصل به.
+     */
+    private fun enforceEndpointIdentity(ssl: SSLSocket) {
+        val params = ssl.sslParameters
+        params.endpointIdentificationAlgorithm = "HTTPS"
+        ssl.sslParameters = params
+    }
+
     override fun send(
         config: SmtpConfig,
         to: List<String>,
@@ -567,6 +579,7 @@ object SmtpClient : EmailSender {
                 val factory = SSLSocketFactory.getDefault() as SSLSocketFactory
                 // توقيع SSLSocketFactory يعيد Socket ساكنًا — cast للنتيجة كي يتاح startHandshake
                 val ssl = factory.createSocket(raw, config.host, config.port, true) as SSLSocket
+                enforceEndpointIdentity(ssl)   // [تدقيق M-1] مطابقة اسم المضيف إلزامية قبل المصافحة
                 ssl.startHandshake()
                 active = ssl
             }
@@ -580,6 +593,7 @@ object SmtpClient : EmailSender {
                     val tlsFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
                     val tls = tlsFactory.createSocket(active, config.host, config.port, true) as SSLSocket
                     tls.soTimeout = config.timeoutMs
+                    enforceEndpointIdentity(tls)   // [تدقيق M-1] مطابقة اسم المضيف إلزامية قبل المصافحة
                     tls.startHandshake()
                     socket = tls
                     session?.rewrap(

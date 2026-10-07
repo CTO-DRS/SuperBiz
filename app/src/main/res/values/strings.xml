@@ -2032,7 +2032,10 @@
     <string name="st3_smtp_from_name">اسم المرسل</string>
     <string name="st3_show_pass">إظهار كلمة المرور</string>
     <string name="st3_hide_pass">إخفاء كلمة المرور</string>
+    <string name="st3_sec_none_warn_title">تأكيد الإرسال دون تشفير</string>
+    <string name="st3_sec_none_warn_body">نمط «بدون تشفير» يرسل بيانات الدخول وكشوف الحساب المالية نصاً مكشوفاً يسهل اعتراضه على الشبكة. استخدمه للشبكات الداخلية المضمونة فقط — هل تريد المتابعة؟</string>
     <string name="st3_save">حفظ الإعدادات</string>
+    <string name="st3_save_failed">تعذّر حفظ الإعدادات — تعذر تشفير بيانات الدخول على هذا الجهاز</string>
     <string name="st3_saved_ok">تم حفظ الإعدادات</string>
     <string name="st3_saving">جارٍ الحفظ</string>
     <string name="st3_test_title">بريد تجريبي</string>
