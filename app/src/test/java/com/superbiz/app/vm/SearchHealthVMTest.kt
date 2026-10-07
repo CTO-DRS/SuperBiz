@@ -10,7 +10,9 @@ import com.superbiz.app.data.db.Expense
 import com.superbiz.app.data.db.Invoice
 import com.superbiz.app.data.db.Party
 import com.superbiz.app.data.db.Product
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -78,6 +80,18 @@ class SearchHealthVMTest {
         inst.set(null, null)
     }
 
+    // [إصلاح سباق JDK21]: ViewModel نطاقاته viewModelScope لا تُلغى تلقائياً في
+    // اختبارات JVM العادية — وWhileSubscribed(5000) تبقي الجامعات العلوية حية
+    // 5 ثوانٍ بعد آخر اشتراك، فتُستأنف كوروتينات debounce/دمج على Main لحظة
+    // resetMain فيرمي «used concurrently with setting it». التتبع والإلغاء الصريح
+    // قبل resetMain يقفل السباق من جذره (نفس دورة onCleared في الإنتاج)
+    private val trackedVMs = mutableListOf<androidx.lifecycle.ViewModel>()
+
+    private fun <T : androidx.lifecycle.ViewModel> tracked(vm: T): T {
+        trackedVMs += vm
+        return vm
+    }
+
     @Before
     fun setUp() {
         resetGraph()
@@ -88,6 +102,8 @@ class SearchHealthVMTest {
 
     @After
     fun tearDown() {
+        trackedVMs.forEach { it.viewModelScope.cancel() }
+        trackedVMs.clear()
         Dispatchers.resetMain()
     }
 
@@ -133,7 +149,7 @@ class SearchHealthVMTest {
     // استعلام فارغ أو قصير جداً (< 2 بعد trim) لا نتائج له — حتى مع بيانات مطابقة موجودة
     @Test
     fun `بحث فارغ أو قصير جدا لا نتائج له`() = runBlocking {
-        val vm = GlobalSearchVM(app)
+        val vm = tracked(GlobalSearchVM(app))
         val pid = seedParty("مؤسسة النور")
         val prd = seedProduct("بروتين واي")
         seedInvoice("INV-1024", pid)
@@ -149,7 +165,7 @@ class SearchHealthVMTest {
     // بحث منتج بالاسم — kind 0 وعنوانه اسم المنتج
     @Test
     fun `بحث منتج بالاسم يعطي ضربة من نوع منتج`() = runBlocking {
-        val vm = GlobalSearchVM(app)
+        val vm = tracked(GlobalSearchVM(app))
         val prd = seedProduct("بروتين واي")
         vm.query.value = "بروتين"
         val hits = awaitResults(vm) { it.any { h -> h.kind == 0 && h.id == prd } }
@@ -160,7 +176,7 @@ class SearchHealthVMTest {
     // مطابقة رمز SKU تمنح 0.96 حرفياً (FeatureVMs.kt:2213)
     @Test
     fun `مطابقة رمز SKU تمنح الدرجة 0_96`() = runBlocking {
-        val vm = GlobalSearchVM(app)
+        val vm = tracked(GlobalSearchVM(app))
         val prd = seedProduct("مكواة", sku = "SKU-77")
         vm.query.value = "SKU-77"
         val hits = awaitResults(vm) { it.any { h -> h.kind == 0 && h.id == prd } }
@@ -170,7 +186,7 @@ class SearchHealthVMTest {
     // الباركود (0.99) يتصدّر على SKU (0.96) — الأولوية بالدرجة تنازلياً
     @Test
     fun `الباركود يتصد على مطابقة الرمز في الترتيب`() = runBlocking {
-        val vm = GlobalSearchVM(app)
+        val vm = tracked(GlobalSearchVM(app))
         val pBar = seedProduct("زيت", barcode = "6280000123456")
         val pSku = seedProduct("سكر", sku = "6280000123456A")
         vm.query.value = "6280000123456"
@@ -184,7 +200,7 @@ class SearchHealthVMTest {
     // بحث طرف بالاسم — kind 1 وشارة النوع «عميل» حين يخلو الهاتف
     @Test
     fun `بحث طرف بالاسم يعطي ضربة من نوع طرف بشاره عميل`() = runBlocking {
-        val vm = GlobalSearchVM(app)
+        val vm = tracked(GlobalSearchVM(app))
         val pid = seedParty("مؤسسة النور")
         vm.query.value = "النور"
         val hits = awaitResults(vm) { it.any { h -> h.kind == 1 && h.id == pid } }
@@ -195,7 +211,7 @@ class SearchHealthVMTest {
     // بحث بالهاتف: أرقام الاستعلام داخل أرقام الطرف (بعد digitsOnly) → 0.98
     @Test
     fun `بحث طرف بالهاتف اللاتيني يعطي الدرجة 0_98`() = runBlocking {
-        val vm = GlobalSearchVM(app)
+        val vm = tracked(GlobalSearchVM(app))
         val pid = seedParty("خالد", phone = "0501234567")
         vm.query.value = "0501234567"
         val hits = awaitResults(vm) { it.any { h -> h.kind == 1 && h.id == pid } }
@@ -205,7 +221,7 @@ class SearchHealthVMTest {
     // الأرقام العربية-الهندية ٠-٩ تُطبَّع عبر digitsOnly قبل المطابقة (TextMath:236)
     @Test
     fun `بحث طرف بالأرقام العربية الهندية يطابق الهاتف`() = runBlocking {
-        val vm = GlobalSearchVM(app)
+        val vm = tracked(GlobalSearchVM(app))
         val pid = seedParty("خالد", phone = "0501234567")
         vm.query.value = "٠٥٠١٢٣٤٥٦٧"
         val hits = awaitResults(vm) { it.any { h -> h.kind == 1 && h.id == pid } }
@@ -215,7 +231,7 @@ class SearchHealthVMTest {
     // بحث فاتورة برقمها — رقم يحوي الاستعلام → 0.97 (FeatureVMs.kt:2233)
     @Test
     fun `بحث فاتورة برقمها يعطي الدرجة 0_97`() = runBlocking {
-        val vm = GlobalSearchVM(app)
+        val vm = tracked(GlobalSearchVM(app))
         val pid = seedParty("مؤسسة النور")
         val inv = seedInvoice("INV-1024", pid)
         vm.query.value = "1024"
@@ -228,7 +244,7 @@ class SearchHealthVMTest {
     // بحث فاتورة باسم طرفها — قش «الرقم + اسم الطرف» يطابق ويُدرج الفاتورة
     @Test
     fun `بحث فاتورة باسم الطرف يجدها مع الطرف معا`() = runBlocking {
-        val vm = GlobalSearchVM(app)
+        val vm = tracked(GlobalSearchVM(app))
         val pid = seedParty("مؤسسة النور")
         val inv = seedInvoice("INV-1024", pid)
         vm.query.value = "النور"
@@ -242,7 +258,7 @@ class SearchHealthVMTest {
     // تُطابَق بدرجة 1.0 حين يتطابق المطبَّعان (TextMath.arabicNormalize:213)
     @Test
     fun `التطبيع العربي يطابق الهمزات والتشكيل والألف المقصورة`() = runBlocking {
-        val vm = GlobalSearchVM(app)
+        val vm = tracked(GlobalSearchVM(app))
         val prd = seedProduct("أقراص")
         val p1 = seedParty("أحمد المُهَنّد")
         val p2 = seedParty("علي حسن")
@@ -259,7 +275,7 @@ class SearchHealthVMTest {
     // (SettingsRepo.addRecentSearch:352 — الأحدث أولاً بسقف 8)
     @Test
     fun `سجل البحث يوثق الاستعلامات ويحل المكرر ثم يمحو`() = runBlocking {
-        val vm = GlobalSearchVM(app)
+        val vm = tracked(GlobalSearchVM(app))
         vm.clearRecent()                                   // تحصين من أي تلوث سابق بالـJVM
         withTimeout(20_000) { vm.recent.first { it.isEmpty() } }
         vm.record("بروتين")
@@ -278,7 +294,7 @@ class SearchHealthVMTest {
     // قاعدة نظيفة: بلا أي نتيجة خطيرة (severity 2) — بنفورد بعينة صغيرة يبقى للانتباه فقط
     @Test
     fun `مسح قاعدة نظيفة بلا أخطار خطيرة`() = runBlocking {
-        val vm = DataHealthVM(app)
+        val vm = tracked(DataHealthVM(app))
         val pid = seedParty("عميل نشط")
         seedProduct("منتج سليم")
         seedInvoice("INV-1", pid)
@@ -291,7 +307,7 @@ class SearchHealthVMTest {
     // عدد السجلات المفحوصة = فواتير + أطراف + منتجات + مصروفات + شيكات + دفعات + خطط
     @Test
     fun `المسح يعد السجلات المفحوصة بدقة`() = runBlocking {
-        val vm = DataHealthVM(app)
+        val vm = tracked(DataHealthVM(app))
         val p1 = seedParty("عميل أول")
         seedParty("عميل ثان")
         seedProduct("منتج أ")
@@ -312,7 +328,7 @@ class SearchHealthVMTest {
     // فجوة ترقيم فواتير بيع: 1001 ثم 1003 → فجوة [1002] بنوع gaps ودرجة انتباه
     @Test
     fun `فجوة ترقيم الفواتير تكتشف بنوع gaps`() = runBlocking {
-        val vm = DataHealthVM(app)
+        val vm = tracked(DataHealthVM(app))
         val pid = seedParty("عميل ترقيم")
         seedInvoice("INV-1001", pid)
         seedInvoice("INV-1003", pid)
@@ -326,7 +342,7 @@ class SearchHealthVMTest {
     // قيم شاذة (مصروف صفر) → نتيجة بنوع anomaly بدرجة خطر 2
     @Test
     fun `القيم الشاذة ترفع خطر اثنين`() = runBlocking {
-        val vm = DataHealthVM(app)
+        val vm = tracked(DataHealthVM(app))
         val pid = seedParty("عميل شاذ")
         seedInvoice("INV-1", pid)
         g.db.expenses().insert(Expense(amount = 0L, category = "خطأ", date = T0))
@@ -339,7 +355,7 @@ class SearchHealthVMTest {
     // علم scanning يرتفع فور بدء المسح (إدخال متحمس) ثم يهبط بالضبط مرة
     @Test
     fun `علم المسح يرتفع أثناء الفحص ويهبط بعده`() = runBlocking {
-        val vm = DataHealthVM(app)
+        val vm = tracked(DataHealthVM(app))
         seedParty("عميل علم")
         vm.scan()
         assertTrue("لم يرتفع علم المسح فور الاستدعاء", vm.scanning.value)
@@ -350,7 +366,7 @@ class SearchHealthVMTest {
     // نص المشاركة يعكس النتائج الفعلية بعلامات ✗/!/✓ وبيانات المفحوص
     @Test
     fun `نص المشاركة يعرض علامة الخطر واسم النتيجة`() = runBlocking {
-        val vm = DataHealthVM(app)
+        val vm = tracked(DataHealthVM(app))
         val pid = seedParty("عميل مشاركة")
         seedInvoice("INV-1", pid)
         g.db.expenses().insert(Expense(amount = 0L, category = "خطأ", date = T0))
@@ -364,7 +380,7 @@ class SearchHealthVMTest {
     // أطراف متشابهة بعد التطبيع (ة↔ه) تُعد أزواج مكررة محتملة بدرجة انتباه
     @Test
     fun `الأطراف المتشابهة بعد التطبيع تكتشف`() = runBlocking {
-        val vm = DataHealthVM(app)
+        val vm = tracked(DataHealthVM(app))
         seedParty("فاطمة الزهراء")
         seedParty("فاطمه الزهراء")
         val report = scanAndWait(vm)
@@ -376,7 +392,7 @@ class SearchHealthVMTest {
     // منتج مؤرشف وبمخزون → مخزون غير مرئي في البيع: arch_stock بدرجة انتباه
     @Test
     fun `المؤرشف بمخزون يكتشف بدرجة انتباه`() = runBlocking {
-        val vm = DataHealthVM(app)
+        val vm = tracked(DataHealthVM(app))
         seedParty("عميل أرشيف")
         g.db.products().upsert(
             Product(name = "مخفي بالجرد", stockQty = 5.0, archived = true)
