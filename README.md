@@ -11,9 +11,13 @@
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-8B5CF6?style=flat-square&labelColor=0B1026)
 ![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-22D3EE?style=flat-square&labelColor=0B1026)
 ![Offline](https://img.shields.io/badge/يعمل-دون%20اتصال-FBBF24?style=flat-square&labelColor=0B1026)
-![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?style=flat-square&labelColor=0B1026)
+![CI](https://github.com/CTO-DRS/SuperBiz/actions/workflows/ci.yml/badge.svg)
+![Release](https://github.com/CTO-DRS/SuperBiz/actions/workflows/release.yml/badge.svg)
+![Latest](https://img.shields.io/github/v/release/CTO-DRS/SuperBiz?style=flat-square&labelColor=0B1026)
 
 ---
+
+> ⬇️ **تحميل جاهز للتثبيت:** حزمة **APK موقّعة** (وأيضًا AAB للمتجر) متاحة مباشرةً من [إصدار V 1.0.0](https://github.com/CTO-DRS/SuperBiz/releases/tag/v1.0.0) — تُبنى وتُوقّع وتُرفق آليًا مع كل وسم `v*` عبر GitHub Actions.
 
 ## وصف المشروع
 
@@ -110,7 +114,7 @@ SuperBiz هو تطبيق أندرويد أصلي (Native) لإدارة الأع�
 
 ## طريقة تثبيت التطبيق
 
-1. من صفحة [Releases](../../releases) حمّل أحدث APK موقَّع (تُبنى الحزم آليًا عند كل وسم `v*` عبر `.github/workflows/release.yml`).
+1. من صفحة [Releases](../../releases) حمّل أحدث APK موقَّع — للإصدار الحالي: [`app-release.apk` من إصدار V 1.0.0](https://github.com/CTO-DRS/SuperBiz/releases/tag/v1.0.0) (تُبنى الحزم وتُوقَّع آليًا عند كل وسم `v*` عبر `.github/workflows/release.yml`، والشهادة: `SuperBiz / CTO-DRS`).
 2. على الهاتف: اسمح بـ«التثبيت من مصادر غير معروفة» لهذا الملف ثم ثبّته.
 3. افتح التطبيق — يعمل فورًا دون تسجيل أو اتصال. كل البيانات تبقى على جهازك فقط.
 4. الترقيات المستقبلية فوق V 1.0.0 تراكبية بنفس شهادة التوقيع — بلا فقد بيانات. خذ نسخة احتياطية من داخل التطبيق قبل أي ترقية كإجراء وقائي.
@@ -138,11 +142,11 @@ SuperBiz/
 
 ## المساهمة
 
-هذا مستودع خاص مملوك لمالكه، والمساهمة الخارجية غير متاحة حاليًا. إن كنت من فريق العمل: أنشئ فرعًا من `main`، واظب على نجاح `testReleaseUnitTest` وفاحص السلاسل (`tools/check_strings_format.py`) قبل فتح Pull Request، ووثّق أي ميزة جديدة في `CHANGELOG.md`.
+هذا مستودع عام للعرض والاطلاع ومملوك لمالكه، والمساهمة الخارجية غير متاحة حاليًا. إن كنت من فريق العمل: أنشئ فرعًا من `main`، واظب على نجاح `testReleaseUnitTest` وفاحص السلاسل (`tools/check_strings_format.py`) قبل فتح Pull Request، ووثّق أي ميزة جديدة في `CHANGELOG.md`.
 
 ## معلومات الترخيص والملكية
 
-جميع الحقوق محفوظة © 2026 CTO-DRS — هذا المستودع خاص، ولا يُمنح أي ترخيص لإعادة التوزيع أو الاستخدام التجاري خارج نطاق مالكه دون إذن كتابي. المتطلبات القانونية للنشر على Google Play موثقة في [`docs/PRIVACY_POLICY.md`](docs/PRIVACY_POLICY.md) و[`docs/PLAY_DATA_SAFETY.md`](docs/PLAY_DATA_SAFETY.md).
+جميع الحقوق محفوظة © 2026 CTO-DRS — المستودع متاح للعرض العام فقط، ولا يُمنح أي ترخيص لإعادة التوزيع أو الاستخدام التجاري خارج نطاق مالكه دون إذن كتابي. المتطلبات القانونية للنشر على Google Play موثقة في [`docs/PRIVACY_POLICY.md`](docs/PRIVACY_POLICY.md) و[`docs/PLAY_DATA_SAFETY.md`](docs/PLAY_DATA_SAFETY.md).
 
 ## معلومات الإصدار
 
