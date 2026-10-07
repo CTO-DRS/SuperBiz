@@ -121,8 +121,9 @@ class DebtsVM(app: Application) : AndroidViewModel(app) {
     fun deleteParty(id: Long) = launchSafe { g.ledger.deleteParty(id); refresh() }
 
     // [P33-P8] المبلغ يدخل ريالاً من الواجهة ويُحوَّل قروشاً عند الحدود الوحيدة (Money) قبل الدفتر
-    fun addDebt(party: Party, amount: Double, note: String, date: Long = System.currentTimeMillis()) =
-        launchSafe { g.ledger.addDebt(party, com.superbiz.app.util.Money.toPiasters(amount), date, note); refresh() }
+    // [تدقيق M-6] direction يمرّ للدفتر — الطرف ثنائي الدور يختار جانب الدين من الواجهة
+    fun addDebt(party: Party, amount: Double, note: String, direction: Int = 0, date: Long = System.currentTimeMillis()) =
+        launchSafe { g.ledger.addDebt(party, com.superbiz.app.util.Money.toPiasters(amount), date, note, direction); refresh() }
 
     fun addPayment(party: Party, amount: Double, direction: Int, method: String = "CASH") =
         launchSafe {
@@ -1843,7 +1844,8 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
      */
     fun verifyPin(pin: String, onResult: (Boolean) -> Unit) = launchSafe {
         val st = lockoutGuard.status()
-        if (st.remainingSeconds() > 0) {
+        // [تدقيق M-9] القرار بالزمن الأحادي — تراجع ساعة الجهاز لا يقصّر القفل
+        if (st.isLocked(android.os.SystemClock.elapsedRealtime())) {
             lockout.value = st
             onResult(false)
             return@launchSafe

@@ -19,7 +19,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -139,9 +138,9 @@ class FreeSaleVmE2E {
     fun `quickSale يكتب فاتورة بيع حر بمبلغ قروش مطابق ويفرغ السلة`() = runBlocking {
         val vm = PosVM(app)
         vm.quickSale("125.5", "بيع حر P40")
-        withTimeout(60_000) {
-            while (g.db.invoices().allOnce().none { it.isSale }) Thread.sleep(100)
-        }
+        // [تدقيق M-10] compose.waitUntil — مهلة مدمجة واستنزاف مجدول التركيب
+        // بدل حلقة while-sleep (كانت مع withTimeout لكن بلا استنزاف مجدول)
+        compose.waitUntil(60_000) { g.db.invoices().allOnce().any { it.isSale } }
         val inv = g.db.invoices().allOnce().single { it.isSale }
         assertEquals("المبلغ الحر 125.50 ريال = 12550 قروش — الأساس قبل الضريبة [P33-P8]", 12_550L, inv.subtotal)
         // POS يطبق ضريبة الإعدادات (15٪ افتراضياً) — الإجمالي جمع صحيح تام

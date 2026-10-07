@@ -412,4 +412,24 @@ object RetryPolicy {
         val n = attempts.coerceAtLeast(0).coerceAtMost(10)   // يمنع فائض الإزاحة قبل السقف
         return minOf(base * (1L shl n), 6L * 3_600_000L)
     }
+
+    /**
+     * [تدقيق M-5] هل حان موعد إعادة المحاولة؟ — البوابة الخلفية التي كانت ناقصة:
+     * nextDelayMs كانت معرّفة بلا مستهلك، فالمجدول (مسح كل 15 دقيقة) كان يعيد
+     * كل فاشل مؤهل في كل دورة ويضرب مضيف SMTP ساقط بعاصفة محاولات بلا مهلة.
+     * الآن: فاشل مؤهل يعاد فقط إذا مضت منذ آخر محاولة مهلته الأسّية كاملة
+     * (5د×2^n بسقف 6 ساعات فوق lastAttemptAt) — أو لم تُسجّل له محاولة أبداً.
+     * قرار نقي فوق الأعمدة القائمة (لا لمس مخطط) — قابل للاختبار بلا Android.
+     */
+    fun isRetryDue(
+        status: String,
+        attempts: Int,
+        maxAttempts: Int,
+        lastAttemptAt: Long?,
+        now: Long
+    ): Boolean {
+        if (!shouldAutoRetry(status, attempts, maxAttempts)) return false
+        if (lastAttemptAt == null) return true
+        return (now - lastAttemptAt) >= nextDelayMs(attempts)
+    }
 }

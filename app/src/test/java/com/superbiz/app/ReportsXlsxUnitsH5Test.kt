@@ -90,23 +90,26 @@ class ReportsXlsxUnitsH5Test {
     }
 
     @Test
-    fun summary_consistency_revenue_equals_expenses_plus_profit_in_riyals() {
-        // اتساق داخلي: الإيراد − المصروفات = الصافي بنفس الوحدة (كانت الوحدات مخلوطة)
+    fun summary_consistency_revenue_matches_profit_identity_in_riyals() {
+        // اتساق داخلي بهوية قائمة ال доход: الصافي = الإيراد + الأخرى − تكلفة المبيعات − المصروفات
+        // (كانت الوحدات مخلوطة فلا هوية ممكنة داخل الملف نفسه)
         val sheets = buildReportSheets(ctx, data(), days = 30, symbol = "ر.س")
         val rows = sheets.first().rows.associate { it[0] to it[1] }
         val revenue = rows[s(R.string.rep_metric_sales)] as Double
         val expenses = rows[s(R.string.kpi_expenses)] as Double
         val profit = rows[s(R.string.rep_metric_profit)] as Double
-        assertEquals(revenue - expenses, profit, 1e-9)
+        // data(): إيراد 100,000 / تكلفة 40,000 / مصروفات 20,000 ⇒ صافي 40,000
+        assertEquals(revenue - Money.fromPiasters(4_000_000L) - expenses, profit, 1e-9)
     }
 
     @Test
     fun trial_balance_rows_are_riyals() {
         val sheets = buildReportSheets(ctx, data(), days = 30, symbol = "ر.س")
-        // ورقة الميزان (3 أعمدة): صف ذمم العملاء — المدين 8,000.00 / الدائن 3,000.00
         val trial = sheets.first { it.name == s(R.string.rep_sheet_trial) }
         val row = trial.rows.first { it[0] == "ذمم العملاء" }
-        assertEquals(8_000.00, row[1])
-        assertEquals(3_000.00, row[2])
+        // عقد ورقة الميزان: [الاسم، الرصيد بالريال، الطرف المقابل إن كان سالباً وإلا 0]
+        // مدين 800,000 − دائن 300,000 = رصيد 500,000 قروش = 5,000.00 ريال
+        assertEquals(5_000.00, row[1])
+        assertEquals(0.0, row[2])
     }
 }

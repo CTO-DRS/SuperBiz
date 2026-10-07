@@ -19,7 +19,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -134,7 +133,13 @@ class PartyEditorP40Test {
         setContent(h) { savedCalled++ }
         compose.onNodeWithText(app.getString(R.string.phone)).performTextInput("0500000009")
         compose.onNodeWithText(app.getString(R.string.save)).performClick()
-        Thread.sleep(400) // نافذة لالتقاط أي كتابة خطأ لو الشرط مكسور
+        // [تدقيق M-10] نافذة سلبية حتمية: استنزاف كامل لأعمال التركيب المقررة
+        // (waitForIdle) ضمن أفق 1 ثانية — بدل Thread.sleep(400) العشوائي
+        val deadline = System.currentTimeMillis() + 1_000
+        while (System.currentTimeMillis() < deadline && g.db.parties().allOnce().isEmpty()) {
+            compose.waitForIdle()
+            Thread.sleep(50)
+        }
         assertTrue("بلا اسم: لا طرف يُكتب", g.db.parties().allOnce().isEmpty())
         assertEquals("بلا اسم: onSaveDone لا يُستدعى (الحوار يبقى)", 0, savedCalled)
     }
@@ -153,9 +158,8 @@ class PartyEditorP40Test {
         // نقر الرقاقة نفسها سلوك BizPill العام مغطى في اختبار الوجود أعلاه
         h.type.value = 2
         compose.onNodeWithText(app.getString(R.string.save)).performClick()
-        withTimeout(60_000) {
-            while (g.db.parties().allOnce().isEmpty()) Thread.sleep(150)
-        }
+        // [تدقيق M-10] compose.waitUntil بديلاً عن while-sleep
+        compose.waitUntil(60_000) { g.db.parties().allOnce().isNotEmpty() }
         val p = g.db.parties().allOnce().single()
         assertEquals("شركة النور", p.name) // مقتطع الفراغ
         assertEquals("0501234567", p.phone)
@@ -176,9 +180,8 @@ class PartyEditorP40Test {
         }
         setContent(h)
         compose.onNodeWithText(app.getString(R.string.save)).performClick()
-        withTimeout(60_000) {
-            while (g.db.parties().allOnce().firstOrNull { it.name == "جديد" } == null) Thread.sleep(150)
-        }
+        // [تدقيق M-10] compose.waitUntil بديلاً عن while-sleep
+        compose.waitUntil(60_000) { g.db.parties().allOnce().any { it.name == "جديد" } }
         val all = g.db.parties().allOnce()
         assertEquals("upsert على نفس المعرف — لا صف ثانٍ", 1, all.size)
         assertEquals(id, all.single().id)
