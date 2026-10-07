@@ -65,7 +65,8 @@ class CsvKitTest {
         assertEquals("'+2", CsvKit.escape("+2"))
         assertEquals("'@x", CsvKit.escape("@x"))
         assertEquals("'\ttab", CsvKit.escape("\ttab"))
-        assertEquals("'\rcr", CsvKit.escape("\rcr"))
+        // CR عضو أيضاً في NEEDS_QUOTES — البادئة والاقتباس معاً
+        assertEquals("\"'\rcr\"", CsvKit.escape("\rcr"))
     }
 
     @Test

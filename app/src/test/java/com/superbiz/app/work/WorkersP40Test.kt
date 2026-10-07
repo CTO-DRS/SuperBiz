@@ -201,6 +201,12 @@ class WorkersP40Test {
             statementId = 1, channel = "SMTP", status = "FAILED",
             attempts = 0, error = "previous failure", scheduledFor = null
         )
+        // [تدقيق M-5] بوابة الاستحقاق الزمنية: الفاشل لحظة تسجيله مهلته 5 دقائق
+        // لم تنتهِ — تُرجَّخ آخر محاولة أبعد من سقف التراجع (6 ساعات) كي يُعامل مستحقاً
+        g.db.statements().updateDelivery(
+            did, "FAILED", "previous failure", 1, null,
+            System.currentTimeMillis() - 7L * 3_600_000L
+        )
         val result = TestListenableWorkerBuilder<StatementScheduleWorker>(app).build().doWork()
         assertEquals(ListenableWorker.Result.success(), result)
         val d = g.db.statements().findDeliveryById(did)!!
@@ -225,6 +231,11 @@ class WorkersP40Test {
         val did = g.statements.recordDelivery(
             statementId = 2, channel = "WHATSAPP", status = "FAILED",
             attempts = 0, error = "user cancelled", scheduledFor = null
+        )
+        // [تدقيق M-5] ترجيخ آخر محاولة لتحويل الفاشل إلى مستحق (نفس عقد الاختبار الأول)
+        g.db.statements().updateDelivery(
+            did, "FAILED", "user cancelled", 1, null,
+            System.currentTimeMillis() - 7L * 3_600_000L
         )
         TestListenableWorkerBuilder<StatementScheduleWorker>(app).build().doWork()
         val d = g.db.statements().findDeliveryById(did)!!
