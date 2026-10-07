@@ -28,14 +28,16 @@ android {
         // بلا خيار الاستبعاد: windowOptOutEdgeToEdgeEnforcement مُهمَل عند استهداف 36 —
         // المعالج القائم enableEdgeToEdge() في MainActivity + الحشوات في الشاشات يغطي ذلك)
         targetSdk = 36
-        // ─── SuperBiz V 1.0.0 — First Official Release ───────────────────────────
-        // الإصدار الرسمي الأول للمشروع (versionCode 1): نقطة بيع، فواتير، مخزون، ذمم،
-        // أقساط، شيكات، مصروفات، تقارير، كشوف حساب PDF، طباعة حرارية، ZATCA (QR مرحلة-1
-        // + بصمة مرحلة-2)، ولاء وكوبونات، فريميوم Pro عبر Play Billing، لوحة KPIs —
-        // يعمل دون اتصال 100%. الإصدار يُعرض للمستخدم حصريًا من
+        // ─── SuperBiz V 1.1.0 — Audit Remediation Release ─────────────────────────
+        // موجة إصلاح التدقيق الكامل (25 ملاحظة: 7 HIGH و10 MEDIUM و8 LOW — كلها مغلقة):
+        // دمج يحفظ الولاء والكشوف، نسخ احتياطي بلقطة متسقة، رابط تحقق QR حي،
+        // تصدير XLSX وحدات موحدة، خزنة SMTP بمفتاح Keystore، TLS بهوية نقطة نهاية،
+        // ذرية إصدار/تسليم الكشوف، تراجع أُسّي مجدول، اتجاه دين صريح للأدوار المزدوجة،
+        // سياسة يتامى موثقة، بيومتريا CryptoObject وقفل زمن أحادي — 1471 اختبار وحدة أخضر.
+        // الإصدار يُعرض للمستخدم حصريًا من
         // BuildConfig.VERSION_NAME / VERSION_CODE (الإعدادات + تذييل PDF).
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
         vectorDrawables { useSupportLibrary = true }
     }
 
