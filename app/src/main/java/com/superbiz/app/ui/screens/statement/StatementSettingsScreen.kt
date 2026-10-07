@@ -135,6 +135,9 @@ fun StatementSettingsScreen(appVM: AppVM, nav: NavHostController) {
     var portTouched by rememberSaveable { mutableStateOf(false) }
     var showPass by rememberSaveable { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
+    // [تدقيق M-2] بوابة تأكيد النمط المكشوف: اختيار NONE يفتح حواراً صريحاً بدل تطبيقه فوراً —
+    // بيانات الدخول والمرفقات المالية تذهب نصاً مكشوفاً، فيقرر المستخدم بعلم كامل
+    var confirmNone by rememberSaveable { mutableStateOf(false) }
     var testTo by rememberSaveable { mutableStateOf("") }
     var sending by remember { mutableStateOf(false) }
 
@@ -169,12 +172,22 @@ fun StatementSettingsScreen(appVM: AppVM, nav: NavHostController) {
         saving = true
         val toSave = form.copy(port = portText.toIntOrNull() ?: 0)
         scope.launch {
-            withContext(Dispatchers.IO) {
-                StatementUiFacade.saveSmtpPrefs(appCtx, toSave)
+            // [تدقيق H-6] الحفظ الآن يشفّر كلمة المرور بمفتاح Keystore — فشل العتاد
+            // يرمي PinVaultException (فشل مغلق) ويُلتقط هنا عمداً: عقد «لا انهيار»
+            // يبقى صامداً والسبب يعرض للمستخدم بصدق في SnackBar
+            val failure = runCatching {
+                withContext(Dispatchers.IO) {
+                    StatementUiFacade.saveSmtpPrefs(appCtx, toSave)
+                }
+            }.exceptionOrNull()
+            if (failure != null) {
+                saving = false
+                snackbar.showSnackbar(appCtx.getString(R.string.st3_save_failed))
+            } else {
+                form = toSave
+                saving = false
+                snackbar.showSnackbar(appCtx.getString(R.string.st3_saved_ok))
             }
-            form = toSave
-            saving = false
-            snackbar.showSnackbar(appCtx.getString(R.string.st3_saved_ok))
         }
     }
 
@@ -223,7 +236,11 @@ fun StatementSettingsScreen(appVM: AppVM, nav: NavHostController) {
     /** قسم الإرسال التلقائي يُحفظ فورياً عند كل تغيير (prefs رخيصة — لا زر حفظ ثانياً) */
     fun pushAutoPrefs(f: com.superbiz.app.domain.statement.SmtpPrefsUi) {
         form = f
-        scope.launch(Dispatchers.IO) { StatementUiFacade.saveSmtpPrefs(appCtx, f) }
+        // [تدقيق H-6] الحفظ يشفّر كلمة المرور — فشل Keystore يُلتقط (عقد «لا انهيار»)
+        scope.launch(Dispatchers.IO) {
+            runCatching { StatementUiFacade.saveSmtpPrefs(appCtx, f) }
+                .onFailure { snackbar.showSnackbar(appCtx.getString(R.string.st3_save_failed)) }
+        }
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -275,12 +292,43 @@ fun StatementSettingsScreen(appVM: AppVM, nav: NavHostController) {
                                         val np = if (portTouched) (portText.toIntOrNull() ?: defaultPortFor(sec))
                                         else defaultPortFor(sec)
                                         portText = np.toString()
-                                        form = form.copy(security = sec.name, port = np)
+                                        // [تدقيق M-2] النمط المكشوف لا يُطبَّق فوراً — بوابة تأكيد أولاً
+                                        if (sec == SmtpSecurity.NONE) confirmNone = true
+                                        else form = form.copy(security = sec.name, port = np)
                                     }
                                 }
                             }
                             GlassSwitchRow(stringResourceCompat(R.string.st3_smtp_auth), form.authEnabled) {
                                 form = form.copy(authEnabled = it)
+                            }
+                            // [تدقيق M-2] حوار تأكيد النمط المكشوف — المرجع: حوار حذف القاعدة أعلاه
+                            if (confirmNone) {
+                                AlertDialog(
+                                    onDismissRequest = { confirmNone = false },
+                                    containerColor = g.surfaceStrong,
+                                    title = { Text(stringResourceCompat(R.string.st3_sec_none_warn_title), color = RedDeep) },
+                                    text = {
+                                        Text(
+                                            stringResourceCompat(R.string.st3_sec_none_warn_body),
+                                            color = g.textSecondary, fontSize = 13.sp
+                                        )
+                                    },
+                                    confirmButton = {
+                                        TextButton(onClick = {
+                                            confirmNone = false
+                                            val np = if (portTouched) (portText.toIntOrNull() ?: defaultPortFor(SmtpSecurity.NONE))
+                                            else defaultPortFor(SmtpSecurity.NONE)
+                                            form = form.copy(security = SmtpSecurity.NONE.name, port = np)
+                                        }) {
+                                            Text(stringResourceCompat(R.string.confirm), color = RedDeep, fontWeight = FontWeight.Bold)
+                                        }
+                                    },
+                                    dismissButton = {
+                                        TextButton(onClick = { confirmNone = false }) {
+                                            Text(stringResourceCompat(R.string.cancel), color = g.textSecondary)
+                                        }
+                                    }
+                                )
                             }
                             if (form.authEnabled) {
                                 BizField(form.user, { form = form.copy(user = it) }, stringResourceCompat(R.string.st3_smtp_user))
@@ -359,7 +407,11 @@ fun StatementSettingsScreen(appVM: AppVM, nav: NavHostController) {
                                     value = form.autoRetryMax.toFloat(),
                                     onValueChange = { v -> form = form.copy(autoRetryMax = v.toInt().coerceIn(1, 5)) },
                                     onValueChangeFinished = {
-                                        scope.launch(Dispatchers.IO) { StatementUiFacade.saveSmtpPrefs(appCtx, form) }
+                                        // [تدقيق H-6] حماية فشل التشفير المغلق (عقد «لا انهيار»)
+                                        scope.launch(Dispatchers.IO) {
+                                            runCatching { StatementUiFacade.saveSmtpPrefs(appCtx, form) }
+                                                .onFailure { snackbar.showSnackbar(appCtx.getString(R.string.st3_save_failed)) }
+                                        }
                                     },
                                     valueRange = 1f..5f,
                                     steps = 3,

@@ -1356,7 +1356,9 @@ private fun deepSummaryHeaderLabels(ctx: android.content.Context): List<String> 
     ctx.getString(R.string.tax),
 )
 
-private fun buildReportSheets(
+// [تدقيق H-5] internal (كانت private) — اختبار وحدة round-trip يتحقق من توحيد
+// الوحدات عبر كل الأوراق: كل خلية مالية يجب أن تكون ريالاً Double عبر fromPiasters
+internal fun buildReportSheets(
     ctx: android.content.Context,
     d: com.superbiz.app.vm.ReportsVM.ReportsData,
     days: Int,
@@ -1376,8 +1378,10 @@ private fun buildReportSheets(
         summaryRows += listOf(s(R.string.rep_metric_sales), Money.fromPiasters(income.revenue))
         summaryRows += listOf(s(R.string.kpi_expenses), Money.fromPiasters(income.expenses))
         summaryRows += listOf(s(R.string.rep_metric_profit), Money.fromPiasters(income.netProfit))
-        summaryRows += listOf(s(R.string.kpi_cash), d.cash)
-        summaryRows += listOf(s(R.string.rep_debts_open), d.aging.sum())
+        // [تدقيق H-5] كانت هذه الخميسة قروشاً خاماً في مصنّف يعلن ريالات (عقد P33-P8)
+        // — سطر الديون يقرأ 100x أكبر من سطر الإيراد في نفس الملف
+        summaryRows += listOf(s(R.string.kpi_cash), Money.fromPiasters(d.cash))
+        summaryRows += listOf(s(R.string.rep_debts_open), Money.fromPiasters(d.aging.sum()))
     }
     sheets += ExportSheet(s(R.string.rep_sheet_summary), listOf(s(R.string.item), periodLabel), summaryRows)
 
@@ -1394,7 +1398,8 @@ private fun buildReportSheets(
         sheets += ExportSheet(
             s(R.string.rep_sheet_customers),
             listOf(s(R.string.party), s(R.string.total)),
-            d.topCustomers.map { listOf<Any?>(it.first, it.second) }
+            // [تدقيق H-5] كان المجموع قروشاً خاماً — ريالات عبر fromPiasters
+            d.topCustomers.map { listOf<Any?>(it.first, Money.fromPiasters(it.second)) }
         )
     }
 
@@ -1403,7 +1408,8 @@ private fun buildReportSheets(
         sheets += ExportSheet(
             s(R.string.rep_sheet_products),
             listOf(s(R.string.item), s(R.string.stock_qty), s(R.string.total)),
-            d.topProducts.map { listOf<Any?>(it.name, it.qty, it.total) }
+            // [تدقيق H-5] كان total قروشاً خاماً — ريالات عبر fromPiasters
+            d.topProducts.map { listOf<Any?>(it.name, it.qty, Money.fromPiasters(it.total)) }
         )
     }
 
@@ -1413,7 +1419,10 @@ private fun buildReportSheets(
         sheets += ExportSheet(
             s(R.string.rep_sheet_aging),
             listOf(s(R.string.item), s(R.string.total)),
-            bucketLabels.mapIndexed { i, lb -> listOf<Any?>(lb, d.aging.getOrElse(i) { 0.0 }) }
+            // [تدقيق H-5] كانت الدلاء قروشاً خاماً — ريالات عبر fromPiasters
+            bucketLabels.mapIndexed { i, lb ->
+                listOf<Any?>(lb, Money.fromPiasters(d.aging.getOrElse(i) { 0L }))
+            }
         )
     }
     return sheets

@@ -295,6 +295,15 @@ class LedgerRepo(private val db: AppDatabase) {
             // فلا يمكن تحصيل الشيك بعدها (لغياب الطرف) ويظهر مدين وهمي في الأرصدة
             db.checks().moveParty(dupId, keepId)
             db.installments().moveParty(dupId, keepId)
+            // [تدقيق H-1/H-2]: ثلاثة أبناء بقوا خلف الحذف بعد الشيكات والأقساط:
+            // نقاط الولاء (FK=CASCADE كانت تمحو الرصيد التاريخي بصمت)،
+            // الكشوف (FK=RESTRICT كانت ترمي استثناء قيد فيفشل الدمج كلياً
+            // لزبائن صادروا كشوفاً)، والزيارات (بلا FK كانت تُترك يتيمة
+            // فيختفي تاريخها من بطاقة الطرف الباقي). الكل تُنقل قبل deleteRow
+            // داخل المعاملة نفسها — فشل أي نقل يُرجع الدمج كله.
+            db.loyalty().moveParty(dupId, keepId)
+            db.statements().moveParty(dupId, keepId)
+            db.visits().moveParty(dupId, keepId)
             val mergedNote = listOf(keep.note, dup.note)
                 .filter { it.isNotBlank() }
                 .joinToString(" | ")

@@ -83,7 +83,10 @@ class BackupRestoreRepo(
      */
     suspend fun exportTo(uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            val data = BackupData(
+            // [تدقيق H-3] بناء BackupData داخل معاملة Room واحدة — عزل اللقطة يجعل
+            // النسخة متسقة (فاتورة بلا بنودها لا تولد)، مطابقة لإصلاح المسار الأول في BackupRepo.
+            val data = db.withTransaction {
+                BackupData(
                 version = BACKUP_VERSION,
                 exportedAt = System.currentTimeMillis(),
                 // exportOnce تشمل المؤرشف (تعليق في Daos.kt) — allOnce كان يفلتره
@@ -117,7 +120,8 @@ class BackupRestoreRepo(
                 // [P46-W1] نطاق v5 — جدولا الولاء والكوبونات (اكتمال 25/25)
                 loyaltyEntries = db.loyalty().allOnce(),
                 coupons = db.coupons().allOnce()
-            )
+                )
+            }
             val json = buildBackupJson(data)
             val os = context.contentResolver.openOutputStream(uri, "wt")
                 ?: throw IOException("openOutputStream returned null")
