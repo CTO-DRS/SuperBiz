@@ -2,6 +2,7 @@ package com.superbiz.app
 
 import com.superbiz.app.domain.algo.CsvKit
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
