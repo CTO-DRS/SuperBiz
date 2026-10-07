@@ -204,7 +204,7 @@ class WorkersP40Test {
         // [تدقيق M-5] بوابة الاستحقاق الزمنية: الفاشل لحظة تسجيله مهلته 5 دقائق
         // لم تنتهِ — تُرجَّخ آخر محاولة أبعد من سقف التراجع (6 ساعات) كي يُعامل مستحقاً
         g.db.statements().updateDelivery(
-            did, "FAILED", "previous failure", 1, null,
+            did, "FAILED", "previous failure", 0, null,
             System.currentTimeMillis() - 7L * 3_600_000L
         )
         val result = TestListenableWorkerBuilder<StatementScheduleWorker>(app).build().doWork()
@@ -234,7 +234,7 @@ class WorkersP40Test {
         )
         // [تدقيق M-5] ترجيخ آخر محاولة لتحويل الفاشل إلى مستحق (نفس عقد الاختبار الأول)
         g.db.statements().updateDelivery(
-            did, "FAILED", "user cancelled", 1, null,
+            did, "FAILED", "user cancelled", 0, null,
             System.currentTimeMillis() - 7L * 3_600_000L
         )
         TestListenableWorkerBuilder<StatementScheduleWorker>(app).build().doWork()
