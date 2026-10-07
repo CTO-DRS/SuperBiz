@@ -586,7 +586,7 @@ fun DebtsScreen(appVM: AppVM, nav: NavHostController) {
                 item(key = "debts-insights-hdr") { SectionLabel(stringResourceCompat(R.string.insights_section_title)) }
                 // ══ [P20-FIX] بطاقات الذكاء — بعد قائمة الأطراف (كانت قبلها فتخفيها) ══
                 // قائمة أولوية التحصيل — ترتيب الاتصال الذكي
-                item(key = "collection-priority") { com.superbiz.app.ui.insights.CollectionPriorityCard(smartVM) }
+                item(key = "collection-priority") { com.superbiz.app.ui.insights.CollectionPriorityCard(appVM, smartVM) }
                 // [P44-K1] جولة 5: المكدس المخصص — ترتيب/إظهار المجموعات السبع بافتضاض المستخدم
                 item(key = "insights-stack-debts") {
                     com.superbiz.app.ui.insights.InsightsStack(

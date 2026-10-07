@@ -39,19 +39,13 @@ object DataExport {
     }
 
     /**
- * : حماية من حقن صيغ CSV (H-21) — القيمة التي تبدأ بـ = + @ أو TAB أو CR
- * تُسبق بعلامة اقتباس مفردة قبل الاقتباس القياسي، فلا يفسّرها Excel كصيغة عند الفتح.
- * : أُزيل '-' من قائمة الحماية — السالب لا يبدأ صيغة في Excel
- * وكانت كل الأرصدة السالبة تُصدَّر كنص «'-50» فيفسد كل الجداول اللاحقة.
-*/
-    private fun csvField(v: String): String {
-        val safe = if (v.isNotEmpty() &&
-            (v[0] == '=' || v[0] == '+' || v[0] == '@' || v[0] == '\t' || v[0] == '\r')
-        ) "'" + v else v
-        return if (safe.contains(',') || safe.contains('"') || safe.contains('\n') || safe.contains('\r'))
-            "\"" + safe.replace("\"", "\"\"") + "\""
-        else safe
-    }
+     * حرس حقن صيغ CSV (H-21) — [تدقيق L-5] توحيد المسارين: التفويض الكامل
+     * لـCsvKit.escape (المصدر الوحيد) الذي يعتمد نفس مجموعة H-21
+     * (= + @ TAB CR — السالب مستثنى لأنه قيمة عددية لا صيغة)،
+     * فلا انقسام سلوك بين تصدير التقارير والمفضّلات بعد اليوم.
+     */
+    private fun csvField(v: String): String =
+        com.superbiz.app.domain.algo.CsvKit.escape(v)
 
     // ─────────── XLSX ───────────
 

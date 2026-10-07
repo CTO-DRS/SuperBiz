@@ -92,9 +92,11 @@ fun HomeSmartCard(app: AppVM, smart: SmartInsightsVM) {
 // ═══════════ المخزون: خطة إعادة الطلب + الراكد ═══════════
 
 @Composable
-fun InventorySmartCard(smart: SmartInsightsVM) {
+// [تدقيق L-7] AppVM تُمرَّر من الشاشة المالكة بدل إنشائها بمفتاح smartApp —
+// viewModel() داخل شاشة تنقل تنشئ نسخة AppVM لكل مدخل رجوع (نطاق BackStackEntry)
+// فتعيد جمع إعدادات وجدولة النسخ الاحتياطي لكل شاشة. HomeSmartCard كان النمط الصحيح
+fun InventorySmartCard(app: AppVM, smart: SmartInsightsVM) {
     val st by smart.inventory.collectAsState()
-    val app = androidx.lifecycle.viewmodel.compose.viewModel<AppVM>(key = "smartApp")
     val symbol by app.symbol.collectAsState()
     fun m(v: Double) = Money.format(v, symbol)
 
@@ -121,9 +123,9 @@ fun InventorySmartCard(smart: SmartInsightsVM) {
 // ═══════════ التقارير: التعادل + الاستقرار + الذروة ═══════════
 
 @Composable
-fun ReportsSmartCard(smart: SmartInsightsVM) {
+// [تدقيق L-7] نفس توحيد تمرير AppVM (انظر InventorySmartCard)
+fun ReportsSmartCard(app: AppVM, smart: SmartInsightsVM) {
     val st by smart.reports.collectAsState()
-    val app = androidx.lifecycle.viewmodel.compose.viewModel<AppVM>(key = "smartApp")
     val symbol by app.symbol.collectAsState()
     fun m(v: Double) = Money.format(v, symbol)
 
@@ -158,10 +160,10 @@ fun ReportsSmartCard(smart: SmartInsightsVM) {
 // ═══════════ الذمم: أولوية التحصيل ═══════════
 
 @Composable
-fun CollectionPriorityCard(smart: SmartInsightsVM) {
+// [تدقيق L-7] نفس توحيد تمرير AppVM (انظر InventorySmartCard)
+fun CollectionPriorityCard(app: AppVM, smart: SmartInsightsVM) {
     val list by smart.collections.collectAsState()
     if (list.isEmpty()) return
-    val app = androidx.lifecycle.viewmodel.compose.viewModel<AppVM>(key = "smartApp")
     val symbol by app.symbol.collectAsState()
     SmartCardShell(stringResource(R.string.ins_coll_title), stringResource(R.string.ins_hint_generic), Red) {
         list.take(5).forEach { r ->

@@ -158,8 +158,13 @@ class PartyEditorP40Test {
         // نقر الرقاقة نفسها سلوك BizPill العام مغطى في اختبار الوجود أعلاه
         h.type.value = 2
         compose.onNodeWithText(app.getString(R.string.save)).performClick()
-        // [تدقيق M-10] compose.waitUntil بديلاً عن while-sleep
-        compose.waitUntil(60_000) { g.db.parties().allOnce().isNotEmpty() }
+        // [تدقيق M-10] مهلة محدودة + استنزاف runOnIdle (lamda waitUntil لا تقبل suspend)
+        val saveDeadline = System.currentTimeMillis() + 60_000
+        while (g.db.parties().allOnce().isEmpty()) {
+            assertTrue("انتهت مهلة انتظار حفظ الطرف (M-10)", System.currentTimeMillis() < saveDeadline)
+            compose.runOnIdle {}
+            Thread.sleep(150)
+        }
         val p = g.db.parties().allOnce().single()
         assertEquals("شركة النور", p.name) // مقتطع الفراغ
         assertEquals("0501234567", p.phone)
@@ -180,8 +185,13 @@ class PartyEditorP40Test {
         }
         setContent(h)
         compose.onNodeWithText(app.getString(R.string.save)).performClick()
-        // [تدقيق M-10] compose.waitUntil بديلاً عن while-sleep
-        compose.waitUntil(60_000) { g.db.parties().allOnce().any { it.name == "جديد" } }
+        // [تدقيق M-10] مهلة محدودة + استنزاف runOnIdle (lamda waitUntil لا تقبل suspend)
+        val editDeadline = System.currentTimeMillis() + 60_000
+        while (g.db.parties().allOnce().none { it.name == "جديد" }) {
+            assertTrue("انتهت مهلة انتظار تعديل الطرف (M-10)", System.currentTimeMillis() < editDeadline)
+            compose.runOnIdle {}
+            Thread.sleep(150)
+        }
         val all = g.db.parties().allOnce()
         assertEquals("upsert على نفس المعرف — لا صف ثانٍ", 1, all.size)
         assertEquals(id, all.single().id)

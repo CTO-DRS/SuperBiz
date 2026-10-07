@@ -113,8 +113,8 @@ class R12FixesTest {
         val now = System.currentTimeMillis()
         db.payments().insert(Payment(amount = 50_000L, date = now, direction = 0, method = "DEBT"))   // [P33-P8] 500.0 ريال → قروش
         db.payments().insert(Payment(amount = 20_000L, date = now, direction = 0, method = "CASH"))   // [P33-P8] 200.0 ريال → قروش
-        // [P33-P8] receivedBetween بقي Double على حدّ DAO فيُرجع مجموع القروش المخزنة كما هي (700.00 ريال = 70000)
-        assertEquals(70_000.0, db.payments().receivedBetween(now - 1000, now + 1000), 1e-9)
+        // [تدقيق L-1] receivedBetween (Double) حُذفت ميتة — الاسم كان يوحي بقبض نقدي
+        // بينما يعيد مجموع DEBT أيضاً؛ العقد الوحيد الحي: receivedBetweenCash
         assertEquals(20_000L, db.payments().receivedBetweenCash(now - 1000, now + 1000))   // [P33-P8] 200.0 ريال = 20_000 قروشاً — مساواة تامة
     }
 

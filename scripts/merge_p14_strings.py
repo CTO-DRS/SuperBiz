@@ -2,7 +2,9 @@
 # [P14] merge_p14_strings.py — 合并 13-a.txt + 13-b.txt 到 strings.xml (ar/en)
 import re, sys, io
 
-REPO = "/home/z/my-project/SuperBiz"
+# [تدقيق L-8] كان مساراً مطلقاً خاصاً بجهاز التطوير — الآن نسبي لمجلد المستودع
+import os
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRAGS = [f"{REPO}/scripts/p14_strings/14-a.txt", f"{REPO}/scripts/p14_strings/14-b.txt"]
 FILES = {
     "ar": f"{REPO}/app/src/main/res/values/strings.xml",

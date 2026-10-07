@@ -2,7 +2,9 @@
 # [P18] merge_p18_strings.py — merge 18-c.txt (st2_) + 18-c-settings.txt (st3_) into strings.xml (ar/en)
 import re, sys, io
 
-REPO = "/home/z/my-project/SuperBiz"
+# [تدقيق L-8] كان مساراً مطلقاً خاصاً بجهاز التطوير — الآن نسبي لمجلد المستودع
+import os
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRAGS = [
     f"{REPO}/scripts/p18_strings/18-c.txt",
     f"{REPO}/scripts/p18_strings/18-c-settings.txt",

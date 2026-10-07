@@ -559,7 +559,7 @@ fun InventoryScreen(appVM: AppVM, nav: NavHostController) {
                         com.superbiz.app.domain.DashboardPrefsP44.SCREEN_INVENTORY,
                         listOf(
                             // خطة إعادة الطلب والمخزون الراكد
-                            com.superbiz.app.ui.insights.insightsGroup("smart") { com.superbiz.app.ui.insights.InventorySmartCard(smartVM) },
+                            com.superbiz.app.ui.insights.insightsGroup("smart") { com.superbiz.app.ui.insights.InventorySmartCard(appVM, smartVM) },
                             // مخزون الأمان/الطلب المتقطع/تقادم الدفعات
                             com.superbiz.app.ui.insights.insightsGroup("r9") { com.superbiz.app.ui.insights.InventoryR9Card(r9VM, appVM) },
                             // ABC/كفاءة رأس المال/سلّم التخفيض/أسماء متشابهة
