@@ -176,6 +176,23 @@ class KpiBoardP47Test {
         assertEquals(123457L, KpiBoardP47.toPiasters(1234.565))
     }
 
+    // ══ [تدقيق L-2] التوحيد مع Money — القيم التي انحرف عنها الضرب العائم بهللة ══
+
+    @Test
+    fun toPiasters_matches_canonical_Money_on_float_drift_cases() {
+        // 2.675 كعائم ثنائي: 2.675*100 = 267.49999999999994 — الضرب القديم أعطى 267،
+        // والتحويل القانوني (BigDecimal على النص) يعطي 268 — انحراف هللة كان ملموساً
+        assertEquals(268L, KpiBoardP47.toPiasters(2.675))
+        assertEquals(com.superbiz.app.util.Money.toPiasters(2.675), KpiBoardP47.toPiasters(2.675))
+        // حماية القيم غير المنطقية — Money تعيد 0
+        assertEquals(0L, KpiBoardP47.toPiasters(Double.NaN))
+        assertEquals(0L, KpiBoardP47.toPiasters(Double.POSITIVE_INFINITY))
+        // تطابق شامل على شبكة قيم نموذجية
+        for (v in listOf(0.0, 0.01, 9.99, 12.34, 125.50, 1999.99, 12345.675)) {
+            assertEquals("v=$v", com.superbiz.app.util.Money.toPiasters(v), KpiBoardP47.toPiasters(v))
+        }
+    }
+
     // ══ الحوسبة الكاملة ══
 
     @Test

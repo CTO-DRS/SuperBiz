@@ -115,6 +115,12 @@ object KpiBoardP47 {
         status = status(k)
     )
 
-    /** التحويل إلى قروش (Long) عند العرض — عقد المال في المشروع: Long قروش */
-    fun toPiasters(value: Double): Long = (value * 100).roundToLong()
+    /**
+     * التحويل إلى قروش (Long) عند العرض — عقد المال في المشروع: Long قروش.
+     * [تدقيق L-2] كان التحويل (value * 100).roundToLong() على عائم ثنائي —
+     * قيم مثل 2.675 تنتج 267 بدل 268 (انحراف هللة) عن التحويل القانوني
+     * Money.toPiasters (BigDecimal على نص القيمة بقاعدة HALF_UP).
+     * التوحيد: كل حدود التحويل في المشروع عبر Money وحدها.
+     */
+    fun toPiasters(value: Double): Long = com.superbiz.app.util.Money.toPiasters(value)
 }

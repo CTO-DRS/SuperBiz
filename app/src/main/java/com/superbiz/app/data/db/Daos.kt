@@ -42,9 +42,7 @@ interface PartyDao {
     /**حذف فعلي بعد دمج الطرف المكرر — تُنقل مستنداته أولاً بمعاملة واحدة */
     @Query("DELETE FROM parties WHERE id = :id")
     suspend fun deleteRow(id: Long)
-
-    @Query("DELETE FROM parties WHERE id = :id")
-    suspend fun delete(id: Long)
+    // [تدقيق L-1] delete(id) المكررة حرفياً لdeleteRow صفر مستدعين — حُذفت
 
     @Query("SELECT COUNT(*) FROM parties")
     suspend fun count(): Int
@@ -534,8 +532,8 @@ interface PaymentDao {
     @Query("SELECT * FROM payments WHERE partyId = :pid ORDER BY date")
     suspend fun forParty(pid: Long): List<Payment>
 
-    @Query("SELECT COALESCE(SUM(amount),0) FROM payments WHERE direction = 0 AND date BETWEEN :from AND :to")
-    suspend fun receivedBetween(from: Long, to: Long): Double
+    // [تدقيق L-1] receivedBetween (Double — خلط وحدات) كانت ميتة صفر مستدعين —
+    // كل المستهلكين على receivedBetweenCash (قروش Long) — حُذفت
 
     /**المقبوض النقدي للنافذة — يستبعد قيود «دين جديد» (DEBT)
  * لأنها ليست تدفقاً نقدياً (نفس مبرر totalReceived) — كان يُحتسب الدين الائتماني

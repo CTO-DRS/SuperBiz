@@ -265,7 +265,9 @@ class BackupRepo(
 
     private fun couponJson(c: com.superbiz.app.data.db.CouponEntity) = JSONObject()
         .put("id", c.id).put("code", c.code).put("kind", c.kind)
-        .put("amountPiasters", c.amountPiasters).put("percent", c.percent)
+        // [تدقيق L-4] NaN/∞ يرمي JSONException في org.json فيفشل التصدير كله —
+        // JSONObject.NULL يُقرأ optDouble بالافتراضي 0.0 بأمان
+        .put("percent", if (c.percent.isNaN() || c.percent.isInfinite()) JSONObject.NULL else c.percent)
         .put("expiresAt", c.expiresAt).put("maxUses", c.maxUses)
         .put("usedCount", c.usedCount).put("active", c.active)
         .put("note", c.note).put("createdAt", c.createdAt)

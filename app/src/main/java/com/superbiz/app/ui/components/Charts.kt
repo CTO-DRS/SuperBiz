@@ -149,15 +149,19 @@ fun DonutChart(
     stroke: Float = 40f
 ) {
     val total = segments.sumOf { it.first }
+    // [تدقيق L-6] السماكة كانت بكسلات خام — 40px كثيفة على شاشات عالية الكثافة
+    // ونحيلة على المنخفضة (تسمن الخطوط بين الأجهزة). الآن 40 = 40dp تُحوّل
+    // لكثافة الجهاز مرة واحدة خارج الـCanvas — سماكة بصرية متطابقة كلّي الكثافات
+    val strokePx = with(androidx.compose.ui.platform.LocalDensity.current) { stroke.dp.toPx() }
     // كل الأجزاء صفرية؟ تُرسم حلقة رمادية باهتة بدل فراغ مريب
     Canvas(modifier) {
-        val diameter = minOf(size.width, size.height) - stroke
+        val diameter = minOf(size.width, size.height) - strokePx
         val topLeft = Offset((size.width - diameter) / 2, (size.height - diameter) / 2)
         if (total <= 1e-9) {
             drawArc(
                 color = Color.Gray.copy(alpha = 0.25f), startAngle = 0f, sweepAngle = 360f,
                 useCenter = false, topLeft = topLeft, size = Size(diameter, diameter),
-                style = Stroke(stroke)
+                style = Stroke(strokePx)
             )
             return@Canvas
         }
@@ -167,7 +171,7 @@ fun DonutChart(
             drawArc(
                 color = color, startAngle = start, sweepAngle = sweep, useCenter = false,
                 topLeft = topLeft, size = Size(diameter, diameter),
-                style = Stroke(stroke)
+                style = Stroke(strokePx)
             )
             start += sweep
         }

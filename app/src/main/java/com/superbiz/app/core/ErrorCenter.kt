@@ -84,9 +84,28 @@ object ErrorCenter {
         _events.tryEmit(ev)
     }
 
-    /** حدث معلوماتي (غير خطأ) — يظهر في السجل فقط */
+    /**
+     * حدث معلوماتي (غير خطأ) — يظهر في السجل فقط.
+     * [تدقيق L-3] كان يصنع RuntimeException(message) ويمرره لreport فيُلتقط
+     * أثر المكدس الكامل عند الإنشاء داخل المعاملات بلا أي قيمة تشخيصية
+     * (الأثر يصف إنشاء الاستثناء لا موقع المعلومة). الآن لا استثناء مزيّفاً —
+     * نفس بنية warn مباشرة بمستوى INFO وبلا وهم في Logcat.
+     */
     fun info(tag: String, message: String) {
-        report(RuntimeException(message), tag, null, ErrorLevel.INFO)
+        val ev = ErrorEvent(
+            id = synchronized(lock) { nextId++ },
+            tag = tag,
+            message = message,
+            userMessage = null,
+            ts = System.currentTimeMillis(),
+            level = ErrorLevel.INFO
+        )
+        Log.i("SuperBiz/$tag", "[${ErrorLevel.INFO}] $message")
+        synchronized(lock) {
+            _history.value = (_history.value + ev).takeLast(MAX_HISTORY)
+            _last.value = ev
+        }
+        _events.tryEmit(ev)
     }
 
     /** تحذير — يظهر في السجل وLogcat بمستوى تحذير */

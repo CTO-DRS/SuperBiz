@@ -1270,7 +1270,7 @@ fun ReportsScreen(appVM: AppVM, nav: NavHostController) {
             com.superbiz.app.domain.DashboardPrefsP44.SCREEN_REPORTS,
             listOf(
                 // نقطة التعادل/استقرار الأرباح/ساعات الذروة
-                com.superbiz.app.ui.insights.insightsGroup("smart") { com.superbiz.app.ui.insights.ReportsSmartCard(smartVM) },
+                com.superbiz.app.ui.insights.insightsGroup("smart") { com.superbiz.app.ui.insights.ReportsSmartCard(appVM, smartVM) },
                 // السعر الأمثل/الحزمة/VaR/الدقة/توازن الفئات/توقع Holt/ساعات العمل
                 com.superbiz.app.ui.insights.insightsGroup("r9") { com.superbiz.app.ui.insights.ReportsR9Card(r9VM, appVM) },
                 // هامش المحفظة/أزواج الرفع/DSO/شواذ الفواتير/المنتج التالي

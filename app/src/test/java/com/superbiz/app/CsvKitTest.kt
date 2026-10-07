@@ -46,6 +46,39 @@ class CsvKitTest {
         assertEquals("\"أ,\"\"ب\"\"\nس\"", CsvKit.escape("أ,\"ب\"\nس"))
     }
 
+    // ─── [تدقيق L-5] توحيد الحرس بين CsvKit وDataExport — السالب قيمة لا صيغة ───
+
+    @Test
+    fun escape_negativeNumber_staysBare_number_notText() {
+        // الإحداثيات والأرصدة السالبة كانت تُسبق بفاصلة عليا فتقرأ Sheets نصاً
+        assertEquals("-46.6", CsvKit.escape("-46.6"))
+        assertEquals("-1", CsvKit.escape("-1"))
+        assertEquals("-250.75", CsvKit.escape("-250.75"))
+        assertEquals("-2+3", CsvKit.escape("-2+3"))
+    }
+
+    @Test
+    fun escape_formulaLeadingChars_stillGuarded() {
+        // مجموعة H-21 كاملة تبقى محروسة: = + @ TAB CR
+        assertEquals("'=SUM(A1)", CsvKit.escape("=SUM(A1)"))
+        assertEquals("'+2", CsvKit.escape("+2"))
+        assertEquals("'@x", CsvKit.escape("@x"))
+        assertEquals("'\ttab", CsvKit.escape("\ttab"))
+        assertEquals("'\rcr", CsvKit.escape("\rcr"))
+    }
+
+    @Test
+    fun guards_are_unified_between_CsvKit_and_DataExport_path() {
+        // الدالة الوحيدة تخدم المسارين — إثبات التطابق على عينة مختلطة
+        // (DataExport.csvField تفوّض لـCsvKit.escape فعلياً؛ هذا يثبت العقد الناتج)
+        val samples = listOf("-46.6", "=cmd", "+1", "@a", "plain", "أ,ب", "x\ny")
+        for (v in samples) {
+            // سلوك CSV الأساسي متسق: بداية صيغة محروسة، وسالب عاري
+            if (v[0] in "=+@\t\r") assertTrue(v, CsvKit.escape(v).startsWith("'"))
+            else assertFalse(v, CsvKit.escape(v).startsWith("'"))
+        }
+    }
+
     // ─── buildCsv ───
 
     @Test

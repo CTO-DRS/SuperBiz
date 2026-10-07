@@ -25,12 +25,17 @@ object CsvKit {
     /**
      * [P12-a] تهيئة حقل CSV واحد: bare إن لم يحتوي حروفاً خاصة، وإلا ملفوّف بعلامات
      * اقتباس مع مضاعفة الاقتباسات الداخلية. مثال: «أ,ب» → "أ,ب"، قال "مرحبا" → "قال ""مرحبا""".
-     * [P20-FIX agent13]: حماية من حِقن الصيغ (OWASP CSV Injection) — حقل يبدأ بـ = + - @
+     * [P20-FIX agent13]: حماية من حِقن الصيغ (OWASP CSV Injection) — حقل يبدأ بـ = + @
      * (أو TAB/CR) كان يُكتب خاماً فيُنفّذه Excel/Sheets كصيغة (WEBSERVICE/HYPERLINK…).
      * الاقتباس لا يمنع التنفيذ — البادئة ' تجعل Excel يعامله نصاً (ويخفيها).
+     *
+     * [تدقيق L-5] توحيد الحرس: كان '-' ضمن المجموعة بينما مسار DataExport (H-21)
+     * أزاله — «-46.6» في تصدير المفضّلات كانت تُكتب «'-46.6» فتقرأ Sheets إحداثيات
+     * النصَّ لا رقم. السالب لا يبدأ صيغة في Excel (قيمة عددية) — المجموعة الآن
+     * = + @ TAB CR في المسارين، وهذه الدالة هي المصدر الوحيد (DataExport تفوّض لها).
      */
     fun escape(field: String): String {
-        val guarded = if (field.isNotEmpty() && field[0] in "=@+-\t\r") "'$field" else field
+        val guarded = if (field.isNotEmpty() && field[0] in "=@+\t\r") "'$field" else field
         if (guarded.indexOfAny(NEEDS_QUOTES) < 0) return guarded
         return "\"" + guarded.replace("\"", "\"\"") + "\""
     }

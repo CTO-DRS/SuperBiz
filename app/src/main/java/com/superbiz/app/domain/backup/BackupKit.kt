@@ -519,7 +519,10 @@ private fun couponToJson(c: CouponEntity): String {
     sb.str("code", c.code); sb.append(',')
     sb.append("\"kind\":").append(c.kind); sb.append(',')
     sb.lng("amountPiasters", c.amountPiasters); sb.append(',')
-    sb.append("\"percent\":").append(c.percent); sb.append(',')
+    // [تدقيق L-4] percent كان يُكتب خاماً — NaN (مسار محرر غير مقصوص) كان يُنتج
+    // "percent":NaN نصاً غير شرعي JSON فيفسد ملف النسخة كله. doubleJson تكتب null
+    // والقارئ dblF يعيد الافتراضي 0.0 بأمان (نفس عقد الحقول العائمة الأخرى)
+    sb.append("\"percent\":").append(doubleJson(c.percent)); sb.append(',')
     sb.lng("expiresAt", c.expiresAt); sb.append(',')
     sb.append("\"maxUses\":").append(c.maxUses); sb.append(',')
     sb.append("\"usedCount\":").append(c.usedCount); sb.append(',')

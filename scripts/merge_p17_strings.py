@@ -2,7 +2,9 @@
 # [P17] merge_p17_strings.py — 合并 17-a.txt + 17-b.txt + 17-c.txt 到 strings.xml (ar/en)
 import re, sys, io
 
-REPO = "/home/z/my-project/SuperBiz"
+# [تدقيق L-8] كان مساراً مطلقاً خاصاً بجهاز التطوير — الآن نسبي لمجلد المستودع
+import os
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRAGS = [f"{REPO}/scripts/p17_strings/17-c.txt"]  # 17-a/17-b بلا مفاتيح UI (نصوص القوالب داخل الكود ثنائية اللغة)
 FILES = {
     "ar": f"{REPO}/app/src/main/res/values/strings.xml",

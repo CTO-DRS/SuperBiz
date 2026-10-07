@@ -138,9 +138,14 @@ class FreeSaleVmE2E {
     fun `quickSale يكتب فاتورة بيع حر بمبلغ قروش مطابق ويفرغ السلة`() = runBlocking {
         val vm = PosVM(app)
         vm.quickSale("125.5", "بيع حر P40")
-        // [تدقيق M-10] compose.waitUntil — مهلة مدمجة واستنزاف مجدول التركيب
-        // بدل حلقة while-sleep (كانت مع withTimeout لكن بلا استنزاف مجدول)
-        compose.waitUntil(60_000) { g.db.invoices().allOnce().any { it.isSale } }
+        // [تدقيق M-10] انتظار محدد المهلة مع استنزاف مجدول التركيب كل دورة —
+        // (waitUntil لا يقبل استدعاءات DAO suspend في لامدته؛ النمط الموثق للعقد الدلالية فقط)
+        val invDeadline = System.currentTimeMillis() + 60_000
+        while (g.db.invoices().allOnce().none { it.isSale }) {
+            assertTrue("انتهت مهلة انتظار فاتورة البيع الحر (M-10)", System.currentTimeMillis() < invDeadline)
+            compose.runOnIdle {}
+            Thread.sleep(100)
+        }
         val inv = g.db.invoices().allOnce().single { it.isSale }
         assertEquals("المبلغ الحر 125.50 ريال = 12550 قروش — الأساس قبل الضريبة [P33-P8]", 12_550L, inv.subtotal)
         // POS يطبق ضريبة الإعدادات (15٪ افتراضياً) — الإجمالي جمع صحيح تام
