@@ -143,7 +143,6 @@ class FreeSaleVmE2E {
         val invDeadline = System.currentTimeMillis() + 60_000
         while (g.db.invoices().allOnce().none { it.isSale }) {
             assertTrue("انتهت مهلة انتظار فاتورة البيع الحر (M-10)", System.currentTimeMillis() < invDeadline)
-            compose.runOnIdle {}
             Thread.sleep(100)
         }
         val inv = g.db.invoices().allOnce().single { it.isSale }
