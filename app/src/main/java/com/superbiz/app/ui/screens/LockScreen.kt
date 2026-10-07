@@ -111,15 +111,17 @@ fun LockScreen(
     val bioReady = biometricOn && BiometricGate.check(activity) == BiometricGate.OK
 
     // نبض الثواني لتحديث العدّاد المعروض أثناء القفل
-    var nowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(lockout.lockUntil) {
+    // [تدقيق M-9] العرض والقرار على الزمن الأحادي (elapsedRealtime) — تراجع الحائط
+    // لا يقصّر العدّاد ولا يفتح القفل (القرار الصارم في verifyPin بنفس المصدر)
+    var nowElapsedMs by remember { mutableLongStateOf(android.os.SystemClock.elapsedRealtime()) }
+    LaunchedEffect(lockout.lockUntilElapsed) {
         settingsVM.refreshLockout()
-        while (lockout.remainingSeconds(nowMs) > 0) {
+        while (lockout.remainingElapsedSeconds(nowElapsedMs) > 0) {
             delay(500)
-            nowMs = System.currentTimeMillis()
+            nowElapsedMs = android.os.SystemClock.elapsedRealtime()
         }
     }
-    val lockLeft = lockout.remainingSeconds(nowMs)
+    val lockLeft = lockout.remainingElapsedSeconds(nowElapsedMs)
     val locked = lockLeft > 0
 
     // تُحلّ في السياق القابل للتركيب ثم تُستخدم داخل الدوال العادية

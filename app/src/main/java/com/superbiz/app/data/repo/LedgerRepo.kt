@@ -85,8 +85,19 @@ class LedgerRepo(private val db: AppDatabase) {
         }
     }
 
-    /** دين جديد (بيع/شراء آجل) — ذرّي: القيد + سطر الدفعة معاً — [P33-P8] amount قروش Long */
-    suspend fun addDebt(party: Party, amount: Long, date: Long, note: String): Long {
+    /** دين جديد (بيع/شراء آجل) — ذرّي: القيد + سطر الدفعة معاً — [P33-P8] amount قروش Long
+     *
+     * [تدقيق M-6] التوجيه بالاتجاه الصريح لا نوع الطرف وحده: كان الطرف ثنائي
+     * الدور (عميل ومورد معاً، type=2) يقع دائماً في فرع دين العميل —
+     * فدين مورد (ذمة دائنة عليك) يُرحَّل صمتاً ذمماً مدينة عليه ويظهر في
+     * التحصيل بدل السداد. direction=1 يوجّه صراحةً لجانب المورد؛
+     * الافتراضي 0 يحفظ سلوك المستدعين الحاليين حرفياً (الأطراف
+     * أحادية الدور تتوجّه بنوعها كما كان، وثنائي الدور بلا تمرير يبقى على
+     * جانب العميل — الواجهة الآن تعرض الاختيار للأدوار المزدوجة).
+     */
+    suspend fun addDebt(
+        party: Party, amount: Long, date: Long, note: String, direction: Int = 0
+    ): Long {
         // رفض المبلغ غير المنطقي — الصفر/السالب يُرحّل قيداً مشوّهاً بلا قيمة
         // [P33-P8] عتبة 0.004 حُذفت — مقارنة صحيحة تامة (القرش الواحد مبلغ حقيقي)
         require(amount > 0L) { "مبلغ الدين غير صالح: $amount" }
@@ -98,17 +109,25 @@ class LedgerRepo(private val db: AppDatabase) {
         require(party.isCustomer || party.isSupplier) {
             "لا يمكن تسجيل دين لطرف بلا دور (لا عميل ولا مورد): ${party.name} (id=${party.id})"
         }
-        val draft = if (party.isCustomer && !party.isSupplier)
-            AccountingEngine.newCustomerDebt(party.id, amount, date)
-        else if (!party.isCustomer && party.isSupplier)
+        val draft = if (direction == 1 || (direction != 0 && direction != 1)) {
+            // اتجاه صريح لجانب المورد — أو أي قيمة غريبة تعامل كأكثر تقييداً (مورد)
             AccountingEngine.newSupplierDebt(party.id, amount, date)
-        else AccountingEngine.newCustomerDebt(party.id, amount, date)
+        } else if (party.isSupplier && !party.isCustomer) {
+            // مورد خالص — لا غموض، يبقى على جانبه كما كان
+            AccountingEngine.newSupplierDebt(party.id, amount, date)
+        } else {
+            AccountingEngine.newCustomerDebt(party.id, amount, date)
+        }
+        // سطر الدفعة يحمل اتجاه الدين نفسه — كان 0 دائماً فتُحصى ديون المورّد
+        // (صادر) ضمن التحصيل (وارد) في تقارير المدفوعات [تدقيق M-6]
+        val payDirection = if (direction == 1 || (direction != 0 && direction != 1)) 1 else
+            if (party.isSupplier && !party.isCustomer) 1 else 0
         var entryId = 0L
         db.withTransaction {
             entryId = postInternal(draft)
             db.payments().insert(
                 Payment(partyId = party.id, amount = amount, date = date,
-                    direction = 0, method = "DEBT", note = note.ifBlank { "دين جديد" })
+                    direction = payDirection, method = "DEBT", note = note.ifBlank { "دين جديد" })
             )
         }
         onMutate?.invoke()

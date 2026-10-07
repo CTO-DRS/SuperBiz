@@ -223,4 +223,45 @@ class AuditWave1FixesTest {
             assertEquals("", com.superbiz.app.domain.statement.StatementPrefs.load(ctx).pass)
         } finally { restoreKey() }
     }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // [تدقيق M-6] دين الطرف ثنائي الدور يُوجَّه بالاتجاه الصريح لا نوع الطرف وحده
+    // Accounts.RECEIVABLE = "1100" / Accounts.PAYABLE = "2000"
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private suspend fun accountRow(account: String) =
+        db.journal().accountSums().firstOrNull { it.account == account }
+
+    @Test
+    fun dualRoleParty_explicitSupplierDirection_booksPayable() = runBlocking {
+        val dual = party("عميل ومورد معاً", type = 2)
+        ledger.addDebt(dual, 50_000L, System.currentTimeMillis(), "شراء آجل", direction = 1)
+
+        // [M-6] قبل الإصلاح: كان يقع دائماً في فرع دين العميل (RECEIVABLE مدين)
+        // الآن الاتجاه الصريح 1 يرحّل ذمة دائنة: مدين مخزون / دائن ذمم موردين
+        val payable = accountRow("2000")
+        assertTrue("الدين على ذمم الموردين لا العملاء (M-6)", payable != null && payable.c == 50_000L)
+        assertEquals("لا ذمم عملاء إطلاقاً", null, accountRow("1100"))
+        // سطر الدفعة يحمل اتجاه الدين (صادر) — كان 0 دائماً
+        val pay = db.payments().forParty(dual.id).first { it.method == "DEBT" }
+        assertEquals(1, pay.direction)
+    }
+
+    @Test
+    fun dualRoleParty_defaultDirection_keepsCustomerSide() = runBlocking {
+        val dual = party("ثنائي الدور بيع", type = 2)
+        ledger.addDebt(dual, 20_000L, System.currentTimeMillis(), "بيع آجل")
+        // الافتراضي يحفظ السلوك القائم: جانب العميل
+        val receivable = accountRow("1100")
+        assertTrue(receivable != null && receivable.d == 20_000L)
+        assertEquals(0, db.payments().forParty(dual.id).first { it.method == "DEBT" }.direction)
+    }
+
+    @Test
+    fun pureSupplier_stillBooksSupplierSide_withoutExplicitDirection() = runBlocking {
+        val sup = party("مورد خالص", type = 1)
+        ledger.addDebt(sup, 8_000L, System.currentTimeMillis(), "شراء آجل")
+        val payable = accountRow("2000")
+        assertTrue("المورد الخالص يبقى على جانبه كما كان (M-6)", payable != null && payable.c == 8_000L)
+    }
 }

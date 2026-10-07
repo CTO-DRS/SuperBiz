@@ -146,12 +146,18 @@ class StatementRepo(
      * إصدار كشف: حساب البصمة + إدراج statements + سطر تدقيق.
      * الـdedup (قرار ③ أعلاه): نفس الطرف والفترة ⇒ يعيد الكشف القائم بلا إدراج
      * (templateId/filePath الممرران يتجاهلان في هذه الحالة — موثق).
+     *
+     * [تدقيق M-3] الفحص والإدراج داخل معاملة واحدة — كانا منفصلين فينافذ
+     * إصداران متزامنان لنفس الطرف والفترة كليهما رؤية غياب الكشف فيُدرجان
+     * صفّين برقمين مختلفين لنفس الفترة. عزل اللقطة يجعل الثانية ترى إدراج
+     * الأولى (أو تُحجب) — استحالة ازدواج الفترة حرفياً.
      */
-    suspend fun issue(data: StatementData, templateId: String, filePath: String): StatementEntity {
-        val existing = db.statements().findByPartyPeriod(data.party.id, data.fromTs, data.toTs)
-        if (existing != null) return existing
-        return insertStatement(data, templateId, filePath, "STATEMENT_ISSUE")
-    }
+    suspend fun issue(data: StatementData, templateId: String, filePath: String): StatementEntity =
+        db.withTransaction {
+            val existing = db.statements().findByPartyPeriod(data.party.id, data.fromTs, data.toTs)
+            if (existing != null) existing
+            else insertStatementTx(data, templateId, filePath, "STATEMENT_ISSUE")
+        }
 
     /**
      * إصدار قسري بلا dedup — لإعادة توليد PDF لنفس الفترة (قالب آخر/تصحيح مسار ملف).
@@ -161,38 +167,42 @@ class StatementRepo(
     suspend fun issueForced(data: StatementData, templateId: String, filePath: String): StatementEntity =
         insertStatement(data, templateId, filePath, "STATEMENT_REISSUE")
 
-    private suspend fun insertStatement(
+    /** [تدقيق M-3] جسد الإدراج — يُستدعى داخل معاملة مفتوحة حصراً (issue أو insertStatement) */
+    private suspend fun insertStatementTx(
         data: StatementData, templateId: String, filePath: String, auditAction: String
     ): StatementEntity {
         val hash = StatementService.contentHash(data)
-        val id = db.withTransaction {
-            val sid = db.statements().insert(
-                StatementEntity(
-                    statementNumber = data.statementNumber,
-                    verificationId = data.verificationId,
-                    partyId = data.party.id,
-                    fromTs = data.fromTs,
-                    toTs = data.toTs,
-                    templateId = templateId,
-                    currency = data.currency,
-                    contentHash = hash,
-                    filePath = filePath,
-                    note = data.note,
-                    createdAt = data.createdAt,
-                    lang = data.lang.name
-                )
+        val sid = db.statements().insert(
+            StatementEntity(
+                statementNumber = data.statementNumber,
+                verificationId = data.verificationId,
+                partyId = data.party.id,
+                fromTs = data.fromTs,
+                toTs = data.toTs,
+                templateId = templateId,
+                currency = data.currency,
+                contentHash = hash,
+                filePath = filePath,
+                note = data.note,
+                createdAt = data.createdAt,
+                lang = data.lang.name
             )
-            db.auditLog().insert(
-                AuditLogEntity(
-                    actor = "owner", action = auditAction,
-                    details = "${data.statementNumber} party=${data.party.id} " +
-                        "${data.fromTs}..${data.toTs} hash=$hash",
-                    ts = System.currentTimeMillis()
-                )
+        )
+        db.auditLog().insert(
+            AuditLogEntity(
+                actor = "owner", action = auditAction,
+                details = "${data.statementNumber} party=${data.party.id} " +
+                    "${data.fromTs}..${data.toTs} hash=$hash",
+                ts = System.currentTimeMillis()
             )
-            sid
-        }
-        return db.statements().findById(id)!!
+        )
+        return db.statements().findById(sid)!!
+    }
+
+    private suspend fun insertStatement(
+        data: StatementData, templateId: String, filePath: String, auditAction: String
+    ): StatementEntity = db.withTransaction {
+        insertStatementTx(data, templateId, filePath, auditAction)
     }
 
     /**
@@ -262,16 +272,22 @@ class StatementRepo(
      * قاعدة المحاولات: PROCESSING/SENT/FAILED تمثل محاولة فعلية ⇒ attempts+1؛
      * PENDING/RETRYING/CANCELLED مجدولة أو إدارية ⇒ بلا زيادة.
      * status=SENT يختم sentAt بالآن (مرة واحدة — لا يُعاد كتمه في كل قراءة).
+     *
+     * [تدقيق M-4] التحديث UPDATE ذري مشروط بدل قراءة-تعديل-كتابة — كان العامل
+     * المجدول وإعادة المحاولة اليدوية يقرآن السطر نفسه فتضيع زيادة محاولة
+     * أو يُعاد ختم sentAt. دلتا المحاولة مشتقة من الحالة الهدف وحدها (عقد ثابت)،
+     * فلا حاجة لقراءة السطر أصلاً — استعلام واحد لا نافذة سباق فيه.
      */
     suspend fun markDelivery(deliveryId: Long, status: String, error: String? = null) {
-        val d = db.statements().findDeliveryById(deliveryId) ?: return
         val now = System.currentTimeMillis()
-        val attempts = when (status) {
-            "PROCESSING", "SENT", "FAILED" -> d.attempts + 1
-            else -> d.attempts
-        }
-        val sentAt = if (status == "SENT") (d.sentAt ?: now) else d.sentAt
-        db.statements().updateDelivery(deliveryId, status, error, attempts, sentAt, now)
+        db.statements().markDeliveryAtomic(
+            id = deliveryId,
+            status = status,
+            error = error,
+            attemptDelta = if (status == "PROCESSING" || status == "SENT" || status == "FAILED") 1 else 0,
+            isSent = status == "SENT",
+            now = now
+        )
     }
 
     // ═══════════ القوالب والتواقيع والأختام والملاحظات والقواعد ═══════════

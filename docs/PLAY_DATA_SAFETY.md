@@ -34,9 +34,19 @@
 |---|---|
 | CAMERA | ماسح باركود المنتجات |
 | READ_CONTACTS / WRITE_CONTACTS | استيراد/تصدير اختياري للعملاء |
+| ACCESS_COARSE_LOCATION / ACCESS_FINE_LOCATION | موقع تسجيل الزيارة (GPS اختياري) |
 | POST_NOTIFICATIONS / SCHEDULE_EXACT_ALARM | تنبيهات الذمم والمخزون والتذكيرات |
-| BLUETOOTH_CONNECT / BLUETOOTH_SCAN (S+) | الطابعات الحرارية |
+| RECEIVE_BOOT_COMPLETED | إعادة جدولة التذكيرات بعد إقلاع الجهاز |
+| VIBRATE | الاهتزاز التفاعلي (إعداد haptics) |
+| USE_BIOMETRIC / USE_FINGERPRINT (≤28) | فتح التطبيق بالبصمة |
+| BLUETOOTH / BLUETOOTH_ADMIN (≤30) / BLUETOOTH_CONNECT | الطابعات الحرارية |
 | INTERNET | البريد المجدول + Play Billing فقط (لا خادم تحكم) |
+
+> [تدقيق — فصل 9] تصحيح مطابقة الـManifest: التطبيق **لا يطلب BLUETOOTH_SCAN** —
+> كان الجدول يعلنه خطأً وينقصه 5 صلاحيات معلنة فعلاً. نموذج Data Safety في
+> Console يُملأ من هذا الجدول حرفياً؛ أي إذن غير مطلوب في الـmanifest ولا يُذكر
+> في النموذج (والعكس) يرفع تعارض مراجعة Play. المصدر الموثوق الوحيد:
+> app/src/main/AndroidManifest.xml في نفس الـcommit.
 
 > ملاحظة امتثال: إعلان `targetSdk 36` يُطلب في Play Console تلقائياً —
 > تحقق أن قيمة «إصدار Android المستهدف» في النموذج = 36 بعد رفع V 1.0.0.

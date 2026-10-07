@@ -742,6 +742,25 @@ interface StatementDao {
         id: Long, status: String, error: String?,
         attempts: Int, sentAt: Long?, lastAttemptAt: Long?
     )
+
+    /**
+     * [تدقيق M-4] انتقال حالة ذري مشروط — UPDATE واحد بلا قراءة سابقة:
+     * دلتا المحاولة تُحسب من الحالة الهدف عند المستدعي (عقد ثابت)، وsentAt
+     * يُختم مرة واحدة فقط عبر CASE (لا يُعاد كتمه) — لا نافذة سباق بين
+     * العامل المجدول وإعادة المحاولة اليدوية.
+     */
+    @Query(
+        """UPDATE statement_deliveries SET
+           status = :status, lastError = :error,
+           attempts = attempts + :attemptDelta,
+           sentAt = CASE WHEN :isSent AND sentAt IS NULL THEN :now ELSE sentAt END,
+           lastAttemptAt = :now
+           WHERE id = :id"""
+    )
+    suspend fun markDeliveryAtomic(
+        id: Long, status: String, error: String?,
+        attemptDelta: Int, isSent: Boolean, now: Long
+    )
 }
 
 @Dao

@@ -32,12 +32,34 @@ object LockoutPolicy {
     }
 }
 
-/** حالة قفل المحاولات — تُستهلك من شاشة القفل مباشرة */
-data class LockStatus(val fails: Int, val lockUntil: Long) {
+/**
+ * حالة قفل المحاولات — تُستهلك من شاشة القفل مباشرة
+ *
+ * [تدقيق M-9] قرار القفل على الزمن الأحادي لا حائط النظام: كان lockUntil فقط،
+ * فتراجع ساعة الجهاز (يدوي أو NTP) يقصّر القفل أو يلغيه. untilElapsed
+ * (نمط SystemClock.elapsedRealtime) لا يرجع للخلف أبداً خلال التشغيل،
+ * وتراجع الحائط لا يمسّه. القيمة تساوى 0 في الحقول القديمة قبل الإصلاح —
+ * قرارها يرجع للحائط كما كان (ترحيل متسامح لمرة واحدة).
+ */
+data class LockStatus(
+    val fails: Int,
+    val lockUntil: Long,
+    val lockUntilElapsed: Long = 0L   // [تدقيق M-9] الزمن الأحادي — القرار عبر isLocked
+) {
 
-    /** الثواني المتبقية من القفل — صفر إن انتهى القفل */
+    /** الثواني المتبقية من القفل بالحائط — صفر إن انتهى (للعرض في الحالة القديمة فقط) */
     fun remainingSeconds(now: Long = System.currentTimeMillis()): Int {
         val rem = ((lockUntil - now) / 1000L).toInt()
+        return if (rem > 0) rem else 0
+    }
+
+    /** [تدقيق M-9] قرار القفل — الزمن الأحادي هو المصدر، التراجع لا يقصّر القفل */
+    fun isLocked(nowElapsed: Long): Boolean = lockUntilElapsed > nowElapsed
+
+    /** الثواني المتبقية بالزمن الأحادي — للعدّاد المعروض (يقرأه المستدعي من elapsedRealtime) */
+    fun remainingElapsedSeconds(nowElapsed: Long): Int {
+        if (lockUntilElapsed <= 0L) return 0
+        val rem = ((lockUntilElapsed - nowElapsed) / 1000L).toInt()
         return if (rem > 0) rem else 0
     }
 }
@@ -51,26 +73,39 @@ class LockoutGuard(private val context: Context) {
     private object K {
         val fails = intPreferencesKey("pin_fails")
         val until = longPreferencesKey("pin_lock_until")
+        // [تدقيق M-9] الزمن الأحادي المقابل — القرار عبره لا عبر الحائط
+        val untilElapsed = longPreferencesKey("pin_lock_until_elapsed")
     }
 
     suspend fun status(): LockStatus {
         val p = context.lockoutStore.data.first()
-        return LockStatus(p[K.fails] ?: 0, p[K.until] ?: 0L)
+        return LockStatus(
+            p[K.fails] ?: 0,
+            p[K.until] ?: 0L,
+            p[K.untilElapsed] ?: 0L
+        )
     }
 
-    /** يُستدعى بعد PIN خاطئ — يحدّث العدّاد ويحسب موعد القفل القادم */
+    /** يُستدعى بعد PIN خاطئ — يحدّث العدّاد ويحسب موعد القفل القادم بالزمنين معاً */
     suspend fun onFailed(): LockStatus {
         val now = System.currentTimeMillis()
+        val nowElapsed = android.os.SystemClock.elapsedRealtime()
         val cur = status()
-        val lockedNow = cur.lockUntil > now
+        // [تدقيق M-9] القفل الساري يُقرأ بالزمن الأحادي — كان بالحائط فتراجع الساعة
+        // يعيد فتح المحاولات فوراً
+        val lockedNow = cur.isLocked(nowElapsed)
         val newFails = if (lockedNow) cur.fails else cur.fails + 1
         val seconds = LockoutPolicy.lockSecondsFor(newFails)
         val newUntil = if (seconds > 0) now + seconds * 1000L else 0L
+        // [تدقيق M-9] القيدان يُكتبان معاً — القرار أحادي، والحائط للتوافق فقط
+        val newUntilElapsed = if (seconds > 0) nowElapsed + seconds * 1000L else 0L
+        val st = LockStatus(newFails, newUntil, newUntilElapsed)
         context.lockoutStore.edit {
             it[K.fails] = newFails
             it[K.until] = newUntil
+            it[K.untilElapsed] = newUntilElapsed
         }
-        return LockStatus(newFails, newUntil)
+        return st
     }
 
     /** يُستدعى بعد أي نجاح مصادقة — تصفير كامل للعدّاد والقفل */
@@ -78,6 +113,7 @@ class LockoutGuard(private val context: Context) {
         context.lockoutStore.edit {
             it.remove(K.fails)
             it.remove(K.until)
+            it.remove(K.untilElapsed)
         }
     }
 }

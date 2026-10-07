@@ -430,10 +430,16 @@ class StatementScheduleWorker(ctx: Context, params: WorkerParameters) : Coroutin
         val candidates = runCatching {
             repo.deliveriesByStatus("FAILED") + repo.deliveriesByStatus("RETRYING")
         }.getOrDefault(emptyList())
+        val now = System.currentTimeMillis()
         for (d in candidates) {
             try {
-                if (!com.superbiz.app.domain.statement.RetryPolicy.shouldAutoRetry(d.status, d.attempts, max)) {
-                    continue   // CANCELLED/SENT/استُنفد السقف — تُترك لحالة المستخدم
+                // [تدقيق M-5] البوابة الكاملة: الأهلية + مهلة التراجع الأسّي —
+                // كان shouldAutoRetry وحدها تعيد كل فاشل في كل دورة (15 دقيقة)
+                // فتضرب مضيفاً ساقطاً بعاصفة؛ nextDelayMs أصبحت مستهلكة فعلاً
+                if (!com.superbiz.app.domain.statement.RetryPolicy.isRetryDue(
+                        d.status, d.attempts, max, d.lastAttemptAt, now)
+                ) {
+                    continue   // CANCELLED/SENT/استُنفد السقف/مهلتها لم تنتهِ — لا عاصفة على المضيف
                 }
                 val channel = d.channel.trim().uppercase(Locale.US)
                 if (channel != "EMAIL" && channel != "SMTP") {

@@ -630,6 +630,9 @@ fun DebtsScreen(appVM: AppVM, nav: NavHostController) {
     opDialog?.let { (party, op, direction) ->
         var amount by remember { mutableStateOf("") }
         var note by remember { mutableStateOf("") }
+        // [تدقيق M-6] الطرف ثنائي الدور (عميل ومورد) يختار جانب الدين صراحةً —
+        // كان يُرحَّل دائماً جانب العميل فتُسجَّل ذمة مورد مدينةً عليك بدل دائنة لك
+        var debtDirection by remember { mutableStateOf(if (direction == 1) 1 else 0) }
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { opDialog = null },
             containerColor = g.surfaceStrong,
@@ -642,6 +645,23 @@ fun DebtsScreen(appVM: AppVM, nav: NavHostController) {
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     BizField(amount, { amount = it }, stringResourceCompat(R.string.amount), keyboard = numberFieldOptions())
+                    // [تدقيق M-6] شرائح الاتجاه — فقط لدين طرفٍ ثنائي الدور
+                    if (op == "debt" && party.isCustomer && party.isSupplier) {
+                        Text(
+                            stringResourceCompat(R.string.debt_dir_label),
+                            fontSize = 12.sp, color = g.textSecondary
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            BizPill(
+                                stringResourceCompat(R.string.debt_dir_receivable), g.accent,
+                                mode = PillMode.SELECT, selected = debtDirection == 0
+                            ) { debtDirection = 0 }
+                            BizPill(
+                                stringResourceCompat(R.string.debt_dir_payable), g.accent,
+                                mode = PillMode.SELECT, selected = debtDirection == 1
+                            ) { debtDirection = 1 }
+                        }
+                    }
                     BizField(note, { note = it }, stringResourceCompat(R.string.note))
                 }
             },
@@ -649,7 +669,9 @@ fun DebtsScreen(appVM: AppVM, nav: NavHostController) {
                 androidx.compose.material3.TextButton(onClick = {
                     val v = parseNum(amount)
                     if (v > 0) {
-                        if (op == "debt") vm.addDebt(party, v, note)
+                        // [تدقيق M-6] الاتجاه المختار يمرّ للدفتر (الأطراف الأحادية لا ترى الشرائح
+                        // فتتوجّه بنوعها داخل الدفتر كما كان)
+                        if (op == "debt") vm.addDebt(party, v, note, debtDirection)
                         else vm.addPayment(party, v, direction)
                     }
                     opDialog = null

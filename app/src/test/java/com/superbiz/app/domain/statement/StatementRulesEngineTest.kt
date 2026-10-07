@@ -297,4 +297,40 @@ class StatementRulesEngineTest {
         assertEquals(6L * 3_600_000L, p.nextDelayMs(50))
         assertEquals(5L * 60_000L, p.nextDelayMs(-3))            // سالبة تصير صفراً
     }
+
+    // ───── [تدقيق M-5] بوابة الاستحقاق: الأهلية + مهلة التراجع الأسّي معاً ─────
+
+    @Test fun `retry due gate - eligible failure waits its full exponential delay`() {
+        val p = RetryPolicy
+        val now = 1_800_000_000_000L
+        // فاشل بمحاولة واحدة: مهلته 10 دقائق — قبلها لا إعادة، بعدها إعادة
+        val last = now - 5L * 60_000L
+        assertFalse("قبل المهلة: لا عاصفة على المضيف (M-5)",
+            p.isRetryDue("FAILED", 1, 3, last, now))
+        assertTrue("بعد المهلة: يعاد",
+            p.isRetryDue("FAILED", 1, 3, last, now + 6L * 60_000L))
+        // بلا محاولة مسجلة: مستحق فوراً
+        assertTrue(p.isRetryDue("FAILED", 0, 3, null, now))
+        // تتراجع عتبة الدخول مع تقدم المحاولات (2 محاولة ⇒ 20 دقيقة)
+        val last2 = now - 15L * 60_000L
+        assertFalse(p.isRetryDue("RETRYING", 2, 5, last2, now))
+        assertTrue(p.isRetryDue("RETRYING", 2, 5, last2, now + 6L * 60_000L))
+    }
+
+    @Test fun `retry due gate - non eligible rows never due regardless of time`() {
+        val p = RetryPolicy
+        val now = 1_800_000_000_000L
+        // SENT/CANCELLED/PENDING/PROCESSING لا تعاد مهما مرّ الزمن
+        for (st in listOf("SENT", "CANCELLED", "PENDING", "PROCESSING")) {
+            assertFalse(st, p.isRetryDue(st, 1, 3, now - 86_400_000L, now))
+        }
+        // استُنفد السقف: لا إعادة أبداً
+        assertFalse(p.isRetryDue("FAILED", 3, 3, now - 86_400_000L, now))
+        // محاولات كثيرة فوق السقف الزمني: المهلة 6 ساعات كاملة
+        val last = now - 5L * 3_600_000L
+        assertFalse(p.isRetryDue("FAILED", 30, 50, last, now))
+        assertTrue(p.isRetryDue("FAILED", 30, 50, last, now + 2L * 3_600_000L))
+        // maxAttempts = 0: آلية الإيقاف الكلي تبقى سليمة
+        assertFalse(p.isRetryDue("FAILED", 0, 0, null, now))
+    }
 }
