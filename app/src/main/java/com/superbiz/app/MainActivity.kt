@@ -327,6 +327,8 @@ class VMFactory(private val context: android.content.Context) :
             modelClass.isAssignableFrom(com.superbiz.app.vm.R14InsightsVM::class.java) -> com.superbiz.app.vm.R14InsightsVM(app) as T
             // VM الرؤى الذكية للموجة R15
             modelClass.isAssignableFrom(com.superbiz.app.vm.R15InsightsVM::class.java) -> com.superbiz.app.vm.R15InsightsVM(app) as T
+            // [H3-6] VM المنسّق الذكي — الأفق الثالث (بطاقات + دردشة محلية + روايات)
+            modelClass.isAssignableFrom(com.superbiz.app.vm.SmartCoordinatorVM::class.java) -> com.superbiz.app.vm.SmartCoordinatorVM(app) as T
             // [H1-4][H1-5][v13] VM المستخدمين والجلسات — RBAC على الجهاز الواحد
             modelClass.isAssignableFrom(com.superbiz.app.vm.LoyaltyVM::class.java) -> com.superbiz.app.vm.LoyaltyVM(app) as T
             modelClass.isAssignableFrom(com.superbiz.app.vm.UsersVM::class.java) -> com.superbiz.app.vm.UsersVM(app) as T

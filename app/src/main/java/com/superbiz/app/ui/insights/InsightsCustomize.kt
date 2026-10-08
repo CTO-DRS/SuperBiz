@@ -79,6 +79,7 @@ fun insightGroupLabel(key: String): String = stringResource(
         "r13" -> R.string.ins_layout_group_r13
         "r14" -> R.string.ins_layout_group_r14
         "r15" -> R.string.ins_layout_group_r15
+        "r16" -> R.string.ins_layout_group_r16
         else -> R.string.ins_layout_group_custom
     }
 )

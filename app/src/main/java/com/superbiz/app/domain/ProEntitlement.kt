@@ -33,8 +33,10 @@ object ProEntitlement {
      * الأبواب المدفوعة — قائمة مركزية واحدة. كل ميزة Pro مستقبلية تُسجّل هنا
      * قبل أي استعمال في الواجهة، والحارس الوحيد هو [isLocked].
      * الموجة 1: لوحة المؤشرات (KPIs) — الباب الأول.
+     * الأفق الثالث [H3-7]: SMART_INTEL — العمق التنبؤي (تدفق 90 يوماً،
+     * الاستعلام العربي، الروايات). الأساس التنبؤي يبقى مجانياً في الرئيسية.
      */
-    enum class ProFeature { KPI_BOARD }
+    enum class ProFeature { KPI_BOARD, SMART_INTEL }
 
     /** خريطة حالة Play الخام إلى استحقاق — الافتراض الآمن = مجاني */
     fun stateOf(playState: PlayPurchaseState): ProState = when (playState) {
