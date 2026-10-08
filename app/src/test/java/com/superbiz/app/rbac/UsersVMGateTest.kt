@@ -53,11 +53,17 @@ class UsersVMGateTest {
         inst.set(null, null)
     }
 
+    // Robolectric بلا AndroidKeyStore — حقن مفتاح AES للحقن في PinVault كلي المسارين
+    // (المستخدمون الجدد يُغلّفون بمفتاح alias لكل مستخدم — نمط SecurityWaveTest نفسه)
+    private val testKey = javax.crypto.spec.SecretKeySpec(ByteArray(32) { it.toByte() }, "AES")
+
     @Before
     fun setUp() {
         resetGraph()
         SessionState.clear()
         Dispatchers.setMain(testMain)
+        com.superbiz.app.security.PinVault.keyProvider = { testKey }
+        com.superbiz.app.security.PinVault.userKeyProvider = { testKey }
         app = ApplicationProvider.getApplicationContext<Application>()
         g = AppGraph.from(app)
         vm = UsersVM(app)
@@ -67,6 +73,10 @@ class UsersVMGateTest {
     fun tearDown() {
         SessionState.clear()
         Dispatchers.resetMain()
+        com.superbiz.app.security.PinVault.keyProvider = { com.superbiz.app.security.PinVault.masterKey() }
+        com.superbiz.app.security.PinVault.userKeyProvider = {
+            com.superbiz.app.security.PinVault.keyForAlias(com.superbiz.app.security.PinVault.userAlias(it))
+        }
     }
 
     /** انتظار قائمة المستخدمين حتى تطابق الحجم المستهدف */
