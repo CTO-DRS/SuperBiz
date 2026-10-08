@@ -773,13 +773,17 @@ private fun statementRuleToJson(r: StatementRuleEntity): String {
 }
 
 private fun auditLogToJson(a: AuditLogEntity): String {
-    val sb = StringBuilder(160)
+    val sb = StringBuilder(180)
     sb.append('{')
     sb.lng("id", a.id); sb.append(',')
     sb.str("actor", a.actor); sb.append(',')
     sb.str("action", a.action); sb.append(',')
     sb.str("details", a.details); sb.append(',')
     sb.lng("ts", a.ts)
+    // [H1-4][v13] إسناد الجلسة — يُكتب فقط عند وجوده (توافق خلفي: ملفات ما قبل v13
+    // تُقرأ بدلالتها كما هي، وقارئ v13 يتسامح مع غياب المفتاحين)
+    a.actorId?.let { sb.append(','); sb.lng("actorId", it) }
+    a.actorRole?.let { sb.append(','); sb.lng("actorRole", it) }
     sb.append('}')
     return sb.toString()
 }
@@ -1254,7 +1258,10 @@ private fun auditLogFromJson(m: Map<*, *>) = AuditLogEntity(
     actor = m.strF("actor", "owner"),
     action = m.strF("action", ""),
     details = m.strF("details", ""),
-    ts = m.lngF("ts", 0L)
+    ts = m.lngF("ts", 0L),
+    // [H1-4][v13] إسناد اختياري — غيابه في ملفات ما قبل v13 = NULL دلالة «قبل التبني»
+    actorId = m.lngN("actorId"),
+    actorRole = m.lngN("actorRole")?.toInt()
 )
 
 // [P46-W1] قراءة جدولا الولاء والكوبونات — invoiceId=0 يعود null (دلالة «بلا فاتورة»)

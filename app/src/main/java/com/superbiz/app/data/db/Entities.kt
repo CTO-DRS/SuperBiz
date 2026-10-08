@@ -150,7 +150,20 @@ data class Invoice(
     val status: Int = 0,            // 0 غير مدفوعة 1 جزئية 2 مدفوعة 3 ملغاة
     val currency: String = "SAR",
     val fxRate: Double = 1.0,
-    val note: String = ""
+    val note: String = "",
+    // [H1-3][v13] أعمدة هوية ZATCA مرحلة-2 — الترحيل المشترك مع RBAC في ترحيل واحد
+    // (عقد ZATCA2_WAVE2_PLAN §2: «الترحيلان يُنفَّذان معاً في v13») — بذور آمنة
+    // محايدة دلالياً، والاستهلاك الفعلي في موجة الربط الرسمي V 1.5.0 (دفعة Z2-أ):
+    // كل عمود مُضاف بـALTER ADD COLUMN NOT NULL DEFAULT (سابقة 10→11 حرفياً)
+    val uuid: String = "",              // UUID للفاتورة — يُولد وقت الإصدار في موجة الربط
+    val icv: Long = 0,                  // عدّاد الفاتورة التزايدي (سلسلة السلامة ICV)
+    val pih: String = "",              // بصمة الفاتورة السابقة PIH ("" = غير محددة بعد)
+    val zatcaSubtype: String = "",      // نوع المستند: 0100000 قياسية / 0200000 مبسطة / دائنة...
+    val deliveryDate: Long = 0,         // تاريخ التوريد المنفصل (0 = غير محدد)
+    val buyerName: String = "",         // بيانات المشتري المقنة للفواتير القياسية B2B
+    val buyerVat: String = "",
+    val buyerAddress: String = "",
+    val zatcaStatus: Int = 0            // حالة الربط: 0 غير مطبق ← 1 بالقائمة ← 2 مبلغة/مخلصة
 ) {
     val open: Long get() = total - paid  // [P33-P8] مساواة تامة — لا تقريب
     val isSale: Boolean get() = type == 0
@@ -519,6 +532,12 @@ data class StatementRuleEntity(
  * [P17-a] سجل تدقيق — إلحاق فقط (لا تعديل ولا حذف): إصدار كشف، إرسال، تعديل قاعدة.
  * actor حالياً "owner" دائماً (تطبيق مفرد المالك — 17-scan: لا نظام أدوار) لكن الحقل
  * محفوظ من اليوم كي لا يصبح الترحيل لازماً يوم يُضاف تعدد المستخدمين.
+ *
+ * [H1-4][v13] إسناد التدقيق للمستخدم — عمودان nullable مُلحقان بترحيل 12→13
+ * (ALTER ADD بلا قيمة افتراضية — NULL دلالته «حدث قبل تبنّي RBAC أو حدث نظام»):
+ *  actorId   = users.id للجلسة الصريحة لحظة الحدث
+ *  actorRole = لقطة الدور لحظة الحدث (نسخة ملتصقة بلا join — عقد التصميم §4.1)
+ * actor النصي يبقى اسم المستخدم للجلسات الجديدة و"owner" للتاريخية.
  */
 @Entity(tableName = "audit_log", indices = [Index("ts"), Index("action")])
 data class AuditLogEntity(
@@ -526,7 +545,9 @@ data class AuditLogEntity(
     val actor: String,
     val action: String,                // STATEMENT_ISSUE / STATEMENT_SEND / STATEMENT_RULE_...
     val details: String,
-    val ts: Long = System.currentTimeMillis()
+    val ts: Long = System.currentTimeMillis(),
+    val actorId: Long? = null,         // [H1-4][v13] users.id — NULL = قبل v13 / نظام
+    val actorRole: Int? = null         // [H1-4][v13] لقطة الدور (0..3) لحظة الحدث
 )
 
 /** صف جدول جاهز لعرضه — يطبق InstallmentEngine على أسطر قاعدة البيانات */
@@ -613,3 +634,62 @@ object LoyaltyP46Kinds {
     const val KIND_FIXED = 0
     const val KIND_PERCENT = 1
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// [H1-3][H1-4][v13] هوية المستخدمين المحلية — RBAC على الجهاز الواحد
+// (تصميم RBAC_V13_DESIGN.md §4 — جداول جديدة فقط، ترحيل إلحاقي ذرّي 12→13)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * مستخدم محلي للجهاز — هوية العرض والإسناد (لا كلمات مرور عارية هنا أبداً:
+ * مادة الدخول في user_secrets مغلّفة كـ PinVault).
+ *
+ * role: ثابت الدور الرقمي (0 مالك / 1 مدير / 2 محاسب / 3 كاشير — Role.fromId
+ * يحوّله في حدود التطبيق، وأي قيمة غريبة تعيد الأدنى صلاحية فشلاً مغلقاً).
+ * الافتراض Kotlin 3 = الأدنى صلاحية (عقد «الافتراض مغلق» §2) — وهو نفسه لا
+ * يظهر في مخطط SQL لأنRoom يولّد CREATE بلا DEFAULT (سابقة 11→12 حرفياً).
+ *
+ * هذه الجداول لا تُصدَّر في نسخ احتياطية JSON/Excel في الموجة الأولى (عقد
+ * التصميم §4.3-5 + §6-5: أسرار المستخدمين لا تخرج من الجهاز إطلاقاً).
+ */
+@Entity(tableName = "users", indices = [Index("role"), Index("active")])
+data class UserEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val role: Int = 3,                 // 0 مالك / 1 مدير / 2 محاسب / 3 كاشير — الافتراض الأدنى
+    val active: Int = 1,               // تعطيل بلا حذف — التاريخ المحاسبي لا يُمس
+    val createdAt: Long = System.currentTimeMillis(),
+    val lastSeenAt: Long = 0
+)
+
+/**
+ * سر دخول المستخدم — نفس صيغة PinVault حرفياً لكل مستخدم:
+ *  pinWrapped = "ks:<ivHex>:<ctHex>" مغلّف بمفتاح Keystore (alias لكل مستخدم
+ *               `superbiz_pin_u<id>` منذ v13؛ بذرة المالك المُرحّلة تبقى
+ *               مغلّفة بالمفتاح الرئيسي ويُقرأ بتراجعٍ موثق في UserAuth).
+ *  pinSalt    = ملح PBKDF2 الخاص بالمستخدم — داخل القاعدة لا DataStore لأن
+ *               DataStore مخزن أحادي المالك لا يمكن تعميمه على N مستخدم
+ *               (قرار تنفيذ موثق: امتداد عمودين على تصميم §4.1 — انظر
+ *               ملاحظة التوثيق في RBAC_V13_DESIGN.md §4.1b).
+ *  pinIters   = دورات PBKDF2 المخزنة (0 = 600k الحالية — نفس دلالة DataStore).
+ *  biometricAllowed = 1 يسمح بفتح البصمة لهذا المستخدم (المالك فقط افتراضاً).
+ *
+ * صف بلا مستخدم مستحيل (CASCADE)، ومستخدم بلا صف سر = مستخدم لم يُنشأ له
+ * رمز بعد (بذرة المالك بلا حماية قائمة — أول دخول يطلب إنشاء PIN).
+ */
+@Entity(
+    tableName = "user_secrets",
+    foreignKeys = [
+        ForeignKey(
+            entity = UserEntity::class, parentColumns = ["id"], childColumns = ["userId"],
+            onDelete = ForeignKey.CASCADE   // حذف المستخدم يمحو سره — لا أيتام أسرار
+        )
+    ]
+)
+data class UserSecretEntity(
+    @PrimaryKey val userId: Long,
+    val pinWrapped: String,
+    val pinSalt: String,
+    val pinIters: Int = 0,
+    val biometricAllowed: Int = 0
+)

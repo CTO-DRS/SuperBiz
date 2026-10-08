@@ -739,7 +739,10 @@ class BackupRepo(
                 stAudit += com.superbiz.app.data.db.AuditLogEntity(
                     id = j.getLong("id"), actor = j.getString("actor"),
                     action = j.getString("action"), details = j.getString("details"),
-                    ts = j.optLong("ts"))
+                    ts = j.optLong("ts"),
+                    // [H1-4][v13] إسناد اختياري متسامح — غيابه في ملفات ما قبل v13 = NULL
+                    actorId = if (j.isNull("actorId")) null else j.optLong("actorId"),
+                    actorRole = if (j.isNull("actorRole")) null else j.optInt("actorRole"))
             }
             // [P46-W1] جولة 7 — قراءة جدولا الولاء والكوبونات (متسامحة: غياب المفتاح = قائمة فارغة
             // — ملفات ما قبل تُستورد بدلالتها بلا مساس)

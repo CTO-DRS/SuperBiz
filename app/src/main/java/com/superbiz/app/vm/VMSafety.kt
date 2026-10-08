@@ -35,6 +35,14 @@ fun ViewModel.launchSafe(
             block()
         } catch (ce: CancellationException) {
             throw ce
+        } catch (e: com.superbiz.app.domain.rbac.RoleDeniedException) {
+            // [H1-4][v13] رفض دور — رسالة موطّنة مفهومة للواجهة بدل التقنية الصامتة،
+            // والقرار نفسه داخل RoleGate (الافتراض مغلق) لا هنا.
+            // launchSafe امتداد على ViewModel المجرد — الحصول على السياق بحارس آمن
+            val userMsg = (this as? androidx.lifecycle.AndroidViewModel)?.let { vm ->
+                vm.getApplication<Application>().getString(com.superbiz.app.R.string.rbac_denied_title)
+            }
+            ErrorCenter.warn("RBAC", e.message ?: "role denied", userMsg)
         } catch (e: Exception) {
             // تُبتلع بوعي لمنع انهيار التطبيق — لكن بأثر مسجَّل في Logcat
             // (نفس سياسة بقية مسارات المشروع: Widgets / BackupRepo / ExportDialog)

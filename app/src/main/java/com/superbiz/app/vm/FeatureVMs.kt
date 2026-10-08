@@ -118,7 +118,14 @@ class DebtsVM(app: Application) : AndroidViewModel(app) {
             refresh()
         }
 
-    fun deleteParty(id: Long) = launchSafe { g.ledger.deleteParty(id); refresh() }
+    fun deleteParty(id: Long) = launchSafe {
+        // [H1-4][v13] حذف نهائي لطرف — باب المالك وحده (مصفوفة §3 سطر 5)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.HARD_DELETE
+        )
+        g.ledger.deleteParty(id); refresh()
+    }
 
     // [P33-P8] المبلغ يدخل ريالاً من الواجهة ويُحوَّل قروشاً عند الحدود الوحيدة (Money) قبل الدفتر
     // [تدقيق M-6] direction يمرّ للدفتر — الطرف ثنائي الدور يختار جانب الدين من الواجهة
@@ -504,6 +511,11 @@ class InvoicesVM(app: Application) : AndroidViewModel(app) {
     }
 
     fun voidInvoice(inv: Invoice) = launchSafe {
+        // [H1-4][v13] إلغاء فاتورة — بلا الكاشير (مصفوفة §3 سطر 3)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.INVOICE_CANCEL
+        )
         g.invoices.voidInvoice(inv)
     }
 
@@ -676,7 +688,14 @@ class InventoryVM(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun deleteProduct(id: Long) = launchSafe { g.inventory.deleteProduct(id) }
+    fun deleteProduct(id: Long) = launchSafe {
+        // [H1-4][v13] حذف نهائي لمنتج — باب المالك وحده (مصفوفة §3 سطر 5)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.HARD_DELETE
+        )
+        g.inventory.deleteProduct(id)
+    }
 
     // [P5-H10 إصلاح]: أرشفة/استرجاع صريح — كان العلم بلا أي واجهة تعيّنه أو تلغيه
     fun setArchived(id: Long, value: Boolean) = launchSafe { g.inventory.setArchived(id, value) }
@@ -1734,7 +1753,14 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
             androidx.core.os.LocaleListCompat.forLanguageTags(v)
         )
     }
-    fun setTaxRate(v: Double) = launchSafe { g.settings.setTaxRate(v) }
+    fun setTaxRate(v: Double) = launchSafe {
+        // [H1-4][v13] الإعدادات العامة — المالك والمدير (مصفوفة §3 سطر 10)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
+        g.settings.setTaxRate(v)
+    }
     fun setAvatarPath(p: String?) = launchSafe { g.settings.setAvatar(p) }
 
     fun setBaseCurrency(code: String) = launchSafe {
@@ -1959,12 +1985,22 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
 
     // ─── النسخ الاحتياطي ───
     fun exportTo(uri: Uri) = launchSafe {
+        // [H1-4][v13] النسخ الاحتياطي — باب المالك وحده (مصفوفة §3 سطر 12)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
         val ok = g.backup.exportTo(uri)
         toast.value = if (ok) getApplication<Application>().getString(com.superbiz.app.R.string.backup_ok)
         else getApplication<Application>().getString(com.superbiz.app.R.string.backup_fail)
     }
 
     fun importFrom(uri: Uri) = launchSafe {
+        // [H1-4][v13] الاستعادة — باب المالك وحده (مصفوفة §3 سطر 12)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
         val ok = g.backup.importFrom(uri)
         toast.value = if (ok) getApplication<Application>().getString(com.superbiz.app.R.string.backup_ok)
         else getApplication<Application>().getString(com.superbiz.app.R.string.backup_fail)
@@ -2200,7 +2236,14 @@ class LoyaltyVM(app: Application) : AndroidViewModel(app) {
         toast.value = R.string.coupon_saved
     }
 
-    fun deleteCoupon(id: Long) = launchSafe { g.loyalty.deleteCoupon(id) }
+    fun deleteCoupon(id: Long) = launchSafe {
+        // [H1-4][v13] إدارة الكوبونات — المالك والمدير (مصفوفة §3 سطر 14)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.LOYALTY_MANAGE
+        )
+        g.loyalty.deleteCoupon(id)
+    }
 
     /** إيقاف/تفعيل — الكوبون الموقوف ترفضه بوابة checkSpec وحرس الاستهلاك الذرّي معاً */
     fun toggleActive(c: CouponEntity) = launchSafe { g.loyalty.saveCoupon(c.copy(active = !c.active)) }

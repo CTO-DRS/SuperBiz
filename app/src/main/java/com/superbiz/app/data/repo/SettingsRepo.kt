@@ -17,6 +17,17 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "superbiz_settings")
 
+/**
+ * [H1-3][v13] بذرة رمز المالك للترحيل — مادة الدخول القائمة تُنسخ نصاً إلى
+ * user_secrets داخل ترحيل 12→13 (نسخ مغلّف ks: لا إعادة تشفير — عقد التصميم).
+ */
+data class OwnerPinSeed(
+    val pinWrapped: String,
+    val pinSalt: String,
+    val pinIters: Int,
+    val biometric: Boolean
+)
+
 data class Settings(
     val businessName: String = "",
     val avatarPath: String? = null,
@@ -419,5 +430,38 @@ class SettingsRepo(private val context: Context) {
     /** قروش قيمة النقطة عند الاستبدال — ≥ 1 بعقد fail-closed (صفر = بلا استبدال) */
     suspend fun setLoyaltyPointValue(v: Long) = context.dataStore.edit {
         it[K.loyaltyPointValue] = v.coerceIn(1L, 1_000_000L)
+    }
+
+    // ═══ [H1-3][v13] بذرة المالك للترحيل ═══
+
+    /**
+     * قراءة متزامنة لمادة رمز المالك القائمة — تُستدعى حصراً من داخل
+     * MIGRATION_12_13 (خيط تنفيذ Room الخلفي) لنقل مادة الدخول إلى
+     * user_secrets بنسخ نص للمغلّف ks: لا إعادة تشفير ولا مسّ Keystore.
+     *
+     * - تعيد null إن لم توجد حماية قائمة (المالك يُزرع بلا سر — أول دخول
+     *   يطلب إنشاء PIN) أو فشلت القراءة (DataStore تالف) — في الحالتين
+     *   يبقى قرار قفل الجهاز على DataStore كما هو فلا ضعف أمني (فشل هادئ
+     *   محفوظ الدلالة، والترحيل لا يرمي).
+     * - runBlocking آمن هنا: لا حلقة انتظار محتملة — DataStore يقرأ على
+     *   نطاق IO مستقل عن منفّذ معاملات Room.
+     */
+    internal fun readOwnerPinSeedSync(): OwnerPinSeed? = try {
+        kotlinx.coroutines.runBlocking {
+            val p = context.dataStore.data.first()
+            val blob = p[K.pinBlob]
+            val salt = p[K.pinSalt]
+            if (blob.isNullOrBlank() || salt.isNullOrBlank()) null
+            else OwnerPinSeed(
+                pinWrapped = blob,
+                pinSalt = salt,
+                pinIters = p[K.pinIters] ?: 0,
+                biometric = p[K.biometric] ?: false
+            )
+        }
+    } catch (ce: kotlinx.coroutines.CancellationException) {
+        throw ce
+    } catch (_: Exception) {
+        null
     }
 }

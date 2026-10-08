@@ -67,22 +67,34 @@ data class LockStatus(
 /**
  * حارس المحاولات — يخزّن عدّاد المحاولات وموعد نهاية القفل في DataStore
  * مستقل، فالقفل يصمد أمام إعادة تشغيل التطبيق أو الجهاز (عكس المتغيرات العابرة).
-*/
-class LockoutGuard(private val context: Context) {
+ *
+ * [H1-4][v13] القفل لكل مستخدم على حدة — النطاق بمفتاح لاحقة:
+ *  scopeKey = ""      → المفاتيح التاريخية الحرفية (pin_fails/…) — مسار قفل
+ *                       الجهاز القائم يبقى مقروءاً بحالته المخزنة كما هو،
+ *                       والترقية لا تصفّر عدّاداً قائماً (توافق بايتي).
+ *  scopeKey = "u<id>" → عدّاد مستقل لكل مستخدم (عقد التصميم §6-4: القفل
+ *                       التصاعدي يعمل لكل مستخدم على حدة، وفشل دخوله
+ *                       يُنسب لاسمه في audit_log).
+ */
+class LockoutGuard(private val context: Context, scopeKey: String = "") {
 
     private object K {
-        val fails = intPreferencesKey("pin_fails")
-        val until = longPreferencesKey("pin_lock_until")
-        // [تدقيق M-9] الزمن الأحادي المقابل — القرار عبره لا عبر الحائط
-        val untilElapsed = longPreferencesKey("pin_lock_until_elapsed")
+        val failsBase = "pin_fails"
+        val untilBase = "pin_lock_until"
+        val untilElapsedBase = "pin_lock_until_elapsed"
     }
+
+    // مفاتيح ديناميكية بالاسم — نفس بنية DataStore القائمة مع لاحقة النطاق
+    private val kFails = intPreferencesKey(K.failsBase + scopeKey)
+    private val kUntil = longPreferencesKey(K.untilBase + scopeKey)
+    private val kUntilElapsed = longPreferencesKey(K.untilElapsedBase + scopeKey)
 
     suspend fun status(): LockStatus {
         val p = context.lockoutStore.data.first()
         return LockStatus(
-            p[K.fails] ?: 0,
-            p[K.until] ?: 0L,
-            p[K.untilElapsed] ?: 0L
+            p[kFails] ?: 0,
+            p[kUntil] ?: 0L,
+            p[kUntilElapsed] ?: 0L
         )
     }
 
@@ -101,9 +113,9 @@ class LockoutGuard(private val context: Context) {
         val newUntilElapsed = if (seconds > 0) nowElapsed + seconds * 1000L else 0L
         val st = LockStatus(newFails, newUntil, newUntilElapsed)
         context.lockoutStore.edit {
-            it[K.fails] = newFails
-            it[K.until] = newUntil
-            it[K.untilElapsed] = newUntilElapsed
+            it[kFails] = newFails
+            it[kUntil] = newUntil
+            it[kUntilElapsed] = newUntilElapsed
         }
         return st
     }
@@ -111,9 +123,9 @@ class LockoutGuard(private val context: Context) {
     /** يُستدعى بعد أي نجاح مصادقة — تصفير كامل للعدّاد والقفل */
     suspend fun onSuccess() {
         context.lockoutStore.edit {
-            it.remove(K.fails)
-            it.remove(K.until)
-            it.remove(K.untilElapsed)
+            it.remove(kFails)
+            it.remove(kUntil)
+            it.remove(kUntilElapsed)
         }
     }
 }

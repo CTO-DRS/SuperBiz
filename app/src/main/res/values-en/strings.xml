@@ -2362,4 +2362,38 @@
     <string name="kpi_edit_title">Monthly targets</string>
     <string name="kpi_edit_hint">Leave empty or 0 = no target for this KPI. Expenses and overdue debts are treated as caps (lower is better).</string>
     <string name="kpi_realdata_note">Every number comes from your real ledger with no estimation — the forecast is linear (actual ÷ elapsed month fraction).</string>
+    <!-- ═══ [H1-4][H1-5][V 1.2.0] Users & roles (RBAC) ═══ -->
+    <string name="users_screen_title">Users &amp; roles</string>
+    <string name="users_screen_hint">Four fixed roles: the Owner sees everything and manages users, the Manager runs operations without user management or hard deletes, the Accountant handles reports and invoices but cannot sell or touch inventory, and the Cashier only sells and applies loyalty. Default is closed: every new screen starts denied for non-owners.</string>
+    <string name="users_add">Add user</string>
+    <string name="users_add_title">New user</string>
+    <string name="users_field_name">Name</string>
+    <string name="users_field_pin">Access PIN (6–8 digits)</string>
+    <string name="users_field_role">Role</string>
+    <string name="users_save">Save</string>
+    <string name="users_added">User added successfully</string>
+    <string name="users_pin_reset">PIN has been reset</string>
+    <string name="users_inactive">Inactive</string>
+    <string name="users_activate">Activate</string>
+    <string name="users_deactivate">Deactivate</string>
+    <string name="users_reset_pin">Reset PIN</string>
+    <string name="users_reset_pin_title">Reset PIN for %1$s</string>
+    <string name="users_delete">Delete</string>
+    <string name="users_delete_confirm_title">Delete user?</string>
+    <string name="users_delete_confirm_msg">%1$s and their access PIN will be permanently removed. Audit events attributed to them remain stored.</string>
+    <string name="users_working">Working…</string>
+    <string name="users_err_name">Enter a non-empty name</string>
+    <string name="users_err_pin">PIN must be 6–8 digits</string>
+    <string name="users_err_last_owner">Cannot remove the last active owner — the device needs an owner</string>
+    <string name="users_err_self">You cannot delete your current user</string>
+    <string name="users_err_bio_owner_only">Biometric unlock is owner-only in this wave — the device fingerprint belongs to its owner</string>
+    <string name="role_owner">Owner</string>
+    <string name="role_manager">Manager</string>
+    <string name="role_accountant">Accountant</string>
+    <string name="role_cashier">Cashier</string>
+    <string name="users_section_title">Users &amp; roles</string>
+    <string name="users_section_sub">Add a manager, accountant or cashier with their own PIN — each role has its own permissions</string>
+    <string name="rbac_denied_title">Not available for your role</string>
+    <string name="rbac_denied_msg">This screen requires a higher role. Contact the business owner if you truly need it.</string>
+    <string name="lock_user_no_pin">This user has no PIN yet — ask the owner to create one from Users &amp; roles</string>
 </resources>

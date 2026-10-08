@@ -2362,4 +2362,38 @@
     <string name="kpi_edit_title">أهداف الشهر</string>
     <string name="kpi_edit_hint">اتركه فارغاً أو 0 = بلا هدف لهذا المؤشر. المصروفات والذمم المتأخرة تُعامل كسقف لا يتجاوزه (أقل أفضل).</string>
     <string name="kpi_realdata_note">كل الأرقام من دفترك الفعلي بلا تقدير — التوقع خطي (الفعلي ÷ نسبة الشهر المضيّة).</string>
+    <!-- ═══ [H1-4][H1-5][V 1.2.0] المستخدمون والأدوار RBAC ═══ -->
+    <string name="users_screen_title">المستخدمون والأدوار</string>
+    <string name="users_screen_hint">أربعة أدوار ثابتة: المالك يرى كل شيء ويدير المستخدمين، المدير يشغّل ويطلع بلا إدارة مستخدمين ولا حذف نهائي، المحاسب للتقارير والفواتير بلا بيع ولا مخزون، والكاشير يبيع ويطبّق الولاء فقط. الافتراض مغلق: كل شاشة جديدة تبدأ محرّمة على غير المالك.</string>
+    <string name="users_add">إضافة مستخدم</string>
+    <string name="users_add_title">مستخدم جديد</string>
+    <string name="users_field_name">الاسم</string>
+    <string name="users_field_pin">رمز الدخول (6–8 أرقام)</string>
+    <string name="users_field_role">الدور</string>
+    <string name="users_save">حفظ</string>
+    <string name="users_added">أُضيف المستخدم بنجاح</string>
+    <string name="users_pin_reset">أُعيد تعيين الرمز</string>
+    <string name="users_inactive">موقوف</string>
+    <string name="users_activate">تفعيل</string>
+    <string name="users_deactivate">إيقاف</string>
+    <string name="users_reset_pin">إعادة الرمز</string>
+    <string name="users_reset_pin_title">إعادة تعيين رمز %1$s</string>
+    <string name="users_delete">حذف</string>
+    <string name="users_delete_confirm_title">حذف المستخدم؟</string>
+    <string name="users_delete_confirm_msg">سيُحذف %1$s ورمز دخوله نهائياً. سجل الأحداث المُنسبة له يبقى محفوظاً.</string>
+    <string name="users_working">جارٍ التنفيذ…</string>
+    <string name="users_err_name">اكتب اسماً غير فارغ</string>
+    <string name="users_err_pin">الرمز 6–8 أرقام فقط</string>
+    <string name="users_err_last_owner">لا يمكن إزالة آخر مالك فعّال — الجهاز يحتاج مالكاً</string>
+    <string name="users_err_self">لا تحذف مستخدمك الحالي</string>
+    <string name="users_err_bio_owner_only">البصمة للمالك فقط في هذه الموجة — بصمة الجهاز مسجّلة لأصابع صاحبه</string>
+    <string name="role_owner">مالك</string>
+    <string name="role_manager">مدير</string>
+    <string name="role_accountant">محاسب</string>
+    <string name="role_cashier">كاشير</string>
+    <string name="users_section_title">المستخدمون والأدوار</string>
+    <string name="users_section_sub">أضف مديراً أو محاسباً أو كاشيراً برمز دخول خاص — لكل دور صلاحياته</string>
+    <string name="rbac_denied_title">غير متاح لصلاحياتك</string>
+    <string name="rbac_denied_msg">هذه الشاشة يحتاجها دور أعلى. تواصل مع مالك النشاط إن كنت تحتاجها فعلاً.</string>
+    <string name="lock_user_no_pin">هذا المستخدم بلا رمز بعد — اطلب من المالك إنشاء رمز له من إدارة المستخدمين</string>
 </resources>

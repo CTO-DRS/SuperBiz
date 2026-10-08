@@ -6,7 +6,7 @@
 ![SuperBiz](assets/banner.png)
 
 ![Version](https://img.shields.io/badge/الإصدار-V%201.0.0-8B5CF6?style=flat-square&labelColor=0B1026)
-![Tests](https://img.shields.io/badge/الاختبارات-1471%20خضراء-34D399?style=flat-square&labelColor=0B1026)
+![Tests](https://img.shields.io/badge/الاختبارات-1518%20خضراء-34D399?style=flat-square&labelColor=0B1026)
 ![Platform](https://img.shields.io/badge/Android-7.0%2B%20(minSdk%2024)-3B82F6?style=flat-square&labelColor=0B1026)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-8B5CF6?style=flat-square&labelColor=0B1026)
 ![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-22D3EE?style=flat-square&labelColor=0B1026)
@@ -27,7 +27,7 @@ SuperBiz هو تطبيق أندرويد أصلي (Native) لإدارة الأع�
 - **اللغة:** Kotlin + Jetpack Compose (Material 3)
 - **الواجهة:** العربية أولًا (RTL أصيل) مع دعم إنجليزي كامل (2235 نصًا × لغتين بتطابق تام)
 - **قاعدة البيانات:** Room (مخطط v12 — 25 جدولًا بمفاتيح أجنبية كاملة، المال مخزَّن Long قروش)
-- **الاختبارات:** 1471 اختبار وحدة أخضر في 120 ملف اختبار
+- **الاختبارات:** 1518 اختبار وحدة أخضر في 124 ملف اختبار
 - **الحجم:** 190 ملف Kotlin (~67 ألف سطر) · 29 شاشة Compose · 17 مستودع بيانات · 57 ملف محركات ومنطق نق Pure
 
 ## الهدف من التطبيق
@@ -102,7 +102,7 @@ SuperBiz هو تطبيق أندرويد أصلي (Native) لإدارة الأع�
 ./gradlew assembleDebug            # APK تجريبي → app/build/outputs/apk/debug/
 ./gradlew assembleRelease          # APK إصدار (يتطلب توقيعًا — انظر أدناه)
 ./gradlew bundleRelease            # AAB للمتجر
-./gradlew testReleaseUnitTest      # 1471 اختبار وحدة
+./gradlew testReleaseUnitTest      # 1518 اختبار وحدة
 ```
 
 > ملاحظة: أول تشغيل يحمّل اعتماديات Gradle/Maven — يلزم اتصال إنترنت مرة واحدة فقط؛ التطبيق نفسه يعمل دون اتصال تمامًا.
@@ -133,7 +133,7 @@ SuperBiz/
 │   ├── widget/      4 ويدجت AppWidgetProvider
 │   ├── work/        عمال الخلفية: أتمتة، نسخ احتياطي، جدولة تقارير، تذكيرات
 │   └── util/        Money (HALF_UP) + Intents آمنة + توليد باركود
-├── app/src/test/    120 ملف اختبار — 1471 اختبار وحدة
+├── app/src/test/    124 ملف اختبار — 1518 اختبار وحدة
 ├── app/schemas/     مخططات Room المصدَّرة (مرجع اختبارات الترحيل)
 ├── docs/            التوثيق: ADR، ZATCA-2، RBAC، أمان، خصوصية، متجر، عمليات
 ├── tools/ scripts/  فاحصات CI للسلاسل الموطَّنة
