@@ -657,7 +657,7 @@ private fun HeaderChip(
 
 /** الدوك العائم الزجاجي */
 @Composable
-fun FloatingDock(
+private fun FloatingDock(
     nav: NavHostController, current: String,
     // [H1-4][v13] عناصر الدوك مفلترة بالدور من المستدعي — الكاشير لا يرى تبويب التقارير
     // والمحاسب لا يرى المخزون (مصفوفة §3)، والقيمة الافتراضية تحفظ الاستدعاء القائم

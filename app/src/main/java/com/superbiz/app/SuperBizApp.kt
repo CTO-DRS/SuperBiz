@@ -28,7 +28,11 @@ class AppGraph(val context: android.content.Context) {
         // [H1-3][v13] ربط مزوّد بذرة المالك قبل بناء القاعدة — القراءة المتزامنة
         // لDataStore تتم داخل مسار الترحيل فقط (عند وجود قاعدة v12 حقيقية) بنسخ
         // نص للمغلّف ks: لا إعادة تشفير ولا مسّ Keystore (عقد التصميم §4.2-3).
-        ownerPinSeedProvider = { settings.readOwnerPinSeedSync() }
+        // الربط idempotent (بشرط العدم) — الاختبارات قد تربط بذرة اصطناعية قبل
+        // أي لمس لgraph.db، وفشل مغلق: مزوّد سابق يبقى هو المعتمد.
+        if (ownerPinSeedProvider == null) {
+            ownerPinSeedProvider = { settings.readOwnerPinSeedSync() }
+        }
         androidx.room.Room.databaseBuilder(context, AppDatabase::class.java, "superbiz.db")
             // [P11-a]: أُضيف MIGRATION_6_7 — القائمة هنا هي المسار الفعلي لفتح القاعدة
             // (قائمة MIGRATIONS أدناه للاختبارات)؛ نسيانها هنا يعني فشل فتح قاعدة v6 القائمة

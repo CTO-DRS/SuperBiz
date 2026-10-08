@@ -140,7 +140,7 @@ class UsersVMGateTest {
         // عودة المالك — يمر
         SessionState.start(1L, "المالك", Role.OWNER)
         vm.addUser("مدير جديد", Role.MANAGER, "333444")
-        awaitUsers(2)
+        assertEquals(2, awaitUsers(2).size)   // يُستهلك Unit إلزامياً — JUnit يرفض دالة اختبار بلا قيمة void
     }
 
     // ═══ دخول الكاشير: جلسة حقيقية + إسناد تدقيق + قفل على حدة ═══
@@ -153,14 +153,20 @@ class UsersVMGateTest {
         val cashier = awaitUsers(2).first { it.name == "سالم" }
 
         // رمز خاطئ: يرفع عدّاد مستهدفه فقط ولا يفتح جلسة
+        // الكولباك غير متزامن (قراءة DataStore داخل launchSafe) — CompletableDeferred
+        // يجعل النتيجة حتمية (نمط DebtsInventoryVMTest الموثق)
         var ok: Boolean? = null
-        vm.verifyUserPin(cashier.id, "000000") { ok = it }
+        val d1 = kotlinx.coroutines.CompletableDeferred<Boolean>()
+        vm.verifyUserPin(cashier.id, "000000") { ok = it; d1.complete(it) }
+        assertEquals(false, kotlinx.coroutines.withTimeout(10_000) { d1.await() })
         assertEquals(false, ok)
         assertEquals(null, SessionState.current)
         assertEquals(1, vm.lockout.first().fails)
 
         // رمز صحيح: جلسة كاشير + ختم ظهور
-        vm.verifyUserPin(cashier.id, "123456") { ok = it }
+        val d2 = kotlinx.coroutines.CompletableDeferred<Boolean>()
+        vm.verifyUserPin(cashier.id, "123456") { ok = it; d2.complete(it) }
+        assertEquals(true, kotlinx.coroutines.withTimeout(10_000) { d2.await() })
         assertEquals(true, ok)
         val sess = SessionState.current!!
         assertEquals(cashier.id, sess.userId)
@@ -188,9 +194,9 @@ class UsersVMGateTest {
         val bareId = g.db.users().insert(
             com.superbiz.app.data.db.UserEntity(name = "بلا رمز", role = 3, active = 1)
         )
-        var ok: Boolean? = null
-        vm.verifyUserPin(bareId, "123456") { ok = it }
-        assertEquals(false, ok)
+        val d = kotlinx.coroutines.CompletableDeferred<Boolean>()
+        vm.verifyUserPin(bareId, "123456") { d.complete(it) }
+        assertEquals(false, kotlinx.coroutines.withTimeout(10_000) { d.await() })
         assertEquals(null, SessionState.current)
     }
 }
