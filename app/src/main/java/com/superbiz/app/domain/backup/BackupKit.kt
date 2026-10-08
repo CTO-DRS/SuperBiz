@@ -783,7 +783,7 @@ private fun auditLogToJson(a: AuditLogEntity): String {
     // [H1-4][v13] إسناد الجلسة — يُكتب فقط عند وجوده (توافق خلفي: ملفات ما قبل v13
     // تُقرأ بدلالتها كما هي، وقارئ v13 يتسامح مع غياب المفتاحين)
     a.actorId?.let { sb.append(','); sb.lng("actorId", it) }
-    a.actorRole?.let { sb.append(','); sb.lng("actorRole", it) }
+    a.actorRole?.let { sb.append(','); sb.lng("actorRole", it.toLong()) }
     sb.append('}')
     return sb.toString()
 }

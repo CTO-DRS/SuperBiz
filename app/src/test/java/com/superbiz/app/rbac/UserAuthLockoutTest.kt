@@ -106,45 +106,59 @@ class UserAuthLockoutTest {
 
     @Test
     fun `per-user lockout — failing user1 does not lock user2`() = runBlocking {
-        val g1 = LockoutGuard(ctx, "u1")
-        val g2 = LockoutGuard(ctx, "u2")
+        // نطاقات فريدة للاختبار + تصفير دفاعي قبل/بعد (نمط LockoutElapsedM9Test) —
+        // مفوّض DataStore ساكن يظل حياً بين طرق الاختبار فالحالة تُصفّر صراحة
+        val g1 = LockoutGuard(ctx, "iso-a")
+        val g2 = LockoutGuard(ctx, "iso-b")
+        g1.onSuccess(); g2.onSuccess()
 
         // المستخدم 1 يستنفد الحرية ويدخل منطقة القفل
         repeat(LockoutPolicy.FREE_ATTEMPTS) { g1.onFailed() }
         val st1 = g1.onFailed()
         assertTrue("user1 must be locked after threshold", st1.isLocked(0L))
         assertEquals(
-            LockoutPolicy.BASE_LOCK_SECONDS,
-            st1.remainingElapsedSeconds(st1.lockUntilElapsed - LockoutPolicy.BASE_LOCK_SECONDS * 1000L)
+            LockoutPolicy.BASE_LOCK_SECONDS * 2,
+            st1.remainingElapsedSeconds(st1.lockUntilElapsed - LockoutPolicy.BASE_LOCK_SECONDS * 2 * 1000L)
         )
 
         // المستخدم 2 حر تماماً — لا تسريب للقفل بين المستخدمين
         val st2 = g2.status()
         assertEquals(0, st2.fails)
         assertFalse(st2.isLocked(0L))
+
+        g1.onSuccess(); g2.onSuccess()
     }
 
     @Test
     fun `per-user lockout — success resets only that user's counter`() = runBlocking {
-        val g1 = LockoutGuard(ctx, "u1")
-        val g2 = LockoutGuard(ctx, "u2")
+        val g1 = LockoutGuard(ctx, "rst-a")
+        val g2 = LockoutGuard(ctx, "rst-b")
+        g1.onSuccess(); g2.onSuccess()
         repeat(LockoutPolicy.FREE_ATTEMPTS - 1) { g1.onFailed() }
         g2.onFailed()
         g1.onSuccess()
         assertEquals(0, g1.status().fails)
         assertEquals(1, g2.status().fails)
+        g1.onSuccess(); g2.onSuccess()
     }
 
     @Test
     fun `per-user lockout — escalation matches the shared policy`() = runBlocking {
-        val g = LockoutGuard(ctx, "u9")
-        repeat(LockoutPolicy.FREE_ATTEMPTS) { g.onFailed() }
-        val st5 = g.onFailed()   // الخامسة: 30ث
+        val g = LockoutGuard(ctx, "esc")
+        g.onSuccess()
+        // الحرية: أول 4 محاولات (0..3) — الخامسة (fails=5) تبلش القفل 30ث
+        repeat(LockoutPolicy.FREE_ATTEMPTS - 1) { g.onFailed() }
+        val st5 = g.onFailed()
+        assertEquals(5, st5.fails)
         assertEquals(LockoutPolicy.BASE_LOCK_SECONDS, LockoutPolicy.lockSecondsFor(st5.fails))
-        val st6 = g.onFailed()   // السادسة: 60ث
-        assertEquals(LockoutPolicy.BASE_LOCK_SECONDS * 2, LockoutPolicy.lockSecondsFor(st6.fails))
-        // السقف الأعلى 900ث
-        assertEquals(LockoutPolicy.MAX_LOCK_SECONDS, LockoutPolicy.lockSecondsFor(st6.fails + 20))
+        // عقد الإنتاج: أثناء قفل ساري لا تتكدس المحاولات (newFails لا يزيد وهو مقفول)
+        val st6 = g.onFailed()
+        assertEquals(5, st6.fails)
+        assertEquals(0, st6.remainingElapsedSeconds(System.currentTimeMillis()))
+        // السياسة النقية: 6→60ث والسقف الأعلى 900ث
+        assertEquals(LockoutPolicy.BASE_LOCK_SECONDS * 2, LockoutPolicy.lockSecondsFor(6))
+        assertEquals(LockoutPolicy.MAX_LOCK_SECONDS, LockoutPolicy.lockSecondsFor(26))
+        g.onSuccess()
     }
 
     @Test
@@ -152,6 +166,7 @@ class UserAuthLockoutTest {
         // النطاق الافتراضي "" يكتب المفاتيح التاريخية حرفياً (توافق بايتي مع ما قبل v13) —
         // نفس العدّاد يُقرأ ويُصفّر عبر نفس الحارس بلا أي لاحقة
         val legacy = LockoutGuard(ctx)
+        legacy.onSuccess()   // تصفير دفاعي — مفوّض DataStore ساكن بين طرق الاختبار
         legacy.onFailed()
         assertEquals(1, legacy.status().fails)
         legacy.onSuccess()

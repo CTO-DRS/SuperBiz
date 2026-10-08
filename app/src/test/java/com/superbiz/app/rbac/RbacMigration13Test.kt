@@ -34,7 +34,10 @@ import org.robolectric.annotation.Config
  *     بين SQL الترحيل ومخطط Room مطلوبة وإلا رمى IllegalStateException.
  */
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [34])
+// application ناضف — إقلاع SuperBizApp الحقيقي يطلق بذرة غير متزامنة قد يعيد
+// ربط ownerPinSeedProvider على خيط آخر (سباق مع ضبط الاختبار له) — نمنعه من
+// الأساس كما يفعل نمط DebtsInventoryVMTest
+@Config(sdk = [34], application = android.app.Application::class)
 class RbacMigration13Test {
 
     private var dbName: String? = null
