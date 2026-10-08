@@ -693,3 +693,35 @@ data class UserSecretEntity(
     val pinIters: Int = 0,
     val biometricAllowed: Int = 0
 )
+
+/**
+ * [Z2-أ V 1.5.0] أرشيف مستند ZATCA-2 — مستند UBL الرسمي للفاتورة كما صدر
+ * أول مرة (O3 من تحليل الفجوات: أرشفة 6 سنوات داخل النسخ الاحتياطية القائمة).
+ *
+ * عقد الأرشيف الأول: صف الفاتورة لا يُستبدل أبداً (insert IGNORE) — سلسلة PIH
+ * تتبع الهاش المحفوظ لحظة الإصدار، وتعديل الفاتورة لاحقاً لا يعيد كتابة التاريخ
+ * (تصحيحات الامتثال بمستند دائن/مدين لاحقاً لا بإعادة كتابة الأرشيف).
+ * بلا صف أرشيف = فاتورة غير مختومة (الإصدارات قبل V 1.5.0 أو بيانات البائع
+ * غير مكتملة لحظة الإصدار).
+ */
+@Entity(
+    tableName = "zatca_docs",
+    foreignKeys = [
+        ForeignKey(
+            entity = Invoice::class, parentColumns = ["id"], childColumns = ["invoiceId"],
+            onDelete = ForeignKey.CASCADE   // حذف الفاتورة (نظرياً عبر دمج/تنظيف) يمحو أرشيفها
+        )
+    ],
+    indices = [Index("invoiceId")]
+)
+data class ZatcaDocEntity(
+    @PrimaryKey val invoiceId: Long,
+    val xml: String,               // مستند UBL 2.1 كامل بايتات الإصدار الأولى
+    val xmlHash: String,           // Base64(SHA256(bytes(xml))) — مرجع PIH للفاتورة التالية
+    val subtype: String,           // «0100000» قياسية / «0200000» مبسطة
+    val issuedAt: Long,            // لحظة الإصدار الحائطية
+    val reportedAt: Long = 0,      // لحظة آخر إبلاغ/تخليص ناجح (0 = لم يُبلَّغ)
+    val rejectReason: String = "", // آخر سبب رفض معياري (فارغ = لا رفض)
+    val attemptCount: Int = 0,     // محاولات فاشلة عابرة — يتتصفح التراجع الأسّي
+    val clearedXml: String = ""    // [O3] النسخة المخلّصة الموقعة من الهيئة (القياسية) — فارغة للمبسطة
+)

@@ -610,6 +610,11 @@ private fun DataSection(
     ZatcaCard()
     Spacer(Modifier.height(8.dp))
 
+    // [Z2-ب V 1.5.0] بطاقة الربط الضريبي (فاتورة) — بوابة الميزة D2 + لوحة حالات
+    // الإبلاغ/التخليص — إيقاع البطاقات الذاتية نفسه بلا معاملات
+    ZatcaLinkCard()
+    Spacer(Modifier.height(8.dp))
+
     // [P17-c] بطاقتا إدارة التواقيع والأختام — بجانب ZatcaCard بنفس الإيقاع،
     // تفتحان شاشتي signatures/stamps عبر المسارات المسجلة في Nav
     StatementAssetCard(

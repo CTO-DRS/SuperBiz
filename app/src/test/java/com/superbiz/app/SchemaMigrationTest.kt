@@ -884,7 +884,7 @@ class SchemaMigrationTest {
             assertEquals(10, migration.startVersion)
             assertEquals(11, migration.endVersion)
             migration.migrate(db)
-            assertEquals("القائمة صارت 12 ترحيلات — الأخير RBAC+ZATCA-2 المشترك 12→13", 12, com.superbiz.app.AppGraph.MIGRATIONS.size)
+            assertEquals("القائمة صارت 13 ترحيلات — الأخير أرشيف zatca_docs 13→14", 13, com.superbiz.app.AppGraph.MIGRATIONS.size)
 
             // 1) العمودان بألفة Room المتوقعة
             assertEquals("taxKind INTEGER", "INTEGER", columnType(db, "invoice_items", "taxKind"))
@@ -962,7 +962,7 @@ class SchemaMigrationTest {
             assertEquals(11, migration.startVersion)
             assertEquals(12, migration.endVersion)
             migration.migrate(db)
-            assertEquals("القائمة صارت 12 ترحيلات — الأخير RBAC+ZATCA-2 المشترك 12→13", 12, com.superbiz.app.AppGraph.MIGRATIONS.size)
+            assertEquals("القائمة صارت 13 ترحيلات — الأخير أرشيف zatca_docs 13→14", 13, com.superbiz.app.AppGraph.MIGRATIONS.size)
 
             // 1) الجدولان وُجدا بألفة Room المتوقعة
             assertEquals("partyId INTEGER", "INTEGER", columnType(db, "loyalty_entries", "partyId"))

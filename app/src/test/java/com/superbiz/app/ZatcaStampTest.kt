@@ -134,7 +134,7 @@ class ZatcaStampTest {
         assertEquals(expected, xml)
     }
 
-    // ───────── 4) بنية الحمولة المرحلة-2 ─────────
+    // ───────── 4) بنية الحمولة المرحلة-2 — الترميز الرسمي [Z2-أ] ─────────
 
     @Test
     fun stampedPayloadBytes_structure_tags678() {
@@ -149,17 +149,44 @@ class ZatcaStampTest {
 
         // البادئة = حمولة المرحلة-1 حرفياً (توافق بايتاً ببايت)
         assertEquals(p1to5.toList(), stamped.copyOfRange(0, p1to5.size).toList())
-        // البنية: وسم 6 = هاش Base64 (44 بايت ASCII)، وسم 7 = التوقيع، وسم 8 = نقطة 65 بايت
+        // البنية: الوسوم 6-8 قيمها نصّ Base64 داخل TLV (المواصفة الرسمية [Z2-أ])
         val tags = parseTags(stamped)
         assertEquals(setOf(1, 2, 3, 4, 5, 6, 7, 8), tags.keys)
         assertEquals(44, tags[6]!!.size)
         assertEquals(hash, String(tags[6]!!, Charsets.US_ASCII))
-        assertTrue(sig.contentEquals(tags[7]!!))
-        assertEquals(65, tags[8]!!.size)
-        assertTrue(point.contentEquals(tags[8]!!))
-        assertEquals(0x04, tags[8]!![0].toInt())
-        // الطول الكلي
-        assertEquals(p1to5.size + (2 + 44) + (2 + sig.size) + (2 + 65), stamped.size)
+        // وسم 7: Base64(التوقيع) نصاً — لا بايتات خام (تغيير العقد الموثق)
+        assertEquals(ZatcaQr.toBase64(sig), String(tags[7]!!, Charsets.US_ASCII))
+        // وسم 8: Base64(نقطة 65 بايت) نصاً (88 محرفاً)
+        assertEquals(ZatcaQr.toBase64(point), String(tags[8]!!, Charsets.US_ASCII))
+        assertEquals(88, tags[8]!!.size)
+        // الطول الكلي — طول وسم 7 ديناميكي (طول DER للتوقيع يتغير ±1 بايت)
+        assertEquals(p1to5.size + (2 + 44) + (2 + ZatcaQr.toBase64(sig).length) + (2 + 88), stamped.size)
+    }
+
+    @Test
+    fun stampedPayloadBytes_tag9_appendedAsBase64Text_whenStampProvided() {
+        val kp = newKeyPair()
+        val xmlBytes = sampleXml()
+        val sig = softwareSigner(kp).sign(xmlBytes)
+        val point = pubPointOf(kp)
+        val p1to5 = ZatcaQr.qrPayloadBytes("شركة النور", "300012345600003", sampleTs(), 115.0, 15.0)
+        val hash = ZatcaStamp.sha256Base64(xmlBytes)
+        // الوسم 9 يُصنع بتوقيع الهاش بمفتاح CSID (برمجي هنا)
+        val stampSig = softwareSigner(kp).sign(hash.toByteArray(Charsets.US_ASCII))
+
+        val with9 = ZatcaStamp.stampedPayloadBytes(p1to5, hash, sig, point, stampSig)
+        val tags = parseTags(with9)
+        assertEquals(setOf(1, 2, 3, 4, 5, 6, 7, 8, 9), tags.keys)
+        assertEquals(ZatcaQr.toBase64(stampSig), String(tags[9]!!, Charsets.US_ASCII))
+
+        // وبدونه لا وسم 9 إطلاقاً (البنية القياسية قبل صدور CSID)
+        val without9 = ZatcaStamp.stampedPayloadBytes(p1to5, hash, sig, point, null)
+        assertFalse(parseTags(without9).containsKey(9))
+        // البادئة حتى وسم 8 متطابقة في الحالتين
+        assertEquals(
+            without9.toList(),
+            with9.copyOfRange(0, without9.size).toList()
+        )
     }
 
     // ───────── 5) توقيع/تحقق ذهاباً وإياباً ─────────

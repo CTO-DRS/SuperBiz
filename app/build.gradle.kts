@@ -36,8 +36,8 @@ android {
         // سياسة يتامى موثقة، بيومتريا CryptoObject وقفل زمن أحادي — 1471 اختبار وحدة أخضر.
         // الإصدار يُعرض للمستخدم حصريًا من
         // BuildConfig.VERSION_NAME / VERSION_CODE (الإعدادات + تذييل PDF).
-        versionCode = 3
-        versionName = "1.2.0"
+        versionCode = 4
+        versionName = "1.5.0"
         vectorDrawables { useSupportLibrary = true }
     }
 
@@ -141,6 +141,9 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    // [Z2-ب V 1.5.0] org.json الحقيقي على JVM — كي تعمل اختبارات خريطة واجهات
+    // فاتورة النقية (ZatcaApi) بلا Robolectric، وتبعية اختبارية حصراً صفر أثر APK
+    testImplementation("org.json:json:20240303")
     // اختبارات مسارات المعاملات على قاعدة بيانات Room حقيقية
     testImplementation("org.robolectric:robolectric:4.13")
     testImplementation("androidx.test:core-ktx:1.6.1")

@@ -24,6 +24,11 @@ jobs:
       - name: String format scanner
         run: python tools/check_strings_format.py
 
+      # [Z2-أ V 1.5.0] فاحص حدود ADR-001 D1: لا استيراد لـnetwork خارج حزمته
+      # وسلك التوصيل الجذري — أي تسرب شبكي جديد = فشل فوري قبل أي بناء
+      - name: Network boundary scanner (ADR-001)
+        run: python tools/check_network_boundary.py
+
       # خطوة ثانية اختيارية: سلامة بنية XML لكلا ملفي strings.xml (تلتقط مثل تهريب & غير المهرب)
       - name: strings.xml well-formedness
         run: |
