@@ -36,6 +36,7 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.WbSunny
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Widgets
+import androidx.compose.material.icons.rounded.Lock // [H1-4][v13] شاشة الرفض
 import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -152,6 +153,8 @@ object Routes {
     const val CHECKS = "checks"
     const val INSTALLMENTS = "installments"
     const val EXPENSES = "expenses"
+    // [H1-5][v13] إدارة المستخدمين والأدوار — باب المالك وحده
+    const val USERS = "users"
     // مركز الإعدادات المركزي + سجل الأخطاء
     const val SETTINGS_HUB = "settings_hub"
     const val ERROR_LOG = "error_log"
@@ -233,6 +236,9 @@ fun AuroraBackground(content: @Composable () -> Unit) {
 fun SuperBizRoot(
     appVM: AppVM,
     settingsVM: SettingsVM,
+    // [H1-4][H1-5][v13] جلسات المستخدمين — الجلسة صدرت من شاشة القفل،
+    // والمسارات المحمية تقرأها لحظة التركيب عبر SessionState.effective()
+    usersVM: com.superbiz.app.vm.UsersVM,
     startRoute: String? = null,
     onRouteConsumed: () -> Unit = {}
 ) {
@@ -275,7 +281,9 @@ fun SuperBizRoot(
                 popExitTransition = { fadeOut(tween(140)) }
             ) {
                 composable(Routes.HOME) { HomeScreen(appVM, settingsVM, nav) }
-                composable(Routes.POS) { PosScreen(appVM, nav) }
+                // [H1-4][v13] المسارات المحمية بأدوارها — البوابة في التركيب وVM الداخل
+                // (عقد التصميم §3: الحسم في VM، والإخفاء هنا عونٌ لا ضمانة)
+                composable(Routes.POS) { RbacGated(com.superbiz.app.domain.rbac.Op.POS_SELL) { PosScreen(appVM, nav) } }
                 composable(Routes.DEBTS) { DebtsScreen(appVM, nav) }
                 // [P36-M4-7] تعميق تنقل نتائج البحث (M4-7) — الفواتير تقبل معامِل تركيز اختيارياً
                 // focusInvoice = رقم الفاتورة: يُضبط حقل البحث الداخلي للشاشة (vm.searchQuery)
@@ -314,12 +322,21 @@ fun SuperBizRoot(
                     }
                     InventoryScreen(appVM, nav)
                 }
-                composable(Routes.REPORTS) { ReportsScreen(appVM, nav) }
-                composable(Routes.AUTO) { AutomationScreen(appVM, settingsVM, nav) }
+                composable(Routes.REPORTS) { RbacGated(com.superbiz.app.domain.rbac.Op.FINANCIAL_REPORTS) { ReportsScreen(appVM, nav) } }
+                composable(Routes.AUTO) { RbacGated(com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS) { AutomationScreen(appVM, settingsVM, nav) } }
                 composable(Routes.SETTINGS) { ProfileScreen(appVM, settingsVM, nav) }
-                composable(Routes.CHECKS) { ChecksScreen(appVM, nav) }
-                composable(Routes.INSTALLMENTS) { InstallmentsScreen(appVM, nav) }
-                composable(Routes.EXPENSES) { ExpensesScreen(appVM, nav) }
+                composable(Routes.CHECKS) { RbacGated(com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS) { ChecksScreen(appVM, nav) } }
+                composable(Routes.INSTALLMENTS) { RbacGated(com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS) { InstallmentsScreen(appVM, nav) } }
+                composable(Routes.EXPENSES) { RbacGated(com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS) { ExpensesScreen(appVM, nav) } }
+                // [H1-5][v13] إدارة المستخدمين والأدوار — باب المالك وحده
+                composable(Routes.USERS) {
+                    RbacGated(com.superbiz.app.domain.rbac.Op.USERS_MANAGE) {
+                        com.superbiz.app.ui.screens.UsersScreen(
+                            usersVM = usersVM,
+                            onBack = { nav.popBackStack() }
+                        )
+                    }
+                }
                 // إصلاح CRITICAL — كانت كتلتا SETTINGS_HUB/ERROR_LOG
                 // مكررتين هنا (نسختان متطابقتان من رقعة وكيل سابق) وNavController يرمي
                 // IllegalArgumentException("Duplicate destination") فور الإقلاع → انهيار
@@ -334,6 +351,8 @@ fun SuperBizRoot(
                         onOpenStamps = { nav.navigate(Routes.STAMPS) },
                         // [W1] قسم Pro — شاشة الترقية
                         onOpenPro = { nav.navigate(Routes.PRO) { launchSingleTop = true } },
+                        // [H1-5][v13] إدارة المستخدمين والأدوار — باب المالك وحده
+                        onOpenUsers = { nav.navigate(Routes.USERS) { launchSingleTop = true } },
                         onBack = { nav.popBackStack() }
                     )
                 }
@@ -430,22 +449,37 @@ fun SuperBizRoot(
                     ProScreen(onBack = { nav.popBackStack() })
                 }
                 // [W1] لوحة المؤشرات — الباب المدفوع الأول (الحديفة تقود إلى شاشة Pro)
+                // [H1-4][v13] — ومؤهلات الأرباح: بلا الكاشير (مصفوفة §3 سطر 7)
                 composable(Routes.KPI_BOARD) {
-                    KpiBoardScreen(
-                        appVM = appVM,
-                        onBack = { nav.popBackStack() },
-                        openPro = { nav.navigate(Routes.PRO) { launchSingleTop = true } }
-                    )
+                    RbacGated(com.superbiz.app.domain.rbac.Op.FINANCIAL_REPORTS) {
+                        KpiBoardScreen(
+                            appVM = appVM,
+                            onBack = { nav.popBackStack() },
+                            openPro = { nav.navigate(Routes.PRO) { launchSingleTop = true } }
+                        )
+                    }
                 }
             }
         }
 
         // Dock العائم — يخفى في الإعدادات والمركز الآلي (شاشات داخلية)
         // [P36-M4-7] المقارنة على baseRoute (بعد "؟") — انظر التعليق عند تعريفه
-        val showDock = baseRoute in dockItems.map { it.route }
+        // [H1-4][v13] عناصر الدوك تُرشَّح بدور الجلسة الفعالة (وضع المالك الضمني
+        // يرى الكل كما كان — التعدد فقط يقصّ التبويبات المحرَّمة على صاحب الدور)
+        val dockForRole = dockItems.filter {
+            when (it.route) {
+                Routes.REPORTS -> com.superbiz.app.domain.rbac.SessionState.effective()
+                    .can(com.superbiz.app.domain.rbac.Op.FINANCIAL_REPORTS)
+                Routes.INVENTORY -> com.superbiz.app.domain.rbac.SessionState.effective()
+                    .can(com.superbiz.app.domain.rbac.Op.INVENTORY_READ)
+                else -> true
+            }
+        }
+        val showDock = baseRoute in dockForRole.map { it.route }
         if (showDock) {
             FloatingDock(
                 nav = nav, current = baseRoute,
+                items = dockForRole,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
@@ -623,7 +657,13 @@ private fun HeaderChip(
 
 /** الدوك العائم الزجاجي */
 @Composable
-fun FloatingDock(nav: NavHostController, current: String, modifier: Modifier = Modifier) {
+fun FloatingDock(
+    nav: NavHostController, current: String,
+    // [H1-4][v13] عناصر الدوك مفلترة بالدور من المستدعي — الكاشير لا يرى تبويب التقارير
+    // والمحاسب لا يرى المخزون (مصفوفة §3)، والقيمة الافتراضية تحفظ الاستدعاء القائم
+    items: List<DockItem> = dockItems,
+    modifier: Modifier = Modifier
+) {
     val g = glassColors()
     GlassCard(corner = 26.dp, modifier = modifier) {
         Row(
@@ -633,7 +673,7 @@ fun FloatingDock(nav: NavHostController, current: String, modifier: Modifier = M
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            dockItems.forEach { item ->
+            items.forEach { item ->
                 val selected = item.route == current
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -678,6 +718,57 @@ fun FloatingDock(nav: NavHostController, current: String, modifier: Modifier = M
                         maxLines = 1
                     )
                 }
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// [H1-4][v13] بوابة الدور في التركيب — عونٌ للإخفاء لا ضمانة الحسم
+// (عقد التصميم §3: الحسم في RoleGate داخل VMs؛ هذه البوابة تعطّل الوصول
+// المباشر للمسار وتعرض شاشة رفض موطّنة بدل محتوى لا يخصّ صاحب الدور)
+// ═══════════════════════════════════════════════════════════════════════════
+
+@Composable
+private fun RbacGated(op: com.superbiz.app.domain.rbac.Op, content: @Composable () -> Unit) {
+    if (com.superbiz.app.domain.rbac.SessionState.effective().can(op)) content()
+    else RbacDeniedScreen()
+}
+
+/** شاشة الرفض — نفس الهوية البصرية، بلا أي بيانات تخصّ عمليات محرَمة */
+@Composable
+private fun RbacDeniedScreen() {
+    val g = glassColors()
+    Box(
+        Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .padding(28.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        GlassCard(corner = 24.dp) {
+            Column(
+                Modifier.padding(28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    Icons.Rounded.Lock, null,
+                    tint = g.textSecondary,
+                    modifier = Modifier.size(40.dp)
+                )
+                Spacer(Modifier.height(14.dp))
+                Text(
+                    stringResource(com.superbiz.app.R.string.rbac_denied_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = g.textPrimary
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    stringResource(com.superbiz.app.R.string.rbac_denied_msg),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = g.textSecondary,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
             }
         }
     }

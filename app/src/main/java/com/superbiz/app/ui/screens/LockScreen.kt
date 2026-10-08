@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -24,6 +25,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Fingerprint
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Icon
@@ -57,29 +59,59 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
 import com.superbiz.app.R
 import com.superbiz.app.security.BiometricGate
-import com.superbiz.app.ui.components.BizField
 import com.superbiz.app.ui.components.GlassCard
 import com.superbiz.app.ui.theme.Cyan
 import com.superbiz.app.ui.theme.RedDeep
 import com.superbiz.app.ui.theme.VioDeep
 import com.superbiz.app.ui.theme.glassColors
 import com.superbiz.app.vm.SettingsVM
+import com.superbiz.app.vm.UsersVM
 import kotlinx.coroutines.delay
 
 /**
  * شاشة القفل — رمز PIN + بصمة الإصبع/الوجه (BiometricPrompt النظامية).
  * جديد: حدّ محاولات تصاعدي (قفل مؤقت مع عدّاد معروض) + إلغاء الفتح الطارئ الصامت
  * (البيومتريا المعطلة بلا رمز تطلب نقراً صريحاً مع تحذير واضح).
+ *
+ * [H1-4][H1-5][V 1.2.0] وضعا القفل:
+ * • وضع المالك الواحد (مستخدم فعّال واحد أو أقل): المسار القائم حرفياً —
+ *   التحقق عبر SettingsVM (مادة DataStore) وفتح جلسة المالك بعد النجاح
+ *   (UsersVM.startSingleOwnerSession — تزرع بذرة المالك للأجهزة الجديدة).
+ * • وضع التعدد (مستخدمان فعّالان فأكثر): رقائق اختيار مستخدم + رمز كل
+ *   مستخدم من user_secrets + قفل تصاعدي لكل مستخدم على حدة (UsersVM)
+ *   + بصمة لمن يملح له فقط (biometricAllowed — المالك افتراضاً بالعقد).
+ * الجلسة الصريحة تُفتح عند النجاح وتموت عند إعادة قفل التطبيق (MainActivity).
 */
 @Composable
 fun LockScreen(
     activity: FragmentActivity?,
     settingsVM: SettingsVM,
+    usersVM: UsersVM,
     onUnlocked: () -> Unit
 ) {
     val g = glassColors()
     val settings by settingsVM.settings.collectAsState()
     val lockout by settingsVM.lockout.collectAsState()
+    // [H1-4][v13] حالة التعدد
+    val activeUsers by usersVM.activeUsers.collectAsState()
+    val userLockout by usersVM.lockout.collectAsState()
+    var selectedUserId by remember { mutableStateOf(0L) }
+    var secretOwners by remember { mutableStateOf(setOf<Long>()) }
+    var bioAllowedUsers by remember { mutableStateOf(setOf<Long>()) }
+
+    // تحديث المستخدمين الفعّالين + أصحاب الأسرار عند كل ظهور لشاشة القفل
+    LaunchedEffect(Unit) {
+        usersVM.refreshActiveUsers()
+    }
+    LaunchedEffect(activeUsers) {
+        if (activeUsers.isNotEmpty()) {
+            if (activeUsers.none { it.id == selectedUserId }) selectedUserId = activeUsers.first().id
+            secretOwners = usersVM.secretOwnersOnce()
+            bioAllowedUsers = usersVM.biometricAllowedOnce()
+        }
+    }
+    val multiUser = activeUsers.size > 1
+
     var pin by remember { mutableStateOf("") }
     var err by remember { mutableStateOf(false) }
     var bioMsg by remember { mutableStateOf<String?>(null) }
@@ -87,6 +119,27 @@ fun LockScreen(
     var showPin by remember { mutableStateOf(false) }
     // لا تحقق ثانٍ متزامن — كانت كل ضغطة مفتاح تُشعل تحققاً جديداً يتداخل مع سابقه
     var verifying by remember { mutableStateOf(false) }
+
+    fun submitPin(v: String) {
+        if (verifying || v.isEmpty()) return
+        verifying = true
+        if (multiUser) {
+            // [H1-4][v13] تحقق مستخدم محدد — القفل التصاعدي على حدة + إسناد التدقيق،
+            // والجلسة تُفتح داخل UsersVM عند النجاح
+            usersVM.verifyUserPin(selectedUserId, v) { ok ->
+                verifying = false
+                if (ok) onUnlocked() else { err = true; pin = "" }
+            }
+        } else {
+            // المسار الأحادي القائم — والجلسة تُفتح بعد نجاح التحقق مباشرة
+            settingsVM.verifyPin(v) { ok ->
+                verifying = false
+                if (ok) usersVM.startSingleOwnerSession { onUnlocked() }
+                else { err = true; pin = "" }
+            }
+        }
+    }
+
     // الطول المخزّن عند التعيين (6..8) — الإرسال عند بلوغه بالضبط فقط
     // والمفقودات القديمة (0) تفترض حدّ السياسة الأدنى 6
     // [P5-H15 إصلاح]: مستخدمو الترحيل برمز 7–8 أرقام بلا pinLength مخزّن كانوا
@@ -97,31 +150,36 @@ fun LockScreen(
     val pinLengthKnown = settings.pinLength in 6..8
     val pinTargetLen = if (pinLengthKnown) settings.pinLength else 8
 
-    fun submitPin(v: String) {
-        if (verifying || v.isEmpty()) return
-        verifying = true
-        settingsVM.verifyPin(v) { ok ->
-            verifying = false
-            if (ok) onUnlocked() else { err = true; pin = "" }
-        }
-    }
-
-    val hasPin = settings.pinHash != null || settings.pinBlob != null
+    val hasPin = if (multiUser) selectedUserId in secretOwners
+                 else (settings.pinHash != null || settings.pinBlob != null)
     val biometricOn = settings.biometric && activity != null
-    val bioReady = biometricOn && BiometricGate.check(activity) == BiometricGate.OK
+    // [H1-4][v13] البصمة في وضع التعدد لمن يسمح له فقط (المالك افتراضاً — عقد المخطط)
+    // — قراءة من الحالة المحمّلة في LaunchedEffect لا استدعاء تعليق داخل التركيب
+    val biometricAllowedForSelected = multiUser && selectedUserId in secretOwners &&
+        selectedUserId in bioAllowedUsers
+    val bioReady = biometricOn && (if (multiUser) biometricAllowedForSelected else true) &&
+        BiometricGate.check(activity) == BiometricGate.OK
 
     // نبض الثواني لتحديث العدّاد المعروض أثناء القفل
     // [تدقيق M-9] العرض والقرار على الزمن الأحادي (elapsedRealtime) — تراجع الحائط
     // لا يقصّر العدّاد ولا يفتح القفل (القرار الصارم في verifyPin بنفس المصدر)
     var nowElapsedMs by remember { mutableLongStateOf(android.os.SystemClock.elapsedRealtime()) }
-    LaunchedEffect(lockout.lockUntilElapsed) {
-        settingsVM.refreshLockout()
-        while (lockout.remainingElapsedSeconds(nowElapsedMs) > 0) {
+
+    // حالة القفل المعروضة — المسار الأحادي من SettingsVM والتعدد من UsersVM
+    val shownLockout = if (multiUser) userLockout else lockout
+    LaunchedEffect(shownLockout.lockUntilElapsed) {
+        if (multiUser) usersVM.refreshLockout(selectedUserId) else settingsVM.refreshLockout()
+        while (shownLockout.remainingElapsedSeconds(nowElapsedMs) > 0) {
             delay(500)
             nowElapsedMs = android.os.SystemClock.elapsedRealtime()
         }
     }
-    val lockLeft = lockout.remainingElapsedSeconds(nowElapsedMs)
+    // إعادة قراءة حالة المستخدم المختار عند تغييره
+    LaunchedEffect(selectedUserId, multiUser) {
+        if (multiUser) usersVM.refreshLockout(selectedUserId)
+    }
+
+    val lockLeft = shownLockout.remainingElapsedSeconds(nowElapsedMs)
     val locked = lockLeft > 0
 
     // تُحلّ في السياق القابل للتركيب ثم تُستخدم داخل الدوال العادية
@@ -147,8 +205,16 @@ fun LockScreen(
             negativeText = bioNegative,
             // H-19: نجاح البصمة يصفّر عدّاد المحاولات الفاشلة كمسار الرمز تماماً
             onSuccess = {
-                settingsVM.onBiometricUnlocked()
-                onUnlocked()
+                if (multiUser) {
+                    // [H1-4][v13] جلسة المستخدم المسموح له فقط — الرفض داخل openBiometricSession
+                    usersVM.openBiometricSession(selectedUserId) { allowed ->
+                        if (allowed) onUnlocked()
+                        else { err = true; bioMsg = bioLockedMsg }
+                    }
+                } else {
+                    settingsVM.onBiometricUnlocked()
+                    usersVM.startSingleOwnerSession { onUnlocked() }
+                }
             },
             onError = { msg -> if (msg.isNotBlank()) bioMsg = msg }
         )
@@ -192,6 +258,47 @@ fun LockScreen(
             Text("SuperBiz", style = MaterialTheme.typography.headlineMedium, color = g.textPrimary)
             Spacer(Modifier.height(24.dp))
 
+            // ─── [H1-4][v13] رقائق اختيار المستخدم في وضع التعدد ───
+            if (multiUser) {
+                androidx.compose.foundation.lazy.LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(activeUsers.size) { i ->
+                        val u = activeUsers[i]
+                        val selected = u.id == selectedUserId
+                        Row(
+                            Modifier
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(
+                                    if (selected) Brush.linearGradient(listOf(VioDeep, Cyan))
+                                    else Brush.linearGradient(listOf(g.surface, g.surface))
+                                )
+                                .clickable {
+                                    selectedUserId = u.id
+                                    err = false; pin = ""; bioMsg = null
+                                }
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Rounded.Person, null,
+                                tint = if (selected) Color.White else g.textSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                u.name,
+                                color = if (selected) Color.White else g.textPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(14.dp))
+            }
+
             // ─── قفل المحاولات: عدّاد معروض وحجب كامل للإدخال ───
             if (locked) {
                 GlassCard(corner = 22.dp) {
@@ -214,7 +321,8 @@ fun LockScreen(
             }
 
             // ─── تحذير الفتح الطارئ: بيومتريا معطلة ولا رمز — نقر صريح مطلوب ───
-            if (biometricOn && !bioReady && !hasPin) {
+            // (المسار الأحادي فقط — وضع التعدد لا يفتح بلا مصادقة إطلاقاً)
+            if (!multiUser && biometricOn && !bioReady && !hasPin) {
                 GlassCard(corner = 22.dp) {
                     Column(Modifier.padding(18.dp)) {
                         Text(
@@ -227,7 +335,9 @@ fun LockScreen(
                             color = g.textSecondary, fontSize = 12.sp
                         )
                         Spacer(Modifier.height(12.dp))
-                        androidx.compose.material3.TextButton(onClick = onUnlocked) {
+                        androidx.compose.material3.TextButton(onClick = {
+                            usersVM.startSingleOwnerSession { onUnlocked() }
+                        }) {
                             Text(
                                 stringResourceCompat(R.string.emergency_continue),
                                 color = RedDeep, fontWeight = FontWeight.Bold
@@ -256,7 +366,10 @@ fun LockScreen(
                                     // الإرسال عند الطول المستهدف فقط وبلا تداخل — كان الإرسال
                                     // عند ≥4 يفشل لرمز ناقص فيُحتسب فشلاً ويُمسح الحقل فيستحيل
                                     // إدخال رمز من 6 أرقام كاملاً
-                                    if (!verifying && v.length == pinTargetLen) submitPin(v)
+                                    // [H1-4][v13] وضع التعدد: طول المستخدم غير مخزَّن —
+                                    // الإرسال عند 8 أو يدوياً بزر «تم» (نمط المفقودات القديمة)
+                                    val target = if (multiUser) 8 else pinTargetLen
+                                    if (!verifying && v.length == target) submitPin(v)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -324,6 +437,15 @@ fun LockScreen(
                         textAlign = TextAlign.Center
                     )
                 }
+            }
+
+            // [H1-4][v13] مستخدم بلا رمز في وضع التعدد — طلب إنشائه من المالك
+            if (multiUser && !hasPin) {
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    stringResourceCompat(R.string.lock_user_no_pin),
+                    color = g.textSecondary, fontSize = 12.sp, textAlign = TextAlign.Center
+                )
             }
 
             bioMsg?.let {

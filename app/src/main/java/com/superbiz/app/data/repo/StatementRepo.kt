@@ -188,12 +188,18 @@ class StatementRepo(
                 lang = data.lang.name
             )
         )
+        // [H1-4][v13] إسناد الحدث للجلسة الحية — الجلسة الصريحة تحمل هويتها،
+        // ووضع المالك الضمني يبقى actor="owner" وactorId/actorRole NULL كما قبل التبني
+        val _issSess = com.superbiz.app.domain.rbac.SessionState.effective()
+        val _issExplicit = com.superbiz.app.domain.rbac.SessionState.current
         db.auditLog().insert(
             AuditLogEntity(
-                actor = "owner", action = auditAction,
+                actor = _issSess.name, action = auditAction,
                 details = "${data.statementNumber} party=${data.party.id} " +
                     "${data.fromTs}..${data.toTs} hash=$hash",
-                ts = System.currentTimeMillis()
+                ts = System.currentTimeMillis(),
+                actorId = _issExplicit?.userId,
+                actorRole = _issExplicit?.role?.id
             )
         )
         return db.statements().findById(sid)!!
@@ -254,11 +260,16 @@ class StatementRepo(
                 )
             )
         }
+        // [H1-4][v13] إسناد الحدث للجلسة الحية (نفس عقد موقع الإصدار أعلاه)
+        val _sndSess = com.superbiz.app.domain.rbac.SessionState.effective()
+        val _sndExplicit = com.superbiz.app.domain.rbac.SessionState.current
         db.auditLog().insert(
             AuditLogEntity(
-                actor = "owner", action = "STATEMENT_SEND",
+                actor = _sndSess.name, action = "STATEMENT_SEND",
                 details = "statement=$statementId channel=$channel status=$status attempts=$attempts",
-                ts = now
+                ts = now,
+                actorId = _sndExplicit?.userId,
+                actorRole = _sndExplicit?.role?.id
             )
         )
         id
@@ -380,19 +391,30 @@ class StatementRepo(
     /** حذف كشف — CASCADE يمحو سطور تسليمه؛ رقمه لا يعاد (قرار الترقيم ②) */
     suspend fun deleteStatement(id: Long) = db.withTransaction {
         db.statements().delete(id)
+        // [H1-4][v13] إسناد الحدث للجلسة الحية (نفس عقد موقع الإصدار أعلاه)
+        val _delSess = com.superbiz.app.domain.rbac.SessionState.effective()
+        val _delExplicit = com.superbiz.app.domain.rbac.SessionState.current
         db.auditLog().insert(
-            AuditLogEntity(actor = "owner", action = "STATEMENT_DELETE",
-                details = "id=$id", ts = System.currentTimeMillis())
+            AuditLogEntity(actor = _delSess.name, action = "STATEMENT_DELETE",
+                details = "id=$id", ts = System.currentTimeMillis(),
+                actorId = _delExplicit?.userId, actorRole = _delExplicit?.role?.id)
         )
     }
 
     // ═══════════ التدقيق ═══════════
 
-    /** سطر تدقيق — actor=owner دائماً اليوم (تطبيق مفرد المالك) مع بقاء الحقل للتوسع */
-    suspend fun audit(action: String, details: String, actor: String = "owner") {
+    /**
+     * سطر تدقيق — [H1-4][v13] الجلسة الصريحة تحمل اسمها وإسنادها (actorId/actorRole)،
+     * ووضع المالك الضمني يبقى actor="owner" بقيم NULL كما قبل التبني.
+     * بارامتر actor صريح يظل مقبولاً لمواقع النظام الخاصة (يتفوق على الجلسة).
+     */
+    suspend fun audit(action: String, details: String, actor: String? = null) {
+        val sess = com.superbiz.app.domain.rbac.SessionState.effective()
+        val explicit = com.superbiz.app.domain.rbac.SessionState.current
         db.auditLog().insert(
-            AuditLogEntity(actor = actor, action = action, details = details,
-                ts = System.currentTimeMillis())
+            AuditLogEntity(actor = actor ?: sess.name, action = action, details = details,
+                ts = System.currentTimeMillis(),
+                actorId = explicit?.userId, actorRole = explicit?.role?.id)
         )
     }
 

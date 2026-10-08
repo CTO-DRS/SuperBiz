@@ -24,6 +24,10 @@ class AppGraph(val context: android.content.Context) {
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     val db: AppDatabase by lazy {
+        // [H1-3][v13] ربط مزوّد بذرة المالك قبل بناء القاعدة — القراءة المتزامنة
+        // لDataStore تتم داخل مسار الترحيل فقط (عند وجود قاعدة v12 حقيقية) بنسخ
+        // نص للمغلّف ks: لا إعادة تشفير ولا مسّ Keystore (عقد التصميم §4.2-3).
+        ownerPinSeedProvider = { settings.readOwnerPinSeedSync() }
         androidx.room.Room.databaseBuilder(context, AppDatabase::class.java, "superbiz.db")
             // [P11-a]: أُضيف MIGRATION_6_7 — القائمة هنا هي المسار الفعلي لفتح القاعدة
             // (قائمة MIGRATIONS أدناه للاختبارات)؛ نسيانها هنا يعني فشل فتح قاعدة v6 القائمة
@@ -32,7 +36,8 @@ class AppGraph(val context: android.content.Context) {
             // [P33-P8]: أُضيف MIGRATION_9_10 — نسيانه هنا يعني فشل فتح قاعدة v9 القائمة
             // [P41-L1]: أُضيف MIGRATION_10_11 — نسيانه هنا يعني فشل فتح قاعدة v10 القائمة
             // [P46-W1]: أُضيف MIGRATION_11_12 — نسيانه هنا يعني فشل فتح قاعدة v11 القائمة
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+            // [H1-3][v13]: أُضيف MIGRATION_12_13 — نسيانه هنا يعني فشل فتح قاعدة v12 القائمة
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
             .build()
     }
     val settings by lazy { SettingsRepo(context) }
@@ -653,6 +658,69 @@ class AppGraph(val context: android.content.Context) {
             }
         }
 
+        // ═══════════════════════════════════════════════════════════════════════
+        // [H1-3][v13] MIGRATION_12_13 — الترحيل المشترك: RBAC + ZATCA-2 في ترحيل واحد
+        // ═══════════════════════════════════════════════════════════════════════
+        // عقد التصميم (RBAC_V13_DESIGN §4 + ZATCA2_WAVE2_PLAN §2: «الترحيلان يُنفّان
+        // معاً في v13») — ترحيل إلحاقي ذرّي خالص:
+        //   1. CREATE TABLE users + user_secrets + فهارسهما (إنشاء فقط — سابقة 11→12
+        //      بلا DEFAULT في CREATE لأن Room يولّده بلا DEFAULT، والافتراضات Kotlin
+        //      في الكيانات هي بذور الإدراج على مستوى التطبيق)
+        //   2. ALTER TABLE audit_log بعمودَي الإسناد (nullable — NULL دلالته «قبل التبني»)
+        //   3. ALTER TABLE invoices بتسعة أعمدة هوية ZATCA-2 ببذور آمنة (سابقة 10→11:
+        //      NOT NULL DEFAULT إلزامي في SQLite للعمود المُضاف)
+        //   4. زرع المالك داخل المعاملة نفسها — من مزوّد بذرة DataStore المتزامن
+        //      (ownerPinSeedProvider) بنسخ نص للمغلّف ks: لا إعادة تشفير ولا مسّ Keystore،
+        //      وبلا حماية قائمة يُزرع المالك بلا سر (أول دخول يطلب إنشاء PIN)
+        // لا تعديل عمود قائم، لا إعادة تسمية، لا حذف — صفر صف يُعاد كتابته عدا سطر
+        // المالك المزروع المعلن. كل الخطوات execSQL متتالية ضمن معاملة Room التلقائية
+        // للمهاجر — فشل في منتصفها يعيد v12 كما كانت بلا حالة نصفية ممكنة.
+        private val MIGRATION_12_13 = object : androidx.room.migration.Migration(12, 13) {
+            override fun migrate(d: androidx.sqlite.db.SupportSQLiteDatabase) {
+                // 1) المستخدمون — إنشاء فقط (البنية مطابقة لما يولّده Room عن UserEntity)
+                d.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `users` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `role` INTEGER NOT NULL, `active` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `lastSeenAt` INTEGER NOT NULL)"
+                )
+                d.execSQL("CREATE INDEX IF NOT EXISTS `index_users_role` ON `users` (`role`)" )
+                d.execSQL("CREATE INDEX IF NOT EXISTS `index_users_active` ON `users` (`active`)")
+                // 2) أسرار الدخول — صيغة PinVault لكل مستخدم (CASCADE مع مالكها)
+                d.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `user_secrets` (`userId` INTEGER PRIMARY KEY NOT NULL, `pinWrapped` TEXT NOT NULL, `pinSalt` TEXT NOT NULL, `pinIters` INTEGER NOT NULL, `biometricAllowed` INTEGER NOT NULL, FOREIGN KEY(`userId`) REFERENCES `users`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)"
+                )
+                // 3) إسناد التدقيق — أعمدة nullable بلا افتراض (NULL دلالة «قبل التبني»)
+                d.execSQL("ALTER TABLE `audit_log` ADD COLUMN `actorId` INTEGER")
+                d.execSQL("ALTER TABLE `audit_log` ADD COLUMN `actorRole` INTEGER")
+                // 4) هوية ZATCA مرحلة-2 على الفواتير — بذور آمنة محايدة دلالياً (سابقة 10→11)
+                d.execSQL("ALTER TABLE `invoices` ADD COLUMN `uuid` TEXT NOT NULL DEFAULT ''")
+                d.execSQL("ALTER TABLE `invoices` ADD COLUMN `icv` INTEGER NOT NULL DEFAULT 0")
+                d.execSQL("ALTER TABLE `invoices` ADD COLUMN `pih` TEXT NOT NULL DEFAULT ''")
+                d.execSQL("ALTER TABLE `invoices` ADD COLUMN `zatcaSubtype` TEXT NOT NULL DEFAULT ''")
+                d.execSQL("ALTER TABLE `invoices` ADD COLUMN `deliveryDate` INTEGER NOT NULL DEFAULT 0")
+                d.execSQL("ALTER TABLE `invoices` ADD COLUMN `buyerName` TEXT NOT NULL DEFAULT ''")
+                d.execSQL("ALTER TABLE `invoices` ADD COLUMN `buyerVat` TEXT NOT NULL DEFAULT ''")
+                d.execSQL("ALTER TABLE `invoices` ADD COLUMN `buyerAddress` TEXT NOT NULL DEFAULT ''")
+                d.execSQL("ALTER TABLE `invoices` ADD COLUMN `zatcaStatus` INTEGER NOT NULL DEFAULT 0")
+                // 5) زرع المالك الافتراضي داخل نفس المعاملة — بلا سيناريو ثالث:
+                //    الجدول جديد بنيوياً فوجود صفوف مسبقاً مستحيل، والفحص تحصين حاسم
+                d.execSQL(
+                    "INSERT INTO `users` (`name`, `role`, `active`, `createdAt`, `lastSeenAt`) " +
+                        "SELECT 'المالك', 0, 1, " + System.currentTimeMillis() + ", 0 " +
+                        "WHERE NOT EXISTS (SELECT 1 FROM `users`)"
+                )
+                //    مادة الرمز القائمة تُنسخ نصاً (ks:<iv>:<ct> كما هي — لا إعادة تشفير،
+                //    المفتاح في Keystore لا يُمس داخل الترحيل). بلا حماية قائمة يبقى
+                //    المالك بلا صف سر — أول دخول بعد الترقية يطلب إنشاء PIN للمالك.
+                ownerPinSeedProvider?.invoke()?.let { seed ->
+                    d.execSQL(
+                        "INSERT INTO `user_secrets` (`userId`, `pinWrapped`, `pinSalt`, `pinIters`, `biometricAllowed`) " +
+                            "SELECT `id`, ?, ?, ?, ? FROM `users` WHERE `role` = 0 " +
+                            "AND NOT EXISTS (SELECT 1 FROM `user_secrets`)",
+                        arrayOf(seed.pinWrapped, seed.pinSalt, seed.pinIters, if (seed.biometric) 1 else 0)
+                    )
+                }
+            }
+        }
+
         // قائمة الترقيات مكشوفة للاختبارات (SchemaMigrationTest يشغّل كل ترحيل فعلياً) —
         // تُعرّف بعد الترحيلات لأن تهيئة خصائص Kotlin تتم بترتيب الإعلان
         // [P11-a]: MIGRATION_6_7 أُلحقت بالنهاية — الفهرسة بالموضع في الاختبارات تبقى صحيحة
@@ -660,7 +728,16 @@ class AppGraph(val context: android.content.Context) {
         // [P17-a]: MIGRATION_8_9 أُلحقت بالنهاية — الفهرس 7 هو ترحيل كشف الحساب
         // [P41-L1]: MIGRATION_10_11 أُلحقت بالنهاية — الفهرس 9 هو حقول السطر الضريبية
         // [P46-W1]: MIGRATION_11_12 أُلحقت بالنهاية — الفهرس 10 هو جداول الولاء والكوبونات
-        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+        // [H1-3]: MIGRATION_12_13 أُلحقت بالنهاية — الفهرس 11 هو RBAC + ZATCA-2 المشترك
+        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+
+        /**
+         * [H1-3] مزوّد بذرة رمز المالك — يُربط في AppGraph.db قبل بناء القاعدة بقراءة
+         * DataStore المتزامنة (SettingsRepo.readOwnerPinSeedSync) لينقل الترحيل مادة
+         * الرمز القائمة إلى user_secrets بنسخ نص. قابل للاستبدال في الاختبارات
+         * (بذرة اصطناعية أو null لمحاكاة «لا حماية قائمة»).
+         */
+        internal var ownerPinSeedProvider: (() -> OwnerPinSeed?)? = null
 
         @Volatile private var instance: AppGraph? = null
         fun get(context: android.content.Context): AppGraph {

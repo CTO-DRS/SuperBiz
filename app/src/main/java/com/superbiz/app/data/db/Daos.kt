@@ -1177,6 +1177,69 @@ interface CouponDao {
     suspend fun wipe()
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// [H1-3][H1-4][v13] DAOs هوية المستخدمين — RBAC على الجهاز الواحد
+// ═══════════════════════════════════════════════════════════════════════════
+
+@androidx.room.Dao
+interface UserDao {
+
+    @Query("SELECT * FROM users ORDER BY id")
+    suspend fun all(): List<UserEntity>
+
+    @Query("SELECT * FROM users WHERE active = 1 ORDER BY id")
+    suspend fun activeUsers(): List<UserEntity>
+
+    @Query("SELECT * FROM users WHERE id = :id")
+    suspend fun byId(id: Long): UserEntity?
+
+    @Query("SELECT COUNT(*) FROM users")
+    suspend fun count(): Int
+
+    /** المالك الفعّال الأول — حارس «لا يبقى جهاز بلا مالك» في UsersVM */
+    @Query("SELECT * FROM users WHERE role = 0 AND active = 1 ORDER BY id LIMIT 1")
+    suspend fun firstActiveOwner(): UserEntity?
+
+    @androidx.room.Insert
+    suspend fun insert(u: UserEntity): Long
+
+    @androidx.room.Update
+    suspend fun update(u: UserEntity)
+
+    /** تعطيل/تفعيل بلا حذف — التاريخ المحاسبي المُنسب له لا يُمس */
+    @Query("UPDATE users SET active = :active WHERE id = :id")
+    suspend fun setActive(id: Long, active: Int)
+
+    /** ختم آخر ظهور عند كل فتح جلسة ناجح */
+    @Query("UPDATE users SET lastSeenAt = :ts WHERE id = :id")
+    suspend fun touch(id: Long, ts: Long)
+
+    /** حذف نهائي — باب المالك وحده (HARD_DELETE عبر USERS_MANAGE في UsersVM) */
+    @Query("DELETE FROM users WHERE id = :id")
+    suspend fun delete(id: Long)
+}
+
+@androidx.room.Dao
+interface UserSecretDao {
+
+    @Query("SELECT * FROM user_secrets WHERE userId = :userId")
+    suspend fun byUser(userId: Long): UserSecretEntity?
+
+    @androidx.room.Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    suspend fun upsert(s: UserSecretEntity)
+
+    /** لا يُستدعى إلا عبر CASCADE حذف المستخدم — إزالة صريحة للاستخدام الإداري فقط */
+    @Query("DELETE FROM user_secrets WHERE userId = :userId")
+    suspend fun deleteFor(userId: Long)
+
+    @Query("SELECT COUNT(*) FROM user_secrets")
+    suspend fun count(): Int
+
+    /** [H1-4] معرفات أصحاب الأسرار — حالة عرض شاشة القفل (من يملك رمزاً) */
+    @Query("SELECT userId FROM user_secrets")
+    suspend fun userIds(): List<Long>
+}
+
 @androidx.room.Database(
     entities = [
         Party::class, JournalEntry::class, JournalLine::class, Product::class,
@@ -1189,7 +1252,10 @@ interface CouponDao {
         NoteTemplateEntity::class, StatementEntity::class, StatementDeliveryEntity::class,
         StatementRuleEntity::class, AuditLogEntity::class,
         // [P46-W1] نقاط الولاء والكوبونات — جدولان بإنشاء فقط (ترحيل 11→12 في SuperBizApp)
-        LoyaltyEntryEntity::class, CouponEntity::class
+        LoyaltyEntryEntity::class, CouponEntity::class,
+        // [H1-3][H1-4] هوية المستخدمين والأدوار — جدولان بإنشاء فقط + عمودا إسناد التدقيق
+        // + أعمدة هوية ZATCA-2 على الفواتير — كلها في ترحيل مشترك واحد (ترحيل 12→13 في SuperBizApp)
+        UserEntity::class, UserSecretEntity::class
     ],
     // [P11-a] عمودا المفضّلة والإحداثيات على parties (ترحيل 6→7 في SuperBizApp)
     // [P12-b] جدول الزيارات بموقعها الجغرافي (ترحيل 7→8 في SuperBizApp)
@@ -1200,7 +1266,10 @@ interface CouponDao {
     // (ترحيل 10→11 في SuperBizApp — ALTER ADD بعمودين ببذرتين محايدتين، لا إعادة بناء)
     // [P46-W1] نقاط الولاء والكوبونات — جدولان بإنشاء فقط
     // (ترحيل 11→12 في SuperBizApp — CREATE TABLE/INDEX فقط، لا جدول قائم يُمس)
-    version = 12,
+    // [H1-3][v13] RBAC + ZATCA-2 — جدولا users/user_secrets بإنشاء فقط + عمودا إسناد
+    // التدقيق على audit_log (ALTER nullable) + 9 أعمدة هوية على invoices (ALTER ببذور آمنة)
+    // (ترحيل 12→13 في SuperBizApp — لا جدول قائم يُعاد بناؤه ولا صف يُعاد كتابته عدا سطر المالك المزروع)
+    version = 13,
     exportSchema = true
 )
 abstract class AppDatabase : androidx.room.RoomDatabase() {
@@ -1229,4 +1298,7 @@ abstract class AppDatabase : androidx.room.RoomDatabase() {
     // [P46-W1] نقاط الولاء والكوبونات
     abstract fun loyalty(): LoyaltyDao
     abstract fun coupons(): CouponDao
+    // [H1-3][H1-4] هوية المستخدمين والأدوار
+    abstract fun users(): UserDao
+    abstract fun userSecrets(): UserSecretDao
 }

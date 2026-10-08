@@ -30,6 +30,7 @@ import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.WorkspacePremium // [W1] قسم Pro
+import androidx.compose.material.icons.rounded.ManageAccounts // [H1-5][v13] قسم المستخدمين
 import androidx.compose.foundation.layout.size // [W1] ProSection
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -100,23 +101,31 @@ fun SettingsHubScreen(
     onOpenStamps: () -> Unit = {},
     // [W1] مدخل شاشة Pro من قسم الفريميوم
     onOpenPro: () -> Unit = {},
+    // [H1-5][v13] مدخل إدارة المستخدمين والأدوار — يظهر للمالك حصراً
+    // (وضع المالك الضمني يراه دائماً كما قبل v13؛ التعدد يقصّه عن غير المالك)
+    onOpenUsers: () -> Unit = {},
     onBack: () -> Unit
 ) {
     val g = glassColors()
     val s by settingsVM.settings.collectAsState()
+    // [H1-5][v13] هل الجلسة الحية مالك؟ — المالك الضمني (وضع أحادي) = نعم
+    val sessionIsOwner = com.superbiz.app.domain.rbac.SessionState.effective().role ==
+        com.superbiz.app.domain.rbac.Role.OWNER
 
-    val sections = listOf(
+    val sections = buildList {
         // [W1] قسم Pro أولاً — الفريميوم واجهة النمو
-        HubSection("pro", Icons.Rounded.WorkspacePremium),
-        HubSection("appearance", Icons.Rounded.Palette),
-        HubSection("behavior", Icons.Rounded.Tune),
-        HubSection("performance", Icons.Rounded.Speed),
-        HubSection("privacy", Icons.Rounded.PrivacyTip),
-        HubSection("notifications", Icons.Rounded.Notifications),
-        HubSection("data", Icons.Rounded.Backup),
-        HubSection("advanced", Icons.Rounded.Build),
-        HubSection("about", Icons.Rounded.Info)
-    )
+        add(HubSection("pro", Icons.Rounded.WorkspacePremium))
+        // [H1-5][v13] المستخدمون — باب المالك وحده (يُقص بنيوياً عن غيره)
+        if (sessionIsOwner) add(HubSection("users", Icons.Rounded.ManageAccounts))
+        add(HubSection("appearance", Icons.Rounded.Palette))
+        add(HubSection("behavior", Icons.Rounded.Tune))
+        add(HubSection("performance", Icons.Rounded.Speed))
+        add(HubSection("privacy", Icons.Rounded.PrivacyTip))
+        add(HubSection("notifications", Icons.Rounded.Notifications))
+        add(HubSection("data", Icons.Rounded.Backup))
+        add(HubSection("advanced", Icons.Rounded.Build))
+        add(HubSection("about", Icons.Rounded.Info))
+    }
     var selected by androidx.compose.runtime.remember { mutableIntStateOf(0) }
 
     Column(
@@ -183,6 +192,8 @@ fun SettingsHubScreen(
 
         when (sections[selected].key) {
             "pro" -> ProSection(onOpenPro)
+            // [H1-5][v13] قسم المستخدمين — بطاقة مدخل واحدة إلى شاشة الإدارة
+            "users" -> UsersSection(onOpenUsers)
             "appearance" -> AppearanceSection(s, settingsVM)
             "behavior" -> BehaviorSection(s, settingsVM)
             "performance" -> PerformanceSection(s, settingsVM)
@@ -202,6 +213,47 @@ fun SettingsHubScreen(
  * بلا VM خاص: ProVM يُنشأ هنا بمصنع الافتراض (AndroidViewModel) ويُقرأ
  * استحقاقه فقط — لا كتابة إعدادات هنا.
  */
+/**
+ * [H1-5][v13] قسم المستخدمين في مركز الإعدادات — بطاقة مدخل واحدة إلى
+ * شاشة إدارة المستخدمين والأدوار (باب المالك حصراً؛ القسم نفسه لا يُبنى
+ * أصلاً لغير المالك انظر sections أعلاه).
+ */
+@Composable
+private fun UsersSection(onOpenUsers: () -> Unit) {
+    val g = glassColors()
+    GlassCard(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.padding(16.dp).fillMaxWidth().clickable { onOpenUsers() },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Rounded.ManageAccounts, null,
+                tint = com.superbiz.app.ui.theme.Vio,
+                modifier = Modifier.size(30.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.users_section_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = g.textPrimary
+                )
+                Text(
+                    stringResource(R.string.users_section_sub),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = g.textSecondary
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Rounded.ArrowBackIos, null,
+                tint = g.textSecondary,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+
 @Composable
 private fun ProSection(onOpenPro: () -> Unit) {
     val g = glassColors()

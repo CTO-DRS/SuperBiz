@@ -53,14 +53,24 @@ class ProVM(app: Application) : AndroidViewModel(app) {
         _price.value = g.billing.formattedPrice
     }
 
-    /** تشغيل تدفق الشراء من نافذة نشطة — الفشل يُعلن للواجهة برمز Play الصادق */
+    /** تشغيل تدفق الشراء من نافذة نشطة — الفشل يُعلن للواجهة برمز Play الصادق
+     *  [H1-4][v13] تفعيل Pro باب المالك وحده (مصفوفة §3 سطر 13) */
     fun purchase(activity: Activity, onUnavailable: (Int) -> Unit) {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.PRO_MANAGE
+        )
         connectBilling()
         g.billing.purchase(activity, onUnavailable)
     }
 
-    /** استعادة المشتريات (زر صريح) — النتيجة تصل عبر pro بعد التصحيح */
+    /** استعادة المشتريات (زر صريح) — النتيجة تصل عبر pro بعد التصحيح
+     *  [H1-4][v13] باب المالك وحده أيضاً */
     fun restore(onDone: (Boolean) -> Unit) {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.PRO_MANAGE
+        )
         connectBilling()
         g.billing.restore(onDone)
     }

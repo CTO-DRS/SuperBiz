@@ -128,6 +128,8 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val settingsVM: SettingsVM = viewModel(factory = VMFactory(this))
             val appVM: AppVM = viewModel(factory = VMFactory(this))
+            // [H1-4][H1-5][v13] جلسات المستخدمين — فتح القفل يبدأ جلسة، وإعادة القفل تمحوها
+            val usersVM: com.superbiz.app.vm.UsersVM = viewModel(factory = VMFactory(this))
             val settings by settingsVM.settings.collectAsState()
             val ready by settingsVM.ready.collectAsState()
 
@@ -191,14 +193,20 @@ var bgSince by rememberSaveable { mutableStateOf(0L) }
                         when (event) {
                             Lifecycle.Event.ON_STOP -> {
                                 bgSince = System.currentTimeMillis()
-                                if (credsConfigured && settings.lockTimeoutMin <= 0 && stage == 3) stage = 2
+                                if (credsConfigured && settings.lockTimeoutMin <= 0 && stage == 3) {
+                                    stage = 2
+                                    usersVM.endSession()   // [H1-4] الهوية تموت مع القفل
+                                }
                             }
                             Lifecycle.Event.ON_START -> {
                                 val timeoutMs = settings.lockTimeoutMin * 60_000L
                                 if (credsConfigured && settings.lockTimeoutMin > 0 &&
                                     stage == 3 && bgSince > 0 &&
                                     System.currentTimeMillis() - bgSince >= timeoutMs
-                                ) stage = 2
+                                ) {
+                                    stage = 2
+                                    usersVM.endSession()   // [H1-4] الهوية تموت مع القفل
+                                }
                             }
                             else -> Unit
                         }
@@ -232,11 +240,12 @@ var bgSince by rememberSaveable { mutableStateOf(0L) }
                     stage == 2 -> LockScreen(
                         activity = this,
                         settingsVM = settingsVM,
+                        usersVM = usersVM,
                         onUnlocked = { stage = 3 }
                     )
 
                     else -> SuperBizRoot(
-                        appVM, settingsVM,
+                        appVM, settingsVM, usersVM,
                         startRoute = pendingRoute,
                         onRouteConsumed = { pendingRoute = null }
                     )
@@ -318,8 +327,9 @@ class VMFactory(private val context: android.content.Context) :
             modelClass.isAssignableFrom(com.superbiz.app.vm.R14InsightsVM::class.java) -> com.superbiz.app.vm.R14InsightsVM(app) as T
             // VM الرؤى الذكية للموجة R15
             modelClass.isAssignableFrom(com.superbiz.app.vm.R15InsightsVM::class.java) -> com.superbiz.app.vm.R15InsightsVM(app) as T
-            // [P46-W1] جولة 7: VM الولاء والكوبونات — إدارة الكوبونات في الإعدادات
+            // [H1-4][H1-5][v13] VM المستخدمين والجلسات — RBAC على الجهاز الواحد
             modelClass.isAssignableFrom(com.superbiz.app.vm.LoyaltyVM::class.java) -> com.superbiz.app.vm.LoyaltyVM(app) as T
+            modelClass.isAssignableFrom(com.superbiz.app.vm.UsersVM::class.java) -> com.superbiz.app.vm.UsersVM(app) as T
             else -> throw IllegalArgumentException("unknown VM ${modelClass.name}")
         }
     }

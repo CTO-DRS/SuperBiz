@@ -107,15 +107,24 @@ object PinVault {
         }
     }
 
-    /** يحمّل مفتاح التغليف أو ينشئه مرة واحدة داخل العتاد (داخلي: يُعاد ربطه في الاختبارات بعد الحقن) */
-    internal fun masterKey(): SecretKey {
+    /**
+     * [H1-4][v13] مفتاح alias لكل مستخدم — تعميم الوحدة من «مستخدم واحد
+     * بمفتاح واحد» إلى «N مستخدمين بمفاتيح N» بنفس العقد البايتي حرفياً
+     * (تصميم RBAC_V13_DESIGN §4.1). المفتاح الرئيسي يبقى لمادة المالك
+     * المُرحّلة (بذرة v13 تُنسخ كما هي — لا إعادة تشفير داخل الترحيل)،
+     * والمستخدمون الجدد يُغلّفون بمفاتيحهم الخاصة superbiz_pin_u<id>.
+     */
+    fun userAlias(userId: Long): String = "superbiz_pin_u$userId"
+
+    /** يحمّل/ينشئ مفتاح تغليف بأي alias — مسار [masterKey] نفسه بلا تغيير */
+    internal fun keyForAlias(alias: String): SecretKey {
         val ks = KeyStore.getInstance(ANDROID_KEYSTORE)
         ks.load(null)
-        (ks.getEntry(ALIAS, null) as? KeyStore.SecretKeyEntry)?.let { return it.secretKey }
+        (ks.getEntry(alias, null) as? KeyStore.SecretKeyEntry)?.let { return it.secretKey }
         val gen = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
         gen.init(
             KeyGenParameterSpec.Builder(
-                ALIAS,
+                alias,
                 KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
             )
                 .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
@@ -126,4 +135,46 @@ object PinVault {
         )
         return gen.generateKey()
     }
+
+    /**
+     * [H1-4][v13] مزوّد مفتاح المستخدم — قابل للاستبدال في اختبارات Robolectric فقط
+     * (بيئة بلا AndroidKeyStore، نمط [keyProvider] نفسه). الإنتاج يستخدم
+     * keyForAlias(userAlias(id)) دائماً ولا يلمس هذا الحقل.
+     */
+    internal var userKeyProvider: (Long) -> SecretKey = { keyForAlias(userAlias(it)) }
+
+    /**
+     * [H1-4][v13] تغليف بمفتاح مستخدم محدد — نفس صيغة ks:<iv>:<ct> حرفياً،
+     * والفرق الوحيد هو alias المفتاح داخل Keystore. فشل Keystore عند التغليف
+     * يرمي PinVaultException (فشل مغلق) تماماً كالمسار الرئيسي.
+     */
+    fun encryptFor(userId: Long, hashHex: String): String {
+        val saved = keyProvider
+        return try {
+            keyProvider = { userKeyProvider(userId) }
+            encrypt(hashHex)
+        } finally {
+            keyProvider = saved
+        }
+    }
+
+    /**
+     * [H1-4][v13] فك مغلّف مستخدم — يجرّب المفتاح الرئيسي أولاً (بذرة المالك
+     * المُرحّلة من v12 مغلّفة به ولا تحمل أثر alias)، ثم مفتاح المستخدم الخاص.
+     * null = فشل فادح (مفتاح مفقود/تلاعب) — المستدعي يبقي الباب مقفلاً ولا
+     * يفتح أبداً على null.
+     */
+    fun decryptFor(userId: Long, blob: String): String? {
+        decrypt(blob)?.let { return it }   // بذرة المالك المُرحّلة + اختبارات المفتاح المحقون
+        val saved = keyProvider
+        return try {
+            keyProvider = { userKeyProvider(userId) }
+            decrypt(blob)
+        } finally {
+            keyProvider = saved
+        }
+    }
+
+    /** يحمّل مفتاح التغليف أو ينشئه مرة واحدة داخل العتاد (داخلي: يُعاد ربطه في الاختبارات بعد الحقن) */
+    internal fun masterKey(): SecretKey = keyForAlias(ALIAS)
 }
