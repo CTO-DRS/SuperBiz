@@ -402,6 +402,41 @@ interface InvoiceDao {
            WHERE partyId = :pid AND status < 3 AND date >= :from AND date <= :to"""
     )
     suspend fun discountSumForPartyBetween(pid: Long, from: Long, to: Long): Long  // [P33-P8] قروش
+
+    // ─── [Z2-أ V 1.5.0] سلسلة ZATCA-2 ولوحة الحالات ───
+
+    /**
+     * أعلى ICV مختوم — السلسلة تتبع الإصدار (icv > 0 = مختومة)؛
+     * يُستدعى حصراً داخل معاملة الحفظ (نمط P6-M5: معاملات الكتابة متسلسلة
+     * فلا عدّاد مكرر بين مستندين متزامنين).
+     */
+    @Query("SELECT MAX(icv) FROM invoices")
+    suspend fun maxIcv(): Long?
+
+    /** فواتير بانتظار الإبلاغ/التخليص بترتيب السلسلة — غذاء قائمة الانتظار */
+    @Query("SELECT * FROM invoices WHERE zatcaStatus = 1 ORDER BY icv")
+    suspend fun pendingForReport(): List<Invoice>
+
+    /** عدّاد حالات الربط للوحة ZATCA (1 بالقائمة / 2 مبلغة / 3 مرفوضة) */
+    @Query(
+        """SELECT zatcaStatus AS state, COUNT(*) AS cnt FROM invoices
+           WHERE zatcaStatus > 0 GROUP BY zatcaStatus"""
+    )
+    suspend fun zatcaStatusCounts(): List<ZatcaStatusCount>
+
+    /** مبسطة مضت نافذتها القانونية دون إبلاغ — إنذار لوحة ZATCA (O1) */
+    @Query(
+        """SELECT COUNT(*) FROM invoices
+           WHERE zatcaStatus = 1 AND zatcaSubtype = '0200000' AND date < :cutoff"""
+    )
+    suspend fun lateSimplifiedCount(cutoff: Long): Int
+
+    /** تحديث حالة الربط بعد نتيجة القائمة (2 مبلغة/مخلصة — 3 مرفوضة — 1 عودة للقائمة) */
+    @Query("UPDATE invoices SET zatcaStatus = :status WHERE id = :id")
+    suspend fun updateZatcaStatus(id: Long, status: Int)
+
+    /** صف عدّ مجمّع — POJO مطابق لأسماء الأعمدة (عقد Room) */
+    data class ZatcaStatusCount(val state: Int, val cnt: Int)
 }
 
 @Dao
@@ -1240,6 +1275,48 @@ interface UserSecretDao {
     suspend fun userIds(): List<Long>
 }
 
+/**
+ * [Z2-أ V 1.5.0] DAO أرشيف ZATCA-2 — عقد الأرشيف الأول: archiveFirst بـIGNORE
+ * لا يستبدل صفّاً قائماً أبداً (سلسلة PIH تتبع بايتات الإصدار الأولى)،
+ * وكل كتابات نتائج القائمة تحدّث أعمدة حالة فقط لا المستند نفسه.
+ */
+@Dao
+interface ZatcaDocDao {
+
+    /** أرشفة أول إصدار — إن وُجد صفّ سابق يُترك كما هو ويعيد -1 */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun archiveFirst(doc: ZatcaDocEntity): Long
+
+    @Query("SELECT * FROM zatca_docs WHERE invoiceId = :invoiceId")
+    suspend fun byInvoice(invoiceId: Long): ZatcaDocEntity?
+
+    /** هاش آخر وثيقة مُصدَرة بترتيب معرّف الفاتورة — مرجع PIH للإصدار التالي */
+    @Query("SELECT xmlHash FROM zatca_docs ORDER BY invoiceId DESC LIMIT 1")
+    suspend fun latestHash(): String?
+
+    /** عدد الأرشيف (تشخيص ونسخ احتياطي) */
+    @Query("SELECT COUNT(*) FROM zatca_docs")
+    suspend fun count(): Int
+
+    /** قبول إبلاغ/تخليص — يغلق المحاولة ويمحوا سبب الرفض */
+    @Query(
+        """UPDATE zatca_docs SET reportedAt = :at, attemptCount = 0,
+           rejectReason = '' WHERE invoiceId = :id"""
+    )
+    suspend fun markReported(id: Long, at: Long)
+
+    /** رفض معياري — السبب يُعرض في لوحة ZATCA والإصلاح بمستند تصحيحي */
+    @Query("UPDATE zatca_docs SET rejectReason = :reason WHERE invoiceId = :id")
+    suspend fun markRejected(id: Long, reason: String)
+
+    /** فشل عابر — عدّاد المحاولات فقط (يحدد مهلة التراجع الأسّي التالية) */
+    @Query("UPDATE zatca_docs SET attemptCount = :count WHERE invoiceId = :id")
+    suspend fun markDeferred(id: Long, count: Int)
+
+    /** [O3] حفظ النسخة المخلّصة الموقعة من الهيئة — القياسية بعد تخليص ناجح */
+    @Query("UPDATE zatca_docs SET clearedXml = :xml WHERE invoiceId = :id")
+    suspend fun markClearedXml(id: Long, xml: String)
+}
 @androidx.room.Database(
     entities = [
         Party::class, JournalEntry::class, JournalLine::class, Product::class,
@@ -1255,7 +1332,10 @@ interface UserSecretDao {
         LoyaltyEntryEntity::class, CouponEntity::class,
         // [H1-3][H1-4] هوية المستخدمين والأدوار — جدولان بإنشاء فقط + عمودا إسناد التدقيق
         // + أعمدة هوية ZATCA-2 على الفواتير — كلها في ترحيل مشترك واحد (ترحيل 12→13 في SuperBizApp)
-        UserEntity::class, UserSecretEntity::class
+        UserEntity::class, UserSecretEntity::class,
+        // [Z2-أ V 1.5.0] أرشيف مستندات ZATCA-2 — جدول بإنشاء فقط
+        // (ترحيل 13→14 في SuperBizApp: CREATE TABLE/INDEX فقط — لا جدول قائم يُمس)
+        ZatcaDocEntity::class
     ],
     // [P11-a] عمودا المفضّلة والإحداثيات على parties (ترحيل 6→7 في SuperBizApp)
     // [P12-b] جدول الزيارات بموقعها الجغرافي (ترحيل 7→8 في SuperBizApp)
@@ -1269,9 +1349,11 @@ interface UserSecretDao {
     // [H1-3][v13] RBAC + ZATCA-2 — جدولا users/user_secrets بإنشاء فقط + عمودا إسناد
     // التدقيق على audit_log (ALTER nullable) + 9 أعمدة هوية على invoices (ALTER ببذور آمنة)
     // (ترحيل 12→13 في SuperBizApp — لا جدول قائم يُعاد بناؤه ولا صف يُعاد كتابته عدا سطر المالك المزروع)
-    version = 13,
+    // [Z2-أ V 1.5.0] جدول zatca_docs بإنشاء فقط (ترحيل 13→14 في SuperBizApp — إلحاقي خالص)
+    version = 14,
     exportSchema = true
 )
+
 abstract class AppDatabase : androidx.room.RoomDatabase() {
     abstract fun parties(): PartyDao
     abstract fun journal(): JournalDao
@@ -1301,4 +1383,5 @@ abstract class AppDatabase : androidx.room.RoomDatabase() {
     // [H1-3][H1-4] هوية المستخدمين والأدوار
     abstract fun users(): UserDao
     abstract fun userSecrets(): UserSecretDao
+    abstract fun zatcaDocs(): ZatcaDocDao
 }

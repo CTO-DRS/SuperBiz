@@ -1816,6 +1816,16 @@
     <string name="zat_copied">نُسخ المفتاح العام بصيغة PEM إلى الحافظة</string>
     <string name="zat_share_chooser">مشاركة مفتاح ZATCA العام</string>
     <string name="zat_fp_fail">تعذّر قراءة المفتاح العام على هذا الجهاز</string>
+    <!-- [Z2-ب V 1.5.0] بطاقة الربط الضريبي (فاتورة) — بوابة D2 ولوحة الحالات -->
+    <string name="zat_link_title">الربط الضريبي — منصة فاتورة</string>
+    <string name="zat_link_desc">إبلاغ الفواتير المبسطة وتخليص القياسية عند الهيئة — بياناتك ترسل لمنصة فاتورة حصراً ولا شيء غيرها</string>
+    <string name="zat_link_env_prod">بيئة الإنتاج — الفواتير تُبلَّغ فعلياً للهيئة</string>
+    <string name="zat_link_env_sim">بيئة المحاكاة (sandbox) — للتجربة قبل الإنتاج</string>
+    <string name="zat_link_pending">بانتظار الإبلاغ/التخليص</string>
+    <string name="zat_link_reported">مُبلَّغَة/مُخلَّصَة</string>
+    <string name="zat_link_rejected">مرفوضة من الهيئة</string>
+    <string name="zat_link_late">مبسطة مضت على إصدارها 24 ساعة دون إبلاغ: %1$d — وصّل الإنترنت وفعّل الربط</string>
+    <string name="zat_link_csid_note">جاهز للربط: أدخل بيانات اعتماد CSID من منصة فاتورة لتبدأ القائمة بالإرسال</string>
     <string name="perm_reminder_t">التذكير اليومي — متابعة الزيارات المتأخرة</string>
     <string name="perm_reminder_d">تنبيه يومي في الوقت المحدد لمتابعة العملاء الذين لم تُزرهم منذ تجاوز عتبة الأيام</string>
     <string name="perm_reminder_time">وقت التذكير</string>

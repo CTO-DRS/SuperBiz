@@ -1816,6 +1816,16 @@
     <string name="zat_copied">Public key PEM copied to clipboard</string>
     <string name="zat_share_chooser">Share ZATCA public key</string>
     <string name="zat_fp_fail">Could not read the public key on this device</string>
+    <!-- [Z2-b V 1.5.0] Fatoora tax-linking card — D2 gate + status board -->
+    <string name="zat_link_title">Tax linking — Fatoora platform</string>
+    <string name="zat_link_desc">Report simplified and clear standard invoices with ZATCA — your data goes to the Fatoora platform only, nothing else</string>
+    <string name="zat_link_env_prod">Production — invoices are reported for real</string>
+    <string name="zat_link_env_sim">Simulation (sandbox) — try before production</string>
+    <string name="zat_link_pending">Awaiting report/clearance</string>
+    <string name="zat_link_reported">Reported/cleared</string>
+    <string name="zat_link_rejected">Rejected by authority</string>
+    <string name="zat_link_late">Simplified invoices past their 24h window: %1$d — go online and enable linking</string>
+    <string name="zat_link_csid_note">Ready to link: enter your CSID credentials from the Fatoora portal to start sending</string>
     <string name="perm_reminder_t">Daily visit reminders</string>
     <string name="perm_reminder_d">A daily nudge to follow up on overdue customers</string>
     <string name="perm_reminder_time">Reminder time</string>

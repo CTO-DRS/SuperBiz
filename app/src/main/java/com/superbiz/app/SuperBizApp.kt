@@ -42,7 +42,8 @@ class AppGraph(val context: android.content.Context) {
             // [P41-L1]: أُضيف MIGRATION_10_11 — نسيانه هنا يعني فشل فتح قاعدة v10 القائمة
             // [P46-W1]: أُضيف MIGRATION_11_12 — نسيانه هنا يعني فشل فتح قاعدة v11 القائمة
             // [H1-3][v13]: أُضيف MIGRATION_12_13 — نسيانه هنا يعني فشل فتح قاعدة v12 القائمة
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+            // [Z2-أ][v14]: أُضيف MIGRATION_13_14 — نسيانه هنا يعني فشل فتح قاعدة v13 القائمة
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
             .build()
     }
     val settings by lazy { SettingsRepo(context) }
@@ -55,7 +56,19 @@ class AppGraph(val context: android.content.Context) {
     // [P46-W1] جولة 7 — نقاط الولاء والكوبونات (مخطط v12)
     val loyalty by lazy { com.superbiz.app.data.repo.LoyaltyRepo(db) }
     val invoices by lazy {
-        InvoiceRepo(db, loyalty).also { repo ->
+        // [Z2-أ V 1.5.0] خاتم ZATCA-2 — لقطة بائع من الإعدادات لحظة الإصدار
+        val stamper = com.superbiz.app.data.repo.ZatcaStamper(db, sellerProvider = {
+            val s = settings.snapshot()
+            com.superbiz.app.data.repo.ZatcaStamper.Seller(
+                name = s.businessName,
+                vatNumber = s.taxNumber,
+                crn = s.crNumber,
+                street = s.address,
+                city = s.city,
+                country = s.country.ifBlank { "SA" },
+            )
+        })
+        InvoiceRepo(db, loyalty, stamper).also { repo ->
             // حفظ/إلغاء فاتورة (ومنها POS) يجدد ويدجات الشاشة الرئيسية فوراً
             repo.onMutate = { com.superbiz.app.widget.WidgetSync.push(context) }
         }
@@ -84,6 +97,21 @@ class AppGraph(val context: android.content.Context) {
     /** [W1] متحكم Play Billing v7 — فريميوم Pro بلا خادم (شراء لمرة واحدة + استعادة) */
     val billing by lazy {
         com.superbiz.app.data.repo.BillingRepo(context, proStore, appScope)
+    }
+
+    // ─── [Z2-أ/ب V 1.5.0] الربط الضريبي — بوابة الميزة + العميل المعزول (ADR-001) ───
+
+    /** بوابة الميزة المزدوجة — خارج تفعيلها الصريح يبقى التطبيق صامتاً شبكياً كلياً */
+    val zatcaLink by lazy { com.superbiz.app.data.repo.ZatcaEnableStore(context) }
+
+    /**
+     * عميل منصة فاتورة — يُحقن هنا فقط (سلك التوصيل الجذري المصرَّح به في
+     * فاحص حدود ADR-001): البقية ترى الواجهة النقية ZatcaGateway حصراً.
+     * مزوّد بيانات الاعتماد null الآن — CSID الحي يُملأ في دفعة Z2-ج،
+     * والبوابة المزدوجة تمنع أي socket قبله (TransientFailure مغلق).
+     */
+    val zatcaGateway: com.superbiz.app.domain.ZatcaGateway by lazy {
+        com.superbiz.app.network.ZatcaFatooraGateway(zatcaLink, credentials = { null })
     }
 
     /** تهيئة أولية/إعادة بناء: عملات + قواعد افتراضية — آمنة للتكرار (idempotent) */
@@ -726,6 +754,20 @@ class AppGraph(val context: android.content.Context) {
             }
         }
 
+        // [Z2-أ V 1.5.0] ترحيل 13→14 — أرشيف مستندات ZATCA-2: جدول واحد بإنشاء فقط
+        // (عقد الترحيلات: إلحاقي خالص — CREATE TABLE/INDEX فقط، لا جدول قائم يُمس
+        // ولا صف يُعاد كتابته، وبذور القيم كلها في الكيان الافتراضية محايدة دلالياً.
+        // قاعدة v13 سليمة تماماً بلا الجدول — الأرشيف يبدأ فارغاً ويُملأ من الإصدارات
+        // الجديدة فقط، والفواتير القائمة تبقى غير مختومة بقرارها الموثق).
+        private val MIGRATION_13_14 = object : androidx.room.migration.Migration(13, 14) {
+            override fun migrate(d: androidx.sqlite.db.SupportSQLiteDatabase) {
+                d.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `zatca_docs` (`invoiceId` INTEGER PRIMARY KEY NOT NULL, `xml` TEXT NOT NULL, `xmlHash` TEXT NOT NULL, `subtype` TEXT NOT NULL, `issuedAt` INTEGER NOT NULL, `reportedAt` INTEGER NOT NULL, `rejectReason` TEXT NOT NULL, `attemptCount` INTEGER NOT NULL, `clearedXml` TEXT NOT NULL, FOREIGN KEY(`invoiceId`) REFERENCES `invoices`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)"
+                )
+                d.execSQL("CREATE INDEX IF NOT EXISTS `index_zatca_docs_invoiceId` ON `zatca_docs` (`invoiceId`)")
+            }
+        }
+
         // قائمة الترقيات مكشوفة للاختبارات (SchemaMigrationTest يشغّل كل ترحيل فعلياً) —
         // تُعرّف بعد الترحيلات لأن تهيئة خصائص Kotlin تتم بترتيب الإعلان
         // [P11-a]: MIGRATION_6_7 أُلحقت بالنهاية — الفهرسة بالموضع في الاختبارات تبقى صحيحة
@@ -734,7 +776,8 @@ class AppGraph(val context: android.content.Context) {
         // [P41-L1]: MIGRATION_10_11 أُلحقت بالنهاية — الفهرس 9 هو حقول السطر الضريبية
         // [P46-W1]: MIGRATION_11_12 أُلحقت بالنهاية — الفهرس 10 هو جداول الولاء والكوبونات
         // [H1-3]: MIGRATION_12_13 أُلحقت بالنهاية — الفهرس 11 هو RBAC + ZATCA-2 المشترك
-        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+        // [Z2-أ]: MIGRATION_13_14 أُلحقت بالنهاية — الفهرس 12 هو أرشيف zatca_docs
+        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
 
         /**
          * [H1-3] مزوّد بذرة رمز المالك — يُربط في AppGraph.db قبل بناء القاعدة بقراءة

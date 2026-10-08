@@ -10,7 +10,12 @@ import com.superbiz.app.domain.AccountingEngine
 import kotlinx.coroutines.flow.Flow
 import androidx.room.withTransaction
 
-class InvoiceRepo(private val db: AppDatabase, private val loyalty: LoyaltyRepo? = null) {
+class InvoiceRepo(
+    private val db: AppDatabase,
+    private val loyalty: LoyaltyRepo? = null,
+    // [Z2-أ V 1.5.0] خاتم ZATCA-2 — null يبقي كل السلوك القائم حرفياً (نمط loyalty)
+    private val zatca: ZatcaStamper? = null,
+) {
 
     // أي تغيير على الفواتير (حفظ/إلغاء) يجدد ويدجات الشاشة الرئيسية — نفس نمط LedgerRepo
     var onMutate: (() -> Unit)? = null
@@ -128,10 +133,17 @@ class InvoiceRepo(private val db: AppDatabase, private val loyalty: LoyaltyRepo?
             }
             // @Upsert في مسار التحديث يعيد -1 — نعوّض بمعرّف الفاتورة الصريح
             // وإلا انكسر تعديل الفاتورة (بنود تُدرج بمعرّف -1 وتيمة)
-            invId = db.invoices().upsert(withNumber)
-                .let { if (it == -1L && withNumber.id != 0L) withNumber.id else it }
+            // [Z2-أ V 1.5.0]: الختم قبل الإدراج (قراءة السلسلة + هوية جديدة) —
+            // كل قراءاته وإسناده داخل هذه المعاملة نفسها فلا سباق عدّاد.
+            val stamped = zatca?.stamp(withNumber, items, prev)
+            val toInsert = stamped?.invoice ?: withNumber
+            invId = db.invoices().upsert(toInsert)
+                .let { if (it == -1L && toInsert.id != 0L) toInsert.id else it }
             db.invoiceItems().deleteForInvoice(invId)
             db.invoiceItems().insertAll(items.map { it.copy(invoiceId = invId) })
+            // [Z2-أ V 1.5.0]: أرشفة مستند UBL — أول إصدار فقط (IGNORE) فلا
+            // تعديل لاحق يعيد كتابة مرجع PIH للفواتير التالية
+            stamped?.doc?.let { db.zatcaDocs().archiveFirst(it.copy(invoiceId = invId)) }
 
             if (moveStock) {
                 for (it in items) {
@@ -244,6 +256,9 @@ class InvoiceRepo(private val db: AppDatabase, private val loyalty: LoyaltyRepo?
             db.journal().deleteLinesByRef("payment", fresh.id)
             db.journal().deleteEntriesByRef("payment", fresh.id)
             db.payments().deleteByInvoiceId(fresh.id)
+            // [Z2-أ V 1.5.0]: الفاتورة الملغاة تخرج من قائمة الربط (zatcaStatus=0)
+            // — الهوية والأرشيف يبقيان (تدقيق)؛ تصحيح الامتثال الكامل بمستند دائن موجة قادمة
+            db.invoices().updateZatcaStatus(fresh.id, 0)
             // [P46-W1] عكس أثر نقاط الفاتورة الملغاة — صف تعويض reason=VOID داخل نفس
             // المعاملة: إلغاء بيع كسب نقاطاً يسترجعها، وإلغاء بيع استبدل نقاطاً يعيدها —
             // فلا نقاط أشباح تُكسب بإلغاء وإعادة إنشاء الفاتورة نفسها

@@ -200,7 +200,7 @@ class RbacMigration13Test {
         val db = buildV12Database(dbName)
         val before = rowCounts(db)
 
-        val migration = AppGraph.MIGRATIONS.last()
+        val migration = AppGraph.MIGRATIONS[11]
         assertEquals(12, migration.startVersion)
         assertEquals(13, migration.endVersion)
         migration.migrate(db)
@@ -247,7 +247,10 @@ class RbacMigration13Test {
         }
 
         // ═══ التحقق الحاسم: فتح القاعدة نفسها بRoom v13 — مطابقة بايتية للمخطط ═══
-        db.version = 13   // كما يفعل MigrationContainer داخلياً بعد migrate()
+        // [Z2-أ V 1.5.0]: إكمال السلسلة إلى v14 (أرشيف zatca_docs بإنشاء فقط) —
+        // المخطط الحالي 14 فالفتحة النهائية تكون بمخطط اليوم كاملاً
+        AppGraph.MIGRATIONS[12].migrate(db)
+        db.version = 14   // كما يفعل MigrationContainer داخلياً بعد migrate()
         db.close()
 
         val ctx = ApplicationProvider.getApplicationContext<Context>()
@@ -255,7 +258,7 @@ class RbacMigration13Test {
             .allowMainThreadQueries()
             .build()
         try {
-            // أي عدم تطابق بين SQL الترحيل ومخطط Room v13 يرمى هنا (RoomOpenHelper.checkIdentity)
+            // أي عدم تطابق بين SQL الترحيل ومخطط Room v14 يرمى هنا (RoomOpenHelper.checkIdentity)
             kotlinx.coroutines.runBlocking {
                 val all = room.users().all()
                 assertEquals(1, all.size)
@@ -285,7 +288,7 @@ class RbacMigration13Test {
         val db = buildV12Database(dbName)
         val before = rowCounts(db)
 
-        AppGraph.MIGRATIONS.last().migrate(db)
+        AppGraph.MIGRATIONS[11].migrate(db)
 
         // الصفوف القائمة كلها سليمة (المالك يُزرع في users الجديدة لا في القديمة)
         assertEquals(before, rowCounts(db))
@@ -309,7 +312,7 @@ class RbacMigration13Test {
             OwnerPinSeed("ks:aa:bb", "ccdd", 600000, false)
         }
         val db = buildV12Database(dbName)
-        AppGraph.MIGRATIONS.last().migrate(db)
+        AppGraph.MIGRATIONS[11].migrate(db)
 
         // مستخدم إضافي بسر ثم حذفه — السر يمشي معه (عقد CASCADE)
         db.execSQL("INSERT INTO `users` (`name`,`role`,`active`,`createdAt`,`lastSeenAt`) VALUES ('كاشير', 3, 1, 500, 0)")
@@ -327,9 +330,13 @@ class RbacMigration13Test {
     @Test
     fun migration12to13_isInMigrationsListAndWiredInBuilder() {
         // عقد التسجيل: الترحيل الأخير في القائمة المكشوفة للاختبارات
-        assertEquals(12, AppGraph.MIGRATIONS.size)
+        assertEquals(13, AppGraph.MIGRATIONS.size)
+        // [Z2-أ V 1.5.0]: أُلحق 13→14 بالنهاية — مشترك RBAC+ZATCA-2 صار الفهرس 11
+        val shared = AppGraph.MIGRATIONS[11]
+        assertEquals(12, shared.startVersion)
+        assertEquals(13, shared.endVersion)
         val last = AppGraph.MIGRATIONS.last()
-        assertEquals(12, last.startVersion)
-        assertEquals(13, last.endVersion)
+        assertEquals(13, last.startVersion)
+        assertEquals(14, last.endVersion)
     }
 }

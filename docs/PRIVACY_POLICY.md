@@ -15,12 +15,13 @@ SuperBiz يعمل **دون اتصال بالإنترنت 100٪** — بيانا�
 - **النسخ الاحتياطية**: تُكتب في المجلد الذي تختاره أنت (SAF) على جهازك أو حصة سحابية تختارها أنت — نحن لا نطّلع عليها.
 - **كلمة مرور القفل/البصمة**: تُحفظ بصمة الرمز مغلّفة بمفاتيح أندرويد Keystore على جهازك، ولا يمكن لنا — ولا لأي طرف — استعادتها.
 
-### ٢. الاتصالات الوحيدة التي يُجريها التطبيق (بمبادرتك أنت)
+### ٢. الاتصالات الوحيدة التي يُجريها التطبيق
 | الاتصال | الغرض | ما يُرسَل |
 |---|---|---|
 | البريد المجدول (SMTP الخاص بك) | إرسال كشوف الحساب | بيانات الكشف التي تختارها + بيانات دخول بريدك |
 | طباعة البلوتوث الحرارية | إيصالات ومستندات | محتوى المستند للطابعة مباشرة |
 | Google Play Billing (اختياري — Pro) | شراء/استعادة ميزات Pro | تُديره Google وفق سياستها؛ لا يتلقى التطبيق بياناتك الشخصية، فقط حالة الشراء |
+| **منصة فاتورة (ZATCA) — اختيارية حصراً** [V 1.5.0] | الإبلاغ عن الفواتير المبسطة وتخليص القياسية عند هيئة الزكاة والضريبة والجمارك — **لا يُرسل socket واحد قبل تفعيلك الصريح للربط من شاشة ZATCA داخل التطبيق** | حصراً: مستند الفاتورة بصيغة UBL 2.1 + بصمته الرقمية (SHA-256) + معرّفها الموحّد وعدّادها + بيانات اعتماد CSID نحو نطاق `gw-fatura.zatca.gov.sa` — **لا شيء آخر إطلاقاً**: لا تحليلات، لا تتبع، لا سجلات أعطال، لا «فحص تحديث» |
 
 ### ٣. الصلاحيات
 الكاميرا (ماسح الباركود)· جهات الاتصال (استيراد اختياري بأمر أنت)· الإشعارات (تنبيهات الذمم/المخزون)· البلوتوث (الطابعات) — كلها لأغراض وظيفية ظاهرة داخل التطبيق ولا تُستخدم لأي تتبّع.
@@ -46,12 +47,13 @@ SuperBiz works **100% offline** — your business data lives only on your device
 - **Backups** are written to the folder *you* choose (SAF) on your device or your chosen cloud share — we never see them.
 - **Lock PIN/biometrics**: the PIN digest is wrapped by Android Keystore keys on your device; neither we nor anyone else can recover it.
 
-### 2. The only connections the app makes (initiated by you)
+### 2. The only connections the app makes
 | Connection | Purpose | What is sent |
 |---|---|---|
 | Scheduled email (your SMTP) | sending account statements | chosen statement data + your mail credentials |
 | Bluetooth thermal printing | receipts & documents | document content directly to the printer |
 | Google Play Billing (optional — Pro) | purchase/restore of Pro features | managed by Google under its policy; the app receives only purchase state, never your personal data |
+| **Fatoora platform (ZATCA) — strictly opt-in** [V 1.5.0] | reporting simplified and clearing standard invoices with the Zakat, Tax and Customs Authority — **not a single socket before you explicitly enable tax linking in the in-app ZATCA screen** | exclusively: the invoice UBL 2.1 document + its digital hash (SHA-256) + its UUID/counter + CSID credentials toward `gw-fatura.zatca.gov.sa` — **nothing else, ever**: no analytics, no tracking, no crash logs, no update checks |
 
 ### 3. Permissions
 Camera (barcode scanner) · Contacts (optional import at your command) · Notifications (debts/stock alerts) · Bluetooth (printers) — all used for visible in-app functionality only, never for tracking.
