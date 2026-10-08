@@ -128,7 +128,9 @@ val StartRouteWhitelist: Set<String> = setOf(
     // في الـmanifest يعمل، لكن هذه القائمة أسقطت المسار فكانت حلقة QR ميتة من الطرف
     // للطرف (يُستهلك المسار بلا تنقل). العضوية تُكتتب بالمسار الأساسي —
     // لاحقة الاستعلام تُطبَّع عند الفحص في isStartRouteAllowed أدناه.
-    Routes.STATEMENT_VERIFY
+    Routes.STATEMENT_VERIFY,
+    // [H3-6] المنسّق الذكي — وجهة إجراء مشروعة لتنبيهات EWMA المستقبلية
+    Routes.SMART
 )
 
 /**
@@ -182,6 +184,8 @@ object Routes {
     // [W1] الفريميوم: شاشة Pro + لوحة المؤشرات (الباب المدفوع الأول)
     const val PRO = "pro"
     const val KPI_BOARD = "kpi_board"
+    // [H3-6] المنسّق الذكي — دردشة محلية والتنبؤ على الجهاز
+    const val SMART = "smart"
 }
 
 private data class DockItem(val route: String, val icon: ImageVector, val labelRes: Int)
@@ -454,6 +458,15 @@ fun SuperBizRoot(
                     RbacGated(com.superbiz.app.domain.rbac.Op.FINANCIAL_REPORTS) {
                         KpiBoardScreen(
                             appVM = appVM,
+                            onBack = { nav.popBackStack() },
+                            openPro = { nav.navigate(Routes.PRO) { launchSingleTop = true } }
+                        )
+                    }
+                }
+                // [H3-6] المنسّق الذكي — دردشة مالية محلية (بوابة RBAC المالية + باب Pro داخلياً)
+                composable(Routes.SMART) {
+                    RbacGated(com.superbiz.app.domain.rbac.Op.FINANCIAL_REPORTS) {
+                        com.superbiz.app.ui.screens.SmartScreen(
                             onBack = { nav.popBackStack() },
                             openPro = { nav.navigate(Routes.PRO) { launchSingleTop = true } }
                         )

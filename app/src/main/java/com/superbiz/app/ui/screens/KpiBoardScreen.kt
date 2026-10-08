@@ -70,13 +70,16 @@ fun KpiBoardScreen(
     appVM: AppVM,
     onBack: () -> Unit,
     openPro: () -> Unit,
-    proVM: ProVM = viewModel()
+    proVM: ProVM = viewModel(),
+    // [H3-5] VM المنسّق الذكي — يغذي بطاقة الروايات (AndroidViewModel بمصنع افتراضي كـProVM)
+    smartVM: com.superbiz.app.vm.SmartCoordinatorVM = viewModel()
 ) {
     val g = glassColors()
     val pro by proVM.pro.collectAsState()
     val home by appVM.home.collectAsState()
     val symbol by appVM.symbol.collectAsState()
     val targets by proVM.targets.collectAsState()
+    val smartHome by smartVM.home.collectAsState()
     var showEditor by remember { mutableStateOf(false) }
 
     Column(
@@ -186,6 +189,8 @@ fun KpiBoardScreen(
             )
             Spacer(Modifier.height(8.dp))
             kpis.forEach { k -> KpiCard(k, symbol, fraction) ; Spacer(Modifier.height(10.dp)) }
+            // [H3-5] روايات الأداء — كل سطر يحمل أساسه الخام (الشفافية الكاملة)
+            com.superbiz.app.ui.insights.KpiNarrativesCard(smartHome.stories, symbol)
             Spacer(Modifier.height(10.dp))
             Text(
                 stringResource(R.string.kpi_realdata_note),

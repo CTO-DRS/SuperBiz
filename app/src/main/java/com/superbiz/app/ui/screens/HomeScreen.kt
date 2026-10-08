@@ -135,6 +135,7 @@ fun HomeScreen(appVM: AppVM, settingsVM: com.superbiz.app.vm.SettingsVM, nav: Na
     // VM الرؤى الذكية للموجة R14 — عبر R14Smart
     val r14VM: com.superbiz.app.vm.R14InsightsVM = viewModel(viewModelStoreOwner = activity, factory = factory)
     val r15VM: com.superbiz.app.vm.R15InsightsVM = viewModel(viewModelStoreOwner = activity, factory = factory)
+    val r16VM: com.superbiz.app.vm.SmartCoordinatorVM = viewModel(viewModelStoreOwner = activity, factory = factory)
     // [P6-M42 إصلاح] زر «فاتورة» كان ميت الوظيفة: كان يفتح المحرر على نسخة InvoicesVM معلّقة
     // بمدخل HOME بينما InvoicesScreen تنشئ نسختها الخاصة بمدخل INVOICES — فلا يُفتح المحرر أبداً.
     // الحل ضمن ملكية هذا الملف (بلا لمس Nav.kt أو InvoicesScreen/FeatureVMs): نسخة على مستوى
@@ -556,6 +557,8 @@ fun HomeScreen(appVM: AppVM, settingsVM: com.superbiz.app.vm.SettingsVM, nav: Na
                     // وينسور/هيرست/ك-س/غطاء الالتزامات
                     com.superbiz.app.ui.insights.insightsGroup("r14") { com.superbiz.app.ui.insights.HomeR14Card(appVM, r14VM) },
                     com.superbiz.app.ui.insights.insightsGroup("r15") { com.superbiz.app.ui.insights.HomeR15Card(appVM, r15VM) },
+                    // [H3-6] المنسّق الذكي — تنبيهات استباقية + إعادة طلب + نقد 90 يوم + مدخل الدردشة
+                    com.superbiz.app.ui.insights.insightsGroup("r16") { com.superbiz.app.ui.insights.HomeR16Card(appVM, r16VM, nav) },
                 )
             )
         }

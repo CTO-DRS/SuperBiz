@@ -1,12 +1,12 @@
 # SuperBiz
 
-**Version: V 1.5.0**
-**ZATCA مرحلة-2 — جاهز-للربط**
+**Version: V 2.0.0**
+**المنسّق الذكي — ذكاء محلي يتنبأ ويشرح أصوله**
 
 ![SuperBiz](assets/banner.png)
 
-![Version](https://img.shields.io/badge/الإصدار-V%201.5.0-8B5CF6?style=flat-square&labelColor=0B1026)
-![Tests](https://img.shields.io/badge/الاختبارات-1593%20خضراء-34D399?style=flat-square&labelColor=0B1026)
+![Version](https://img.shields.io/badge/الإصدار-V%202.0.0-8B5CF6?style=flat-square&labelColor=0B1026)
+![Tests](https://img.shields.io/badge/الاختبارات-1629%20خضراء-34D399?style=flat-square&labelColor=0B1026)
 ![Platform](https://img.shields.io/badge/Android-7.0%2B%20(minSdk%2024)-3B82F6?style=flat-square&labelColor=0B1026)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-8B5CF6?style=flat-square&labelColor=0B1026)
 ![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-22D3EE?style=flat-square&labelColor=0B1026)
@@ -17,7 +17,7 @@
 
 ---
 
-> ⬇️ **تحميل جاهز للتثبيت:** حزمة **APK موقّعة** (وأيضًا AAB للمتجر) متاحة مباشرةً من [إصدار V 1.5.0](https://github.com/CTO-DRS/SuperBiz/releases/tag/v1.5.0) — تُبنى وتُوقّع وتُرفق آليًا مع كل وسم `v*` عبر GitHub Actions.
+> ⬇️ **تحميل جاهز للتثبيت:** حزمة **APK موقّعة** (وأيضًا AAB للمتجر) متاحة مباشرةً من [إصدار V 2.0.0](https://github.com/CTO-DRS/SuperBiz/releases/tag/v2.0.0) — تُبنى وتُوقّع وتُرفق آليًا مع كل وسم `v*` عبر GitHub Actions.
 
 ## وصف المشروع
 
@@ -27,7 +27,7 @@ SuperBiz هو تطبيق أندرويد أصلي (Native) لإدارة الأع�
 - **اللغة:** Kotlin + Jetpack Compose (Material 3)
 - **الواجهة:** العربية أولًا (RTL أصيل) مع دعم إنجليزي كامل (2235 نصًا × لغتين بتطابق تام)
 - **قاعدة البيانات:** Room (مخطط v12 — 25 جدولًا بمفاتيح أجنبية كاملة، المال مخزَّن Long قروش)
-- **الاختبارات:** 1593 اختبار وحدة أخضر في 131 ملف اختبار
+- **الاختبارات:** 1629 اختبار وحدة أخضر في 133 ملف اختبار
 - **الحجم:** 190 ملف Kotlin (~67 ألف سطر) · 29 شاشة Compose · 17 مستودع بيانات · 57 ملف محركات ومنطق نق Pure
 
 ## الهدف من التطبيق
@@ -102,7 +102,7 @@ SuperBiz هو تطبيق أندرويد أصلي (Native) لإدارة الأع�
 ./gradlew assembleDebug            # APK تجريبي → app/build/outputs/apk/debug/
 ./gradlew assembleRelease          # APK إصدار (يتطلب توقيعًا — انظر أدناه)
 ./gradlew bundleRelease            # AAB للمتجر
-./gradlew testReleaseUnitTest      # 1593 اختبار وحدة
+./gradlew testReleaseUnitTest      # 1629 اختبار وحدة
 ```
 
 > ملاحظة: أول تشغيل يحمّل اعتماديات Gradle/Maven — يلزم اتصال إنترنت مرة واحدة فقط؛ التطبيق نفسه يعمل دون اتصال تمامًا.
@@ -114,10 +114,10 @@ SuperBiz هو تطبيق أندرويد أصلي (Native) لإدارة الأع�
 
 ## طريقة تثبيت التطبيق
 
-1. من صفحة [Releases](../../releases) حمّل أحدث APK موقَّع — للإصدار الحالي: [`app-release.apk` من إصدار V 1.5.0](https://github.com/CTO-DRS/SuperBiz/releases/tag/v1.5.0) (تُبنى الحزم وتُوقَّع آليًا عند كل وسم `v*` عبر `.github/workflows/release.yml`، والشهادة: `SuperBiz / CTO-DRS`).
+1. من صفحة [Releases](../../releases) حمّل أحدث APK موقَّع — للإصدار الحالي: [`app-release.apk` من إصدار V 2.0.0](https://github.com/CTO-DRS/SuperBiz/releases/tag/v2.0.0) (تُبنى الحزم وتُوقَّع آليًا عند كل وسم `v*` عبر `.github/workflows/release.yml`، والشهادة: `SuperBiz / CTO-DRS`).
 2. على الهاتف: اسمح بـ«التثبيت من مصادر غير معروفة» لهذا الملف ثم ثبّته.
 3. افتح التطبيق — يعمل فورًا دون تسجيل أو اتصال. كل البيانات تبقى على جهازك فقط.
-4. الترقيات المستقبلية فوق V 1.0.0 تراكبية بنفس شهادة التوقيع (وحتى V 1.5.0 تحفظ كل البيانات على مخطط v14) — بلا فقد بيانات. خذ نسخة احتياطية من داخل التطبيق قبل أي ترقية كإجراء وقائي.
+4. الترقيات المستقبلية فوق V 1.0.0 تراكبية بنفس شهادة التوقيع (وحتى V 2.0.0 تحفظ كل البيانات على مخطط v14) — بلا فقد بيانات. خذ نسخة احتياطية من داخل التطبيق قبل أي ترقية كإجراء وقائي.
 
 ## بنية المشروع (مختصرة)
 
@@ -133,7 +133,7 @@ SuperBiz/
 │   ├── widget/      4 ويدجت AppWidgetProvider
 │   ├── work/        عمال الخلفية: أتمتة، نسخ احتياطي، جدولة تقارير، تذكيرات
 │   └── util/        Money (HALF_UP) + Intents آمنة + توليد باركود
-├── app/src/test/    131 ملف اختبار — 1593 اختبار وحدة
+├── app/src/test/    133 ملف اختبار — 1629 اختبار وحدة
 ├── app/schemas/     مخططات Room المصدَّرة (مرجع اختبارات الترحيل)
 ├── docs/            التوثيق: ADR، ZATCA-2، RBAC، أمان، خصوصية، متجر، عمليات
 ├── tools/ scripts/  فاحصات CI للسلاسل الموطَّنة
@@ -152,10 +152,10 @@ SuperBiz/
 
 | البند | القيمة |
 |---|---|
-| الإصدار | **V 1.5.0 — ZATCA مرحلة-2 (جاهز-للربط)** |
-| versionCode | 1 |
-| تاريخ الإصدار | 2026-10-06 |
-| الوسم | `v1.5.0` |
+| الإصدار | **V 2.0.0 — المنسّق الذكي (الذكاء المحلي)** |
+| versionCode | 5 |
+| تاريخ الإصدار | 2026-10-08 |
+| الوسم | `v2.0.0` |
 | رقم الإصدار داخل التطبيق | يُعرض من `BuildConfig.VERSION_NAME` في مركز الإعدادات (حول) وتذييل كل مستندات PDF — لا يوجد أي رقم إصدار صلب في الكود |
 
 ## فهرس التوثيق
