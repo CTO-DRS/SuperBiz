@@ -37,6 +37,10 @@ class ExpensesVM(app: Application) : AndroidViewModel(app) {
     val todayTotal = MutableStateFlow(0L)
     val byCategory = MutableStateFlow<List<Pair<String, Long>>>(emptyList())
 
+    // [H4-1 V 2.5.0] كتالوج العملات لمنتقي حوار الإضافة — التحويل عند addInCurrency
+    val currencies = g.db.currencies().all()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     /** 0 = الكل، وإلا فلترة فئة */
     val categoryFilter = MutableStateFlow("")
 
@@ -83,6 +87,55 @@ class ExpensesVM(app: Application) : AndroidViewModel(app) {
                     "Expenses", "add: ${e.message}",
                     // [P6-M47 إصلاح] الفشل لم يعد صامتاً للمستخدم — رسالة مفهومة عبر ErrorCenter
                     // تظهر في الـSnackbar الموحد (نمط رسائل رفض الحفظ في بقية الـVMs)
+                    getApplication<Application>().getString(com.superbiz.app.R.string.exp_save_failed)
+                )
+            }
+            refresh()
+        }
+
+    /**
+     * [H4-1 V 2.5.0] إضافة مصروف بعملة أجنبية — الأفق الرابع (عملات متعددة):
+     * المبلغ يدخل وحدات 2dp من العملة المختارة، يُشتق سعر micros حتمياً من الكتالوج
+     * (FxStampMath.rateMicrosFromCatalog)، ويُحوَّل قروش أساس عبر Money.foreignToBasePiasters
+     * (نقطة التحويل الوحيدة)، ويُختم الصف بفئته الأصلية وسعره التاريخي. الإخفاق مغلَق:
+     * عملة مجهولة/سعر غير صالح/تحويل فاشل ⇒ رفض برسالة لا صفر مالي زائف.
+     */
+    fun addInCurrency(foreignMinor: Long, code: String, category: String, note: String, date: Long = System.currentTimeMillis()) =
+        launchSafe {
+            try {
+                val base = g.settings.snapshot().baseCurrency
+                val micros: Long = if (code == base) {
+                    com.superbiz.app.domain.algo.FxStampMath.BASE_RATE_MICROS
+                } else {
+                    val entry = g.db.currencies().allOnce().firstOrNull { it.code == code }
+                    val m = entry?.let { com.superbiz.app.domain.algo.FxStampMath.rateMicrosFromCatalog(it.rateToBase) }
+                    if (m == null) {
+                        com.superbiz.app.core.ErrorCenter.warn(
+                            "Expenses", "addInCurrency: invalid currency/rate $code",
+                            getApplication<Application>().getString(com.superbiz.app.R.string.cur_rate_invalid)
+                        )
+                        return@launchSafe
+                    }
+                    m
+                }
+                val basePiasters = com.superbiz.app.util.Money.foreignToBasePiasters(foreignMinor, 2, micros)
+                if (basePiasters == null || basePiasters <= 0L) {
+                    com.superbiz.app.core.ErrorCenter.warn(
+                        "Expenses", "addInCurrency: unconvertible amount $foreignMinor @ $micros",
+                        getApplication<Application>().getString(com.superbiz.app.R.string.exp_save_failed)
+                    )
+                    return@launchSafe
+                }
+                g.expenses.addStamped(
+                    basePiasters,
+                    if (code == base) "" else code,
+                    foreignMinor,
+                    if (code == base) 0L else micros,
+                    category, note, date
+                )
+            } catch (e: Exception) {
+                com.superbiz.app.core.ErrorCenter.warn(
+                    "Expenses", "addInCurrency: ${e.message}",
                     getApplication<Application>().getString(com.superbiz.app.R.string.exp_save_failed)
                 )
             }

@@ -347,6 +347,14 @@ private fun AddExpenseDialog(
     val suggestions = remember { vm.suggestedCategories() }
     // [P6-M47 إصلاح] كان زر الحفظ يفشل صامتاً على المبلغ غير الصالح — رسالة خطأ داخل الحوار
     var errRes by remember { mutableStateOf<Int?>(null) }
+    // [H4-1 V 2.5.0] عملة المصروف — الافتراضي عملة الأساس، والاختيار الأجنبي يحوّل ويختَم
+    val currencies by vm.currencies.collectAsState()
+    var curCode by remember { mutableStateOf("") }
+    androidx.compose.runtime.LaunchedEffect(currencies) {
+        if (curCode.isBlank() && currencies.isNotEmpty()) {
+            curCode = currencies.firstOrNull { it.isBase }?.code ?: currencies.first().code
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -359,6 +367,30 @@ private fun AddExpenseDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 BizField(amount, { amount = it }, stringResourceCompat(R.string.amount), keyboard = numberFieldOptions())
+                // [H4-1 V 2.5.0] رقاقات العملة — الأجنبية تحوّل قروش أساس وتختَم تاريخياً
+                if (currencies.isNotEmpty()) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        currencies.forEach { c ->
+                            val selected = c.code == curCode
+                            Text(
+                                c.code + " " + c.symbol,
+                                color = if (selected) Color.White else g.textPrimary,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                fontSize = 11.sp,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (selected) g.accent else g.textSecondary.copy(alpha = 0.08f))
+                                    .clickable { curCode = c.code }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
+                }
                 Text(
                     stringResourceCompat(R.string.exp_category),
                     color = g.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold
@@ -393,7 +425,12 @@ private fun AddExpenseDialog(
                 val v = parseNum(amount)
                 if (v > 0) {
                     errRes = null
-                    vm.add(v, category, note)
+                    // [H4-1] مسار موحّد: addInCurrency يتكفل بهوية الأساس (ختم فارغ) والأجنبي بالتحويل والختم
+                    vm.addInCurrency(
+                        com.superbiz.app.util.Money.parseToPiasters(amount),
+                        curCode.ifBlank { currencies.firstOrNull { it.isBase }?.code ?: "" },
+                        category, note
+                    )
                     onDismiss()
                 } else {
                     // [P6-M47 إصلاح] مفتاح قائم يعاد استخدامه — رسالة واضحة داخل الحوار

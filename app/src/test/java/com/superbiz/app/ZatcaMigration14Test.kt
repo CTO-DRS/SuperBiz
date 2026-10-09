@@ -133,8 +133,10 @@ class ZatcaMigration14Test {
             // 4) الجدول يبدأ فارغاً — الأرشيف يُملأ من الإصدارات الجديدة فقط
             assertEquals(0L, scalar(db, "SELECT COUNT(*) FROM zatca_docs"))
 
-            // ═══ التحقق الحاسم: فتح القاعدة نفسها بRoom v14 ═══
-            db.version = 14
+            // ═══ التحقق الحاسم: فتح القاعدة نفسها بRoom ═══
+            // [H4-1 V 2.5.0]: إكمال السلسلة إلى v15 (ختم الفئة الأصلية) — المخطط الحالي 15
+            AppGraph.MIGRATIONS[13].migrate(db)
+            db.version = 15
             db.close()
 
             val ctx = ApplicationProvider.getApplicationContext<Context>()
