@@ -625,6 +625,10 @@ private fun DataSection(
     // الإبلاغ/التخليص — إيقاع البطاقات الذاتية نفسه بلا معاملات
     ZatcaLinkCard()
     Spacer(Modifier.height(8.dp))
+
+    // [H5-3 V 3.2.0] بطاقة الولاية الضريبية الخليجية (SA/AE/BH) — نفس الإيقاع
+    JurisdictionCard()
+    Spacer(Modifier.height(8.dp))
     SyncLinkCard()   // [H4-3][V 3.0.0] المزامنة المشفرة — بوابة ADR-002 مزدوجة الأبواب
     Spacer(Modifier.height(8.dp))
     WebhookCard()    // [H4-6][V 3.0.0] تصدير الويب هوك

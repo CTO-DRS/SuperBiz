@@ -62,11 +62,14 @@ class AppGraph(val context: android.content.Context) {
             val s = settings.snapshot()
             com.superbiz.app.data.repo.ZatcaStamper.Seller(
                 name = s.businessName,
-                vatNumber = s.taxNumber,
+                // [H5-3 V 3.2.0] بوابة الولاية الضريبية — ZATCA سعودية حصراً: خارج SA
+                // يخرج البائع بلا رقم ضريبي ⇒ stamp() يعيد null صامتاً بعقده
+                // فلا ختم ولا QR ولا UBL ولا أي socket (عقد GulfTax [P51-3]).
+                vatNumber = com.superbiz.app.domain.GulfTax.zatcaSellerVat(s.taxJurisdiction, s.taxNumber),
                 crn = s.crNumber,
                 street = s.address,
                 city = s.city,
-                country = s.country.ifBlank { "SA" },
+                country = s.country.ifBlank { s.taxJurisdiction.ifBlank { "SA" } },
             )
         })
         InvoiceRepo(db, loyalty, stamper).also { repo ->

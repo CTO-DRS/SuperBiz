@@ -289,14 +289,8 @@ fun DebtsScreen(appVM: AppVM, nav: NavHostController) {
                             Brush.linearGradient(listOf(Green, Cyan))
                         ) {
                             // تصدير المطالبات (الأطراف والأرصدة والخطر) Excel/CSV — الوظيفة كما كانت حرفياً
-                            val header = listOf(
-                                activity.getString(R.string.name),
-                                activity.getString(R.string.phone),
-                                activity.getString(R.string.transaction_type),
-                                activity.getString(R.string.balance),
-                                activity.getString(R.string.risk_score),
-                                activity.getString(R.string.status)
-                            )
+                            // [H5-4 V 3.2.0] الرؤوس من عقد التصدير الموحد
+                            val header = com.superbiz.app.export.ExportSchemas.claimsHeaders(activity)
                             val data = rows.map { r ->
                                 listOf<Any?>(
                                     r.party.name,

@@ -1,45 +1,49 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-""" — أداة فحص تطابق النصوص بين العربية والإنجليزية.
-
-تتحقق من: (1) نفس عدد المفاتيح، (2) نفس مجموعة المفاتيح، (3) نفس الترتيب.
-تخرج برمز غير صفر عند أي اختلاف — مناسبة لبوابة CI.
-
-الاستخدام: python3 tools/check_strings.py
-"""
+# [H5-2 V 3.0.0] حارس توازن السلاسل — عمّم من زوج ar/en إلى كل اللغات.
+# القاعدة الحاكمة: كل locale (values-*/strings.xml) يطابق الافتراضي (values/ = العربية)
+# في العدد ومجموعة المفاتيح والترتيب حرفياً — لا سلسلة يتيمة في أي لغة.
+import glob
+import os
 import re
 import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-AR = ROOT / "app/src/main/res/values/strings.xml"
-EN = ROOT / "app/src/main/res/values-en/strings.xml"
+ROOT = os.path.join(os.path.dirname(__file__), "..", "app", "src", "main", "res")
+BASE = os.path.join(ROOT, "values", "strings.xml")
 
-def keys(path: Path):
-    src = path.read_text(encoding="utf-8")
-    return re.findall(r'<string name="([^"]+)"', src)
+def keys(path):
+    with open(path, encoding="utf-8") as f:
+        return re.findall(r'<string name="([^"]+)"', f.read())
 
-def main() -> int:
-    ar, en = keys(AR), keys(EN)
-    ok = True
-    if len(ar) != len(en):
-        print(f"✗ عدد المفاتيح مختلف: ar={len(ar)} en={len(en)}")
-        ok = False
-    only_ar = set(ar) - set(en)
-    only_en = set(en) - set(ar)
-    if only_ar:
-        print(f"✗ مفاتيح بلا مقابل إنجليزي: {sorted(only_ar)[:10]}")
-        ok = False
-    if only_en:
-        print(f"✗ مفاتيح بلا مقابل عربي: {sorted(only_en)[:10]}")
-        ok = False
-    if ar != en and set(ar) == set(en):
-        print("✗ المفاتيح متطابقة لكن الترتيب مختلف (يبقى الفرق معياراً صارماً)")
-        ok = False
-    if ok:
-        print(f"✓ تطابق تام: {len(ar)} مفتاحاً عربياً = {len(en)} إنجليزياً، نفس الترتيب")
+def main():
+    if not os.path.exists(BASE):
+        print("فشل: لا يوجد strings.xml الافتراضي")
+        return 1
+    ar = keys(BASE)
+    locales = sorted(glob.glob(os.path.join(ROOT, "values-*", "strings.xml")))
+    locales = [p for p in locales if os.path.basename(os.path.dirname(p)) != "values-night"]
+    if not locales:
+        print("لا توجد لغات إضافية — لا شيء يُقارن")
         return 0
-    return 1
+    fail = False
+    for path in locales:
+        loc = os.path.basename(os.path.dirname(path))
+        ks = keys(path)
+        if len(ks) != len(ar):
+            print(f"فشل {loc}: العدد {len(ks)} != {len(ar)}")
+            fail = True
+            continue
+        if set(ks) != set(ar):
+            missing = [k for k in ar if k not in set(ks)][:10]
+            extra = [k for k in ks if k not in set(ar)][:10]
+            print(f"فشل {loc}: مفاتيح مختلفة — ناقص {missing} زائد {extra}")
+            fail = True
+            continue
+        if ks != ar:
+            print(f"فشل {loc}: الترتيب مختلف عن الافتراضي")
+            fail = True
+            continue
+        print(f"{loc}: {len(ks)} = {len(ar)}, نفس الترتيب")
+    return 1 if fail else 0
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -176,7 +176,9 @@ class BackupRepo(
             .put("searchFuzzyThreshold", s.searchFuzzyThreshold)
             .put("eoqOrderCost", s.eoqOrderCost)
             .put("expenseMonthlyLimit", s.expenseMonthlyLimit)
-            .put("privacyBlur", s.privacyBlur))
+            .put("privacyBlur", s.privacyBlur)
+            // [H5-3 V 3.2.0] الولاية الضريبية الخليجية
+            .put("taxJurisdiction", s.taxJurisdiction))
         return root
     }
 
@@ -829,9 +831,10 @@ class BackupRepo(
                     runCatching { if (it.has("businessName")) settings.setBusinessName(it.getString("businessName")) }
                     // [P7-X2 إصلاح]: avatarPath/backupDirUri من النسخة تُتجاهل بأمان — قيمة
                     // الجهاز المحلي تبقى كما هي (النسخ القديمة تحمل المفتاحين بلا أثر)
-                    // [P20-FIX agent18]: قائمة بيضاء ar/en — نفس عقد SettingsCodec؛ ملف فاسد/محرّر
+                    // [P20-FIX agent18]: قائمة بيضاء للغات — [H5-2 V 3.2.0] الست كلها
+                    // (ar/en/tr/fr/ur/id) — نفس عقد SettingsCodec؛ ملف فاسد/محرّر
                     // كان يزرع لغة غير معروفة تفشل عند التطبيق
-                    runCatching { if (it.has("language") && it.getString("language") in setOf("ar", "en")) settings.setLanguage(it.getString("language")) }
+                    runCatching { if (it.has("language") && it.getString("language") in setOf("ar", "en", "tr", "fr", "ur", "id")) settings.setLanguage(it.getString("language")) }
                     runCatching { if (it.has("theme")) settings.setTheme(it.getString("theme")) }
                     if (it.has("baseCurrency") && it.getString("baseCurrency").isNotBlank())
                         settings.setBaseCurrency(it.getString("baseCurrency"))
@@ -884,6 +887,8 @@ class BackupRepo(
                     runCatching { if (it.has("eoqOrderCost")) settings.setEoqOrderCost(it.getDouble("eoqOrderCost")) }
                     runCatching { if (it.has("expenseMonthlyLimit")) settings.setExpenseMonthlyLimit(it.getDouble("expenseMonthlyLimit")) }
                     runCatching { if (it.has("privacyBlur")) settings.setPrivacyBlur(it.getBoolean("privacyBlur")) }
+                    // [H5-3 V 3.2.0] الولاية — القائمة المغلقة داخل المُحدّث نفسه
+                    runCatching { if (it.has("taxJurisdiction")) settings.setTaxJurisdiction(it.getString("taxJurisdiction")) }
                 }
             } catch (e: Exception) {
                 // نتجاهل فشل الإعدادات فقط — القاعدة نفسها استُعيدت داخل المعاملة بنجاح

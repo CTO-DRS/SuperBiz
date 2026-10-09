@@ -1,12 +1,12 @@
 # SuperBiz
 
-**Version: V 3.1.0**
+**Version: V 3.2.0**
 **اكتمال اللغات — خمس لغات بتغطية 100% (الأفق الرابع مغلق)**
 
 ![SuperBiz](assets/banner.png)
 
-![Version](https://img.shields.io/badge/الإصدار-V%203.1.0-8B5CF6?style=flat-square&labelColor=0B1026)
-![Tests](https://img.shields.io/badge/الاختبارات-1706%20خضراء-34D399?style=flat-square&labelColor=0B1026)
+![Version](https://img.shields.io/badge/الإصدار-V%203.2.0-8B5CF6?style=flat-square&labelColor=0B1026)
+![Tests](https://img.shields.io/badge/الاختبارات-1716%20خضراء-34D399?style=flat-square&labelColor=0B1026)
 ![Platform](https://img.shields.io/badge/Android-7.0%2B%20(minSdk%2024)-3B82F6?style=flat-square&labelColor=0B1026)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-8B5CF6?style=flat-square&labelColor=0B1026)
 ![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-22D3EE?style=flat-square&labelColor=0B1026)
@@ -17,7 +17,7 @@
 
 ---
 
-> ⬇️ **تحميل جاهز للتثبيت:** حزمة **APK موقّعة** (وأيضًا AAB للمتجر) متاحة مباشرةً من [إصدار V 3.1.0](https://github.com/CTO-DRS/SuperBiz/releases/tag/v3.1.0) — تُبنى وتُوقّع وتُرفق آليًا مع كل وسم `v*` عبر GitHub Actions.
+> ⬇️ **تحميل جاهز للتثبيت:** حزمة **APK موقّعة** (وأيضًا AAB للمتجر) متاحة مباشرةً من [إصدار V 3.2.0](https://github.com/CTO-DRS/SuperBiz/releases/tag/v3.2.0) — تُبنى وتُوقّع وتُرفق آليًا مع كل وسم `v*` عبر GitHub Actions.
 
 ## وصف المشروع
 
@@ -28,7 +28,7 @@ SuperBiz هو تطبيق أندرويد أصلي (Native) لإدارة الأع�
 - **الواجهة:** العربية أولًا (RTL أصيل) مع خمس لغات مشحونة بتغطية 100% (2427 نصًا × 5: الإنجليزية والأوردية والتركية والإندونيسية — مثبتة آلياً ببوابة CI وفق `docs/LANGUAGE_PLAN.md`)
 - **العملات:** متعددة — فواتير ومصروفات بعملات أجنبية تُختَم بسعرها التاريخي، وتقارير موحّدة بعملة الأساس، وصفر Double في أي مسار مالي (موجة R17 + مخطط v15)
 - **قاعدة البيانات:** Room (مخطط v16 — المال مخزَّن Long قروش، هوية/ساعة للمزامنة + sync_log)
-- **الاختبارات:** 1706 اختبار وحدة أخضر في 145 ملف اختبار
+- **الاختبارات:** 1716 اختبار وحدة أخضر في 146 ملف اختبار
 - **الحجم:** 190 ملف Kotlin (~67 ألف سطر) · 29 شاشة Compose · 17 مستودع بيانات · 57 ملف محركات ومنطق نق Pure
 
 ## الهدف من التطبيق
@@ -134,7 +134,7 @@ SuperBiz/
 │   ├── widget/      4 ويدجت AppWidgetProvider
 │   ├── work/        عمال الخلفية: أتمتة، نسخ احتياطي، جدولة تقارير، تذكيرات
 │   └── util/        Money (HALF_UP) + Intents آمنة + توليد باركود
-├── app/src/test/    133 ملف اختبار — 1629 اختبار وحدة
+├── app/src/test/    136 ملف اختبار — 1716 اختبار وحدة
 ├── app/schemas/     مخططات Room المصدَّرة (مرجع اختبارات الترحيل)
 ├── docs/            التوثيق: ADR، ZATCA-2، RBAC، أمان، خصوصية، متجر، عمليات
 ├── tools/ scripts/  فاحصات CI للسلاسل الموطَّنة
@@ -153,10 +153,10 @@ SuperBiz/
 
 | البند | القيمة |
 |---|---|
-| الإصدار | **V 3.1.0 — اكتمال اللغات (الأفق الرابع مغلق)** |
+| الإصدار | **V 3.2.0 — الأفق الخامس: الامتثال الخليجي + الفرنسية + مبدّل اللغات الست + عقد التصدير** |
 | versionCode | 8 |
 | تاريخ الإصدار | 2026-10-09 |
-| الوسم | `v3.1.0` |
+| الوسم | `v3.2.0` |
 | رقم الإصدار داخل التطبيق | يُعرض من `BuildConfig.VERSION_NAME` في مركز الإعدادات (حول) وتذييل كل مستندات PDF — لا يوجد أي رقم إصدار صلب في الكود |
 
 ## فهرس التوثيق

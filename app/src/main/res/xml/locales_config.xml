@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- [H4-2][V 3.1.0] اللغات المشحونة بتغطية 100% — الإندونيسية مكتملة (2427 مفتاحاً) -->
+<!-- [H4-2][V 3.1.0] + [H5-2][V 3.2.0] الفرنسية — اللغات المشحونة بتغطية 100% -->
 <locale-config xmlns:android="http://schemas.android.com/apk/res/android">
     <locale android:name="ar" />
     <locale android:name="en" />
     <locale android:name="ur" />
     <locale android:name="tr" />
     <locale android:name="id" />
+    <locale android:name="fr" />
 </locale-config>

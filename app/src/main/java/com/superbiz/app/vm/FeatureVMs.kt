@@ -1823,6 +1823,23 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
     fun setLoyaltyEarnDivisor(v: Long) = launchSafe { g.settings.setLoyaltyEarnDivisor(v) }
     fun setLoyaltyPointValue(v: Long) = launchSafe { g.settings.setLoyaltyPointValue(v) }
 
+    /**
+     * [H5-3 V 3.2.0] «الأفق الخامس — العالمية»: تطبيق افتراضيات الولاية الخليجية —
+     * فعل صريح من المالك/المدير يكتب نسبة القانون (والفواتير المحفوظة تحمل نسبتها
+     * اللحظية فلا يتأثر التاريخ). الكود غير معروف يُرفض كلياً (فشل مغلق).
+     * تبديل عملة الولاية يبقى في مسار العملة القائم (منتقي H4-1 بنفس الشاشة).
+     */
+    fun applyJurisdictionRate(code: String) = launchSafe {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
+        val preset = com.superbiz.app.domain.GulfTax.ALL.firstOrNull { it.code == code }
+            ?: return@launchSafe
+        g.settings.setTaxJurisdiction(preset.code)
+        g.settings.setTaxRate(preset.defaultRate)
+    }
+
     fun setBusinessName(v: String) = launchSafe { g.settings.setBusinessName(v) }
     fun setTheme(v: String) = launchSafe { g.settings.setTheme(v) }
     fun setLanguage(v: String) = launchSafe {
@@ -2208,7 +2225,9 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
             SettingsCodec.Entry("weekendFriSat", SettingsCodec.Val.B(s.weekendFriSat)),
             SettingsCodec.Entry("searchFuzzyThreshold", SettingsCodec.Val.N(s.searchFuzzyThreshold)),
             SettingsCodec.Entry("eoqOrderCost", SettingsCodec.Val.N(s.eoqOrderCost)),
-            SettingsCodec.Entry("expenseMonthlyLimit", SettingsCodec.Val.N(s.expenseMonthlyLimit))
+            SettingsCodec.Entry("expenseMonthlyLimit", SettingsCodec.Val.N(s.expenseMonthlyLimit)),
+            // [H5-3 V 3.2.0] الولاية الضريبية
+            SettingsCodec.Entry("taxJurisdiction", SettingsCodec.Val.S(s.taxJurisdiction))
         )
     }
 
@@ -2278,6 +2297,8 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
                     }
                 }
                 "taxRate" -> g.settings.setTaxRate(nv(e))
+                // [H5-3 V 3.2.0] الولاية — القائمة المغلقة داخل المُحدّث
+                "taxJurisdiction" -> g.settings.setTaxJurisdiction(sv(e))
                 "fontScale" -> g.settings.setFontScale(nv(e).toFloat())
                 "dynamicColors" -> g.settings.setDynamicColors(bv(e))
                 "mirrorChartsRtl" -> g.settings.setMirrorChartsRtl(bv(e))

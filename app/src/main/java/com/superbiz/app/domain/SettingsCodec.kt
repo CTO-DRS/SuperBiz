@@ -46,7 +46,10 @@ object SettingsCodec {
     /** القائمة البيضاء — منتفاة عنها كل المفاتيح المحظورة أعلاه */
     val SPECS: Map<String, Spec> = linkedMapOf(
         // عام
-        "language" to Spec('s', allowed = setOf("ar", "en")),
+        // [H5-2 V 3.2.0] اللغات الست (العربية، الإنجليزية، التركية، الفرنسية، الأردية، الإندونيسية)
+        "language" to Spec('s', allowed = setOf("ar", "en", "tr", "fr", "ur", "id")),
+        // [H5-3 V 3.2.0] الولاية الضريبية الخليجية
+        "taxJurisdiction" to Spec('s', allowed = com.superbiz.app.domain.GulfTax.CODES),
         "theme" to Spec('s', allowed = setOf("dark", "light", "auto")),
         "baseCurrency" to Spec('s', pattern = Regex("[A-Z]{3}")),
         "taxRate" to Spec('n', min = 0.0, max = 100.0),

@@ -135,9 +135,18 @@ object InvoicePdf {
             }
             val xR = PAGE_W - MARGIN - (if (avatar != null) 70f else 0f)
             canvas.drawText(businessName, xR, 52f, paint(24f, white, bold = true))
-            canvas.drawText(ctx.getString(R.string.inv_pdf_title, invoice.number), xR, 78f, paint(13f, white))
-            canvas.drawText(Dates.short(invoice.date), xR, 98f, paint(13f, white))
-            canvas.drawText(ctx.getString(R.string.inv_pdf_due_date, Dates.short(invoice.dueDate)), xR, 118f, paint(13f, white))
+            // [H5-3 V 3.2.0] ملصق «فاتورة ضريبية» — إلزامي للفواتير الضريبية B2B في
+            // ولايات الخليج الثلاث (SA/AE/BH) عند وجود الرقم الضريبي للبائع
+            if (vatNumber.isNotBlank()) {
+                canvas.drawText(ctx.getString(R.string.invoice_tax_caption), xR, 70f, paint(12f, white, bold = true))
+                canvas.drawText(ctx.getString(R.string.inv_pdf_title, invoice.number), xR, 88f, paint(13f, white))
+                canvas.drawText(Dates.short(invoice.date), xR, 106f, paint(13f, white))
+                canvas.drawText(ctx.getString(R.string.inv_pdf_due_date, Dates.short(invoice.dueDate)), xR, 124f, paint(13f, white))
+            } else {
+                canvas.drawText(ctx.getString(R.string.inv_pdf_title, invoice.number), xR, 78f, paint(13f, white))
+                canvas.drawText(Dates.short(invoice.date), xR, 98f, paint(13f, white))
+                canvas.drawText(ctx.getString(R.string.inv_pdf_due_date, Dates.short(invoice.dueDate)), xR, 118f, paint(13f, white))
+            }
         }
 
         /** ترويسة مختصرة + ترقيم لصفحات التتمة */
@@ -352,6 +361,8 @@ object InvoicePdf {
         "د.إ" -> "درهم"
         "ج.م" -> "جنيه"
         "ر.ي" -> "ريال"
+        // [H5-3 V 3.2.0] البحرين — دينار بفلس مئوي (عقد P50-5 في ADR-002)
+        "د.ب" -> "دينار"
         else -> "ريال"
     }
 
@@ -360,6 +371,7 @@ object InvoicePdf {
         "د.إ" -> "فلس"
         "ج.م" -> "قرش"
         "ر.ي" -> "فلس"
+        "د.ب" -> "فلس"
         else -> "هللة"
     }
 }
