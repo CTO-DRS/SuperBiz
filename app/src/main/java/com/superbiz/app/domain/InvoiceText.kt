@@ -34,7 +34,9 @@ object InvoiceText {
         val discount: String = "الخصم",
         val tax: String = "الضريبة",
         val total: String = "الإجمالي",
-        val remaining: String = "المتبقي"
+        val remaining: String = "المتبقي",
+        // [H4-1 V 2.5.0] سطر الفئة الأصلية — يظهر فقط للفواتير المختومة بعملة أجنبية
+        val originalAmount: String = "الفئة الأصلية"
     )
 
     fun summary(inv: Invoice, items: List<InvoiceItem>, partyName: String?, labels: Labels = Labels()): String {
@@ -53,6 +55,12 @@ object InvoiceText {
         if (inv.discount > 0L) sb.appendLine("${labels.discount}: -${Money.numP(inv.discount)}")
         if (inv.taxAmount > 0L) sb.appendLine("${labels.tax}: ${Money.numP(inv.taxAmount)}")
         sb.appendLine("${labels.total}: ${Money.numP(inv.total)} ${inv.currency}")
+        // [H4-1 V 2.5.0] الفئة الأصلية بسعرها التاريخي — وثيقة عرض من الختم المخزّن
+        // (origTotal بوحدات 2dp عالمية، origFxMicros عقد R17) — لا إعادة حساب من أي سعر حالي
+        if (inv.origCurrency.isNotBlank()) {
+            val rateText = com.superbiz.app.domain.algo.FxStampMath.formatRate(inv.origFxMicros)
+            sb.appendLine("${labels.originalAmount}: ${Money.numP(inv.origTotal)} ${inv.origCurrency} @ $rateText")
+        }
         if (inv.status < 3 && inv.open > 0L) sb.appendLine("${labels.remaining}: ${Money.numP(inv.open)}")
         return sb.toString().trimEnd()
     }

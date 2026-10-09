@@ -371,6 +371,21 @@ class InvoicesVM(app: Application) : AndroidViewModel(app) {
     val editorDueDays = MutableStateFlow(14)
     val editorInvoiceId = MutableStateFlow<Long?>(null) // تعديل؟ حالياً إنشاء فقط
 
+    // [H4-1 V 2.5.0] عملة الفاتورة — الأفق الرابع (عملات متعددة):
+    // كتالوج العملات لمنتقي المحرر + عملة المحرر الحالية ("‏" تُتبع الأساس) —
+    // الأسعار تُدخل بعملة الفاتورة وتُحوَّل قروش أساس عند الحفظ عبر Money.foreignToBasePiasters
+    // (نقطة التحويل الوحيدة — عقد R17)، والفئة الأصلية تُختَم على الصف (origCurrency/origTotal/origFxMicros)
+    val currencies = g.db.currencies().all()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val editorCurrency = MutableStateFlow("")
+
+    /** micros سعر العملة من مخزون الكتالوج المعروض — للمعاينة في الواجهة حصراً (الحفظ يعيد الاشتقاق من allOnce) */
+    fun rateMicrosFor(code: String): Long? {
+        if (code.isBlank()) return null
+        val entry = currencies.value.firstOrNull { it.code == code } ?: return null
+        return com.superbiz.app.domain.algo.FxStampMath.rateMicrosFromCatalog(entry.rateToBase)
+    }
+
     // [P33-P8] الأسعار/الخصومات نصوص ريالية → parseToPiasters قروش؛ الكمية تبقى Double؛
     // (المجموع الفرعي، الضريبة، الإجمالي) قروش Long: الضريبة Math.round(الصافي × النسبة/100)
     fun totals(items: List<EditorItem>, taxRate: Double): Triple<Long, Long, Long> {
@@ -417,7 +432,11 @@ class InvoicesVM(app: Application) : AndroidViewModel(app) {
         editorType.value = type
         editorParty.value = presetParty
         editorItems.value = listOf(EditorItem(null, "", "", ""))
-        launchSafe { editorTaxRate.value = g.settings.snapshot().taxRate }
+        launchSafe {
+            editorTaxRate.value = g.settings.snapshot().taxRate
+            // [H4-1] عملة المحرر تتبع الأساس عند كل فتح — الاختيار الأجنبي قرار واعٍ لكل فاتورة
+            editorCurrency.value = g.settings.snapshot().baseCurrency
+        }
         editorOpen.value = true
     }
 
@@ -465,8 +484,63 @@ class InvoicesVM(app: Application) : AndroidViewModel(app) {
             }
         }
         val taxRate = editorTaxRate.value
+        // ── [H4-1 V 2.5.0] عملة الفاتورة وتحويل الحدود الوحيد ──
+        // الأسعار المدخلة بعملة المحرر (أجنبية عند اختيارها). الأجنبية: تُحسب
+        // الفئة الأصلية من النصوص المدخلة نفسها (origTotal)، ثم يُحوَّل «كل سطر مرة
+        // واحدة» عبر Money.foreignToBasePiasters (عقد R17 — نقطة التحويل الوحيدة)،
+        // وتُعاد كتابة نصوص السعر/الخصم بقروش الأساس فيُستأنف خط الأساس الحرفي
+        // القديم كاملاً (totals/cost/قيد) بلا أي منطق تقريب جديد. الإخفاق مغلَق:
+        // سعر غير صالح أو تحويل فاشل يرفض الحفظ برسالة — لا صفر مالي زائف.
+        val baseCode = g.settings.snapshot().baseCurrency
+        val curCode = editorCurrency.value.ifBlank { baseCode }
+        // [H4-1] الأساس لا يحتاج كتالوجاً — هوية التحويل بحكم التعريف (rate 1.0) وختمه فارغ،
+        // فلا يعتمد الحفظ الأساسي على بذور الكتالوج إطلاقاً. الكتالوج يُطلب للعملات الأجنبية حصراً.
+        val isForeign = curCode != baseCode
+        val curEntry = if (isForeign) g.db.currencies().allOnce().firstOrNull { it.code == curCode } else null
+        if (isForeign && curEntry == null) {
+            com.superbiz.app.core.ErrorCenter.warn(
+                "InvoicesVM", "rejected unknown currency $curCode",
+                getApplication<Application>().getString(com.superbiz.app.R.string.cur_rate_invalid)
+            )
+            return@launchSafe
+        }
+        var origMicros = 0L
+        var origTotalF = 0L
+        var effItems = items
+        if (isForeign) {
+            // الحرس أعلاه يضمن عدم الـnull هنا — القيمة المحلية للذكاء النمطي
+            val entry = curEntry ?: return@launchSafe
+            val micros = com.superbiz.app.domain.algo.FxStampMath.rateMicrosFromCatalog(entry.rateToBase)
+            if (micros == null) {
+                com.superbiz.app.core.ErrorCenter.warn(
+                    "InvoicesVM", "rejected invalid fx rate for $curCode (${entry.rateToBase})",
+                    getApplication<Application>().getString(com.superbiz.app.R.string.cur_rate_invalid)
+                )
+                return@launchSafe
+            }
+            origMicros = micros
+            val (subF, _, totalF) = totalsLineAware(items, taxRate) ?: totals(items, taxRate)
+            origTotalF = totalF
+            val converted = items.map { ei ->
+                val pB = com.superbiz.app.util.Money.foreignToBasePiasters(
+                    com.superbiz.app.util.Money.parseToPiasters(ei.price), 2, micros)
+                val dB = com.superbiz.app.util.Money.foreignToBasePiasters(
+                    com.superbiz.app.util.Money.parseToPiasters(ei.discount), 2, micros)
+                Triple(ei, pB, dB)
+            }
+            if (converted.any { it.second == null || it.third == null }) {
+                com.superbiz.app.core.ErrorCenter.warn(
+                    "InvoicesVM", "rejected unconvertible line for $curCode",
+                    getApplication<Application>().getString(com.superbiz.app.R.string.cur_rate_invalid)
+                )
+                return@launchSafe
+            }
+            effItems = converted.map { (ei, pB, dB) ->
+                ei.copy(price = com.superbiz.app.util.Money.numP(pB!!), discount = com.superbiz.app.util.Money.numP(dB!!))
+            }
+        }
         // [P41-L1]: مسار السطر الصريح إن وُجد وإلا المسار التاريخي الحرفي — لا تقريب مزدوج
-        val (sub, tax, total) = totalsLineAware(items, taxRate) ?: totals(items, taxRate)
+        val (sub, tax, total) = totalsLineAware(effItems, taxRate) ?: totals(effItems, taxRate)
         // خصم الفاتورة كان يُحسب من البنود ولا يُحفظ في الرأس —
         // فيُبنى قيد غير متوازن (صافي بلا خصم مقابل إجمالي به خصم) ويفشل الحفظ صامتاً.
         // [P33-P8] الخصم مشتق بالقروش مطروحاً تاماً (sub − (total − tax)) — بلا تقريب إطلاقاً
@@ -483,9 +557,13 @@ class InvoicesVM(app: Application) : AndroidViewModel(app) {
             date = now, dueDate = now + editorDueDays.value * 86_400_000L,
             subtotal = sub, discount = disc, taxRate = taxRate, taxAmount = tax, total = total,
             costTotal = costTotal,
-            currency = g.settings.snapshot().baseCurrency
+            // [H4-1] العملة المعروضة للفاتورة + ختم الفئة الأصلية (فارغ = بالأساس نفسه)
+            currency = curCode,
+            origCurrency = if (isForeign) curCode else "",
+            origTotal = origTotalF,
+            origFxMicros = origMicros
         )
-        val itemEntities = items.map {
+        val itemEntities = effItems.map {
             InvoiceItem(
                 invoiceId = 0, productId = it.productId, desc = it.desc.trim(),
                 // [P33-P8] الكمية Double والسعر/الخصم قروش Long
@@ -1764,6 +1842,11 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
     fun setAvatarPath(p: String?) = launchSafe { g.settings.setAvatar(p) }
 
     fun setBaseCurrency(code: String) = launchSafe {
+        // [H4-1][v15] العملة إعداد عام — المالك والمدير (مصفوفة §3 سطر 10، نفس عقد الضريبة)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
         // اجعل العملة المختارة أساساً وأعد ضبط المعدلات النسبية
         val all = g.db.currencies().allOnce()
         val target = all.firstOrNull { it.code == code } ?: return@launchSafe
@@ -1785,6 +1868,11 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
     }
 
     fun updateRate(code: String, rate: Double) = launchSafe {
+        // [H4-1][v15] نفس بوابة الإعدادات العامة — سعر العملة مدخل لكل أختام R17 التاريخية
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
         currencies.value.firstOrNull { it.code == code }?.let {
             // رفض معدل غير موجب/غير نهائي — كان الصفر يُقبل ثم يُفجّر setBaseCurrency لاحقاً
             if (!rate.isFinite() || rate <= 0.0) {
@@ -1799,6 +1887,51 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
                 return@launchSafe
             }
             g.db.currencies().upsert(it.copy(rateToBase = rate))
+        }
+    }
+
+    /**
+     * [H4-6 V 2.5.0] استيراد CSV (أصناف/أطراف) — باب المالك وحده (BACKUP_RESTORE:
+     * إدخال جماعي متغيّر للبيانات، نفس باب الاستعادة) والتنفيذ عبر CsvImportRepo
+     * (معاملة واحدة، صف تالف يُتخطى بسبب مسمّى). النتيجة توست موطّن عبر notifyToast.
+     */
+    fun importCsv(uri: android.net.Uri) = launchSafe {
+        val app = getApplication<Application>()
+        try {
+            com.superbiz.app.domain.rbac.RoleGate.require(
+                com.superbiz.app.domain.rbac.SessionState.effective(),
+                com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+            )
+        } catch (e: Exception) {
+            com.superbiz.app.core.ErrorCenter.warn(
+                "CsvImport", "denied: ${e.message}",
+                app.getString(com.superbiz.app.R.string.csv_import_denied)
+            )
+            return@launchSafe
+        }
+        try {
+            val text = app.contentResolver.openInputStream(uri)
+                ?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
+            if (text.isBlank()) {
+                notifyToast(app.getString(com.superbiz.app.R.string.csv_import_unknown))
+                return@launchSafe
+            }
+            val res = com.superbiz.app.data.repo.CsvImportRepo(g.db).import(
+                text,
+                app.getString(com.superbiz.app.R.string.customers),
+                app.getString(com.superbiz.app.R.string.suppliers),
+                app.getString(com.superbiz.app.R.string.party_both)
+            )
+            if (res.kind == "unknown") {
+                notifyToast(app.getString(com.superbiz.app.R.string.csv_import_unknown))
+            } else {
+                notifyToast(app.getString(com.superbiz.app.R.string.csv_import_done, res.upserted, res.skipped.size))
+            }
+        } catch (e: Exception) {
+            com.superbiz.app.core.ErrorCenter.warn(
+                "CsvImport", "failed: ${e.message}",
+                app.getString(com.superbiz.app.R.string.csv_import_unknown)
+            )
         }
     }
 

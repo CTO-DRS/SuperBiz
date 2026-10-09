@@ -432,6 +432,12 @@ private fun invoiceToJson(i: Invoice): String {
     sb.str("currency", i.currency); sb.append(',')
     sb.dbl("fxRate", i.fxRate); sb.append(',')
     sb.str("note", i.note)
+    // [H4-1 V 2.5.0] ختم الفئة الأصلية — يُكتب دائماً (عقد العقد الحرفي: كل الحقول)
+    // والقارئ متسامح (غيابه في ملفات ما قبل v15 ⇒ البذور المحايدة ""/0/0)
+    sb.append(',')
+    sb.str("origCurrency", i.origCurrency); sb.append(',')
+    sb.lng("origTotal", i.origTotal); sb.append(',')
+    sb.lng("origFxMicros", i.origFxMicros)
     sb.append('}')
     return sb.toString()
 }
@@ -483,7 +489,7 @@ private fun visitToJson(v: Visit): String {
 }
 
 private fun expenseToJson(e: Expense): String {
-    val sb = StringBuilder(128)
+    val sb = StringBuilder(160)
     sb.append('{')
     sb.lng("id", e.id); sb.append(',')
     sb.lng("amount", e.amount); sb.append(',') // [P33-P8] قروش
@@ -491,6 +497,11 @@ private fun expenseToJson(e: Expense): String {
     sb.str("note", e.note); sb.append(',')
     sb.lng("date", e.date); sb.append(',')
     sb.lng("createdAt", e.createdAt)
+    // [H4-1 V 2.5.0] ختم الفئة الأصلية — يُكتب دائماً والقارئ متسامح (كما الفواتير)
+    sb.append(',')
+    sb.str("origCurrency", e.origCurrency); sb.append(',')
+    sb.lng("origTotal", e.origTotal); sb.append(',')
+    sb.lng("origFxMicros", e.origFxMicros)
     sb.append('}')
     return sb.toString()
 }
@@ -1023,7 +1034,11 @@ private fun invoiceFromJson(m: Map<*, *>, legacy: Boolean) = Invoice(
     status = m.intF("status", 0),
     currency = m.strF("currency", "SAR"),
     fxRate = m.dblF("fxRate", 1.0),
-    note = m.strF("note", "")
+    note = m.strF("note", ""),
+    // [H4-1 V 2.5.0] ختم الفئة الأصلية — متسامح: غياب المفاتيح (ملفات ≤v14) ⇒ البذور المحايدة
+    origCurrency = m.strF("origCurrency", ""),
+    origTotal = m.moneyF("origTotal", legacy),
+    origFxMicros = m.lngF("origFxMicros", 0L)
 )
 
 private fun invoiceItemFromJson(m: Map<*, *>, legacy: Boolean) = InvoiceItem(

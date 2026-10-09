@@ -113,6 +113,21 @@ object Money {
         return toPiasters(v)
     }
 
+    // ── [H4-1 V 2.5.0] نقطة التحويل الوحيدة بين «وحدة أجنبية 2dp» و«قروش الأساس» ──
+    // امتداد لعقد P33-P8 نفسه: أي تحويل عملة أجنبية→أساس يمر هنا حصراً عبر
+    // CurrencyMath (R17) — لا ضرب يدوي بالسعر متناثراً في الشجرة، وصفر Double
+    // في الحساب (السعر الكتالوجي Double يُستهلك داخل rateMicrosFromCatalog وحده
+    // عبر BigDecimal(toString) ثم يفنى).
+    // الإخفاق مغلَق: null يعني «ارفض الحفظ برسالة» — لا صفر مالي زائف.
+
+    /** مبلغ أجنبي 2dp → قروش أساس بسعر micros مختوم — يفوّض FxStampMath.toBasePiasters */
+    fun foreignToBasePiasters(foreignMinor: Long, minorUnits: Int, rateMicros: Long): Long? =
+        com.superbiz.app.domain.algo.FxStampMath.toBasePiasters(foreignMinor, minorUnits, rateMicros)
+
+    /** قروش أساس → مبلغ أجنبي 2dp للعرض فقط — يفوّض FxStampMath.fromBasePiasters */
+    fun baseToForeignMinor(basePiasters: Long, minorUnits: Int, rateMicros: Long): Long? =
+        com.superbiz.app.domain.algo.FxStampMath.fromBasePiasters(basePiasters, minorUnits, rateMicros)
+
     // (M-2.3 توحيد): parse يقرأ مخرجات format — يطبّع الأرقام العربية والمفصولات العربية أولاً
     fun parse(text: String): Double? {
         val cleaned = normalizeDigits(text)

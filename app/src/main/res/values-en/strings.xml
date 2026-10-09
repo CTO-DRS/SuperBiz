@@ -2479,4 +2479,24 @@
     <string name="r16_story_overdue_flat">Overdue receivables stable at %1$s</string>
     <string name="r16_story_overdue_new">New overdue receivables appeared worth %1$s</string>
     <string name="r16_story_target">You achieved %1$s of the sales target (%2$s)</string>
+    <string name="set_section_currencies">Currencies</string>
+    <string name="cur_section_desc">The currency catalog is the single rate source — every foreign entry converts to base piasters and is stamped with its historical rate on the row itself, while reports stay unified in the base currency</string>
+    <string name="cur_rate_row">%1$s rate: %2$s units per 1 base</string>
+    <string name="cur_base_badge">Base</string>
+    <string name="cur_edit_title">%1$s rate</string>
+    <string name="cur_rate_hint">Currency units per 1 base (e.g. 0.2665)</string>
+    <string name="cur_micros_preview">Will be stamped at %1$s per unit</string>
+    <string name="cur_rate_invalid">Invalid rate — enter a positive number with a dot or the Arabic decimal separator</string>
+    <string name="cur_base_equivalent">Base equivalent</string>
+    <string name="cur_orig_amount">Original amount</string>
+    <string name="csv_import_title">CSV import</string>
+    <string name="csv_import_desc">Import products or parties from a file exported by this app — one file is one transaction, a bad row is skipped with a named reason, and balances stay journal-driven not text-driven</string>
+    <string name="csv_import_action">Choose CSV file</string>
+    <string name="csv_import_done">Imported %1$d rows — skipped %2$d</string>
+    <string name="csv_import_unknown">Unrecognized file type</string>
+    <string name="csv_import_denied">Import is owner-only</string>
+    <string name="a11y_remove_invoice_line">Remove this line</string>
+    <string name="a11y_kpi_edit">Edit target</string>
+    <string name="a11y_kpi_lock">Locked — available in Pro</string>
+    <string name="a11y_kpi_upgrade">Upgrade to Pro</string>
 </resources>

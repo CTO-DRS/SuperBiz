@@ -12,20 +12,21 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
-import org.json.JSONObject
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * [Z2-أ V 1.5.0] اختبار ترحيل v13→v14 — أرشيف zatca_docs (إلحاقي خالص)
+ * [H4-1 V 2.5.0] اختبار ترحيل v14→v15 — ختم الفئة الأصلية (عملات متعددة)
  * ═══════════════════════════════════════════════════════════════════════════
- * عقد القبول (ZATCA2_WAVE2_PLAN §6-1): ترحيل إلحاقي خالص — CREATE فقط،
- * صفر صف يُعاد كتابته، وكل بيانات v13 حية، والتحقق الحاسم: القاعدة نفسها
- * تُفتح بRoom v14 (مطابقة بايتية بين SQL الترحيل ومخطط Room) ثم تعمل
- * دالة DAO كاملة (أرشفة IGNORE + latestHash) على المخطط الحقيقي.
+ * عقد القبول (H4-1): ترحيل إلحاقي خالص — 6 أعمدة ALTER ADD COLUMN NOT NULL
+ * DEFAULT (3 على invoices + 3 على expenses)، بذور محايدة دلالياً:
+ * origCurrency="" = «الفئة بالأساس نفسه» فتبقى كل بيانات v14 سليمة دلالتها
+ * حرفياً. والتحقق الحاسم كما في ZatcaMigration14Test: القاعدة نفسها تُفتح
+ * بRoom v15 (مطابقة بايتية بين SQL الترحيل ومخطط Room المُصدَّر 15.json)
+ * ثم تعمل دالة DAO كاملة تقرأ وتكتب الأعمدة الجديدة على المخطط الحقيقي.
  */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [34], application = android.app.Application::class)
-class ZatcaMigration14Test {
+class Migration15Test {
 
     private var dbName: String? = null
 
@@ -37,13 +38,13 @@ class ZatcaMigration14Test {
         }
     }
 
-    /** يبني قاعدة v12 من المخطط المُصدَّر (نمط RbacMigration13Test) */
-    private fun buildV12(name: String): SupportSQLiteDatabase {
+    /** يبني قاعدة v13 من المخطط المُصدَّر (نمط ZatcaMigration14Test حرفياً) */
+    private fun buildV13(name: String): SupportSQLiteDatabase {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
-        val schema = loadSchemaSql(12)
+        val schema = loadSchemaSql(13)
         val config = SupportSQLiteOpenHelper.Configuration.builder(ctx)
             .name(name)
-            .callback(object : SupportSQLiteOpenHelper.Callback(12) {
+            .callback(object : SupportSQLiteOpenHelper.Callback(13) {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     schema.forEach { db.execSQL(it) }
                     seedMinimal(db)
@@ -79,63 +80,62 @@ class ZatcaMigration14Test {
     }
 
     private fun seedMinimal(db: SupportSQLiteDatabase) {
+        // [H4-1] بذرة على مخطط v13 المُصدَّر — أعمدة ZATCA-2 (v13) كلها NOT NULL بلا
+        // DEFAULT في createSql المولَّد، فتُمرَّر قيمها المحايدة صراحةً هنا
         db.execSQL(
             "INSERT INTO parties (name, phone, type, note, createdAt, archived, favorite) " +
-                "VALUES ('عميل الترحيل', '0500000000', 0, '', 0, 0, 0)"
+                "VALUES ('عميل الترحيل 15', '0500000015', 0, '', 0, 0, 0)"
         )
         db.execSQL(
-            "INSERT INTO invoices (number, partyId, type, date, dueDate, subtotal, discount, taxRate, taxAmount, total, paid, costTotal, status, currency, fxRate, note) " +
-                "VALUES ('INV-9001', 1, 0, 1000, 1000, 10000, 0, 15.0, 1500, 11500, 0, 0, 0, 'SAR', 1.0, '')"
+            "INSERT INTO invoices (number, partyId, type, date, dueDate, subtotal, discount, taxRate, taxAmount, total, paid, costTotal, status, currency, fxRate, note, uuid, icv, pih, zatcaSubtype, deliveryDate, buyerName, buyerVat, buyerAddress, zatcaStatus) " +
+                "VALUES ('INV-1501', 1, 0, 1000, 1000, 10000, 0, 15.0, 1500, 11500, 0, 0, 0, 'SAR', 1.0, '', '', 0, '', '', 0, '', '', '', 0)"
+        )
+        db.execSQL(
+            "INSERT INTO expenses (amount, category, note, date, createdAt) " +
+                "VALUES (5000, 'إيجار', '', 1000, 1000)"
         )
     }
 
     @Test
-    fun migration13to14_createsArchiveTableKeepingAllData() {
-        dbName = "zatca_m14.db"
-        val db = buildV12(dbName!!)
+    fun migration14to15_addsOriginStampColumnsKeepingAllData() {
+        dbName = "h4_m15.db"
+        val db = buildV13(dbName!!)
         try {
-            // v13 أولاً (RBAC+ZATCA هوية) ثم إدراج فاتورة بيانات v13 ثم v14
-            AppGraph.MIGRATIONS[11].migrate(db)
+            // v14 أولاً (أرشيف zatca_docs) + صفوف بيانات v14 ثم الترحيل الجديد
+            AppGraph.MIGRATIONS[12].migrate(db)
             db.execSQL(
                 "INSERT INTO invoices (number, partyId, type, date, dueDate, subtotal, discount, taxRate, taxAmount, total, paid, costTotal, status, currency, fxRate, note, uuid, icv, pih, zatcaSubtype, deliveryDate, buyerName, buyerVat, buyerAddress, zatcaStatus) " +
-                    "VALUES ('INV-9002', 1, 0, 2000, 2000, 20000, 0, 15.0, 3000, 23000, 0, 0, 0, 'SAR', 1.0, '', 'UUID-9002', 1, 'PIH-FIRST', '0200000', 0, '', '', '', 1)"
+                    "VALUES ('INV-1502', 1, 0, 2000, 2000, 20000, 0, 15.0, 3000, 23000, 0, 0, 0, 'SAR', 1.0, '', 'UUID-1502', 1, '', '0200000', 0, '', '', '', 0)"
+            )
+            db.execSQL(
+                "INSERT INTO expenses (amount, category, note, date, createdAt) " +
+                    "VALUES (2500, 'وقود', 'قبل الترحيل', 2000, 2000)"
             )
             val invoiceCount = scalar(db, "SELECT COUNT(*) FROM invoices")
-            val stampedIcv = scalar(db, "SELECT icv FROM invoices WHERE number = 'INV-9002'")
+            val expenseCount = scalar(db, "SELECT COUNT(*) FROM expenses")
+            val invTotal = scalar(db, "SELECT total FROM invoices WHERE number = 'INV-1501'")
 
-            val migration = AppGraph.MIGRATIONS[12]
-            assertEquals(13, migration.startVersion)
-            assertEquals(14, migration.endVersion)
+            val migration = AppGraph.MIGRATIONS[13]
+            assertEquals(14, migration.startVersion)
+            assertEquals(15, migration.endVersion)
             migration.migrate(db)
 
-            // 1) الجدول ببنية Room المتوقعة — كل أعمدته بألفتها
-            assertEquals("invoiceId INTEGER", "INTEGER", columnType(db, "zatca_docs", "invoiceId"))
-            assertEquals("xml TEXT", "TEXT", columnType(db, "zatca_docs", "xml"))
-            assertEquals("xmlHash TEXT", "TEXT", columnType(db, "zatca_docs", "xmlHash"))
-            assertEquals("subtype TEXT", "TEXT", columnType(db, "zatca_docs", "subtype"))
-            assertEquals("issuedAt INTEGER", "INTEGER", columnType(db, "zatca_docs", "issuedAt"))
-            assertEquals("reportedAt INTEGER", "INTEGER", columnType(db, "zatca_docs", "reportedAt"))
-            assertEquals("rejectReason TEXT", "TEXT", columnType(db, "zatca_docs", "rejectReason"))
-            assertEquals("attemptCount INTEGER", "INTEGER", columnType(db, "zatca_docs", "attemptCount"))
-            assertEquals("clearedXml TEXT", "TEXT", columnType(db, "zatca_docs", "clearedXml"))
-            // الفهرس حاضر
-            db.query("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='zatca_docs'").use { c ->
-                val names = HashSet<String>()
-                while (c.moveToNext()) names += c.getString(0)
-                assertTrue("فهرس invoiceId حاضر", names.contains("index_zatca_docs_invoiceId"))
+            // 1) الأعمدة الستة بألفتها المتوقعة (TEXT/INTEGER)
+            for (col in listOf("origCurrency", "origTotal", "origFxMicros")) {
+                assertEquals("invoices.$col", if (col == "origCurrency") "TEXT" else "INTEGER", columnType(db, "invoices", col))
+                assertEquals("expenses.$col", if (col == "origCurrency") "TEXT" else "INTEGER", columnType(db, "expenses", col))
             }
-            // 2) لا صف فقد في القديمة — إلحاقي خالص
+            // 2) لا صف فقد — إلحاقي خالص، والقيم القديمة كما هي حرفياً
             assertEquals(invoiceCount, scalar(db, "SELECT COUNT(*) FROM invoices"))
-            assertEquals(stampedIcv, scalar(db, "SELECT icv FROM invoices WHERE number = 'INV-9002'"))
-            // 3) المفتاح الأجنبي CASCADE حاضر وسلامة المراجع نظيفة
-            assertEquals(1L, fkCount(db, "zatca_docs"))
+            assertEquals(expenseCount, scalar(db, "SELECT COUNT(*) FROM expenses"))
+            assertEquals(invTotal, scalar(db, "SELECT total FROM invoices WHERE number = 'INV-1501'"))
+            // 3) البذور المحايدة على الصفوف التاريخية: '' و0 و0 — دلالة «بالأساس نفسه»
+            assertEquals(0L, scalar(db, "SELECT COUNT(*) FROM invoices WHERE origCurrency != ''"))
+            assertEquals(0L, scalar(db, "SELECT COUNT(*) FROM invoices WHERE origTotal != 0"))
+            assertEquals(0L, scalar(db, "SELECT COUNT(*) FROM expenses WHERE origFxMicros != 0"))
             assertEquals(0L, rowCount(db, "PRAGMA foreign_key_check"))
-            // 4) الجدول يبدأ فارغاً — الأرشيف يُملأ من الإصدارات الجديدة فقط
-            assertEquals(0L, scalar(db, "SELECT COUNT(*) FROM zatca_docs"))
 
-            // ═══ التحقق الحاسم: فتح القاعدة نفسها بRoom ═══
-            // [H4-1 V 2.5.0]: إكمال السلسلة إلى v15 (ختم الفئة الأصلية) — المخطط الحالي 15
-            AppGraph.MIGRATIONS[13].migrate(db)
+            // ═══ التحقق الحاسم: فتح القاعدة نفسها بRoom v15 ═══
             db.version = 15
             db.close()
 
@@ -146,19 +146,23 @@ class ZatcaMigration14Test {
             try {
                 kotlinx.coroutines.runBlocking {
                     // عدم المطابقة البايتية يرمى قبل هنا (RoomOpenHelper.checkIdentity)
-                    val inv = room.invoices().byId(1L)!!
-                    assertEquals("", inv.uuid)
-                    // DAO يعمل على المخطط الحقيقي: أرشفة أول + الأحدث + IGNORE
-                    val doc = com.superbiz.app.data.db.ZatcaDocEntity(
-                        invoiceId = 2L, xml = "<Invoice/>", xmlHash = "HASH-2",
-                        subtype = "0200000", issuedAt = 2000,
+                    val old = room.invoices().byId(1L)!!
+                    assertEquals("", old.origCurrency)
+                    assertEquals(0L, old.origTotal)
+                    assertEquals(0L, old.origFxMicros)
+                    assertEquals(11500L, old.total)
+                    // DAO يعمل على المخطط الحقيقي: إدراج فاتورة مختومة بفئة أجنبية + مصروف أجنبي
+                    val stamped = old.copy(
+                        id = 0, number = "INV-1503", subtotal = 37500, taxAmount = 0, total = 37500,
+                        origCurrency = "USD", origTotal = 10000, origFxMicros = 375_000_000L
                     )
-                    assertTrue(room.zatcaDocs().archiveFirst(doc) != -1L)
-                    // الإعادة بـIGNORE: لا استبدال — صفّ واحد فقط
-                    assertTrue(room.zatcaDocs().archiveFirst(doc.copy(xml = "OTHER")) == -1L)
-                    assertEquals(1, room.zatcaDocs().count())
-                    assertEquals("HASH-2", room.zatcaDocs().latestHash())
-                    assertEquals("<Invoice/>", room.zatcaDocs().byInvoice(2L)!!.xml)
+                    val newId = room.invoices().upsert(stamped)
+                    assertTrue(newId > 0L)
+                    val read = room.invoices().byId(newId)!!
+                    assertEquals("USD", read.origCurrency)
+                    assertEquals(10000L, read.origTotal)
+                    assertEquals(375_000_000L, read.origFxMicros)
+                    assertEquals(37500L, read.total) // القروش الأساسية سليمة
                 }
             } finally {
                 room.close()
@@ -168,7 +172,7 @@ class ZatcaMigration14Test {
         }
     }
 
-    // ─── مساعدات ───
+    // ─── مساعدات (نفس ZatcaMigration14Test) ───
 
     private fun scalar(db: SupportSQLiteDatabase, sql: String): Long {
         db.query(sql).use { c ->
@@ -186,9 +190,6 @@ class ZatcaMigration14Test {
             }
             throw AssertionError("column not found: $table.$column")
         }
-
-    private fun fkCount(db: SupportSQLiteDatabase, table: String): Long =
-        scalar(db, "SELECT COUNT(*) FROM pragma_foreign_key_list('$table')")
 
     /** عدّ صفوف نتيجة (لـPRAGMAs التي تعيد صفر صفوف عند النظافة) */
     private fun rowCount(db: SupportSQLiteDatabase, sql: String): Long {

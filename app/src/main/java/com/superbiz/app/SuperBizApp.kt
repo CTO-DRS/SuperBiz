@@ -43,7 +43,8 @@ class AppGraph(val context: android.content.Context) {
             // [P46-W1]: أُضيف MIGRATION_11_12 — نسيانه هنا يعني فشل فتح قاعدة v11 القائمة
             // [H1-3][v13]: أُضيف MIGRATION_12_13 — نسيانه هنا يعني فشل فتح قاعدة v12 القائمة
             // [Z2-أ][v14]: أُضيف MIGRATION_13_14 — نسيانه هنا يعني فشل فتح قاعدة v13 القائمة
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
+            // [H4-1][v15]: أُضيف MIGRATION_14_15 — نسيانه هنا يعني فشل فتح قاعدة v14 القائمة
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15)
             .build()
     }
     val settings by lazy { SettingsRepo(context) }
@@ -768,6 +769,22 @@ class AppGraph(val context: android.content.Context) {
             }
         }
 
+        // [H4-1 V 2.5.0] ترحيل 14→15 — ختم الفئة الأصلية للعملات المتعددة: 6 أعمدة إلحاقية
+        // (3 على invoices + 3 على expenses) ببذور محايدة دلالياً: origCurrency="" يعني
+        // «الفئة بالأساس نفسه» — كل الصفوف التاريخية سليمة دلالتها حرفياً بلا أي مسّ،
+        // وأعمدة المبالغ القائمة تبقى قروش الأساس كما هي (وحدة القياس الموحدة P33-P8
+        // لا تتغير). نفس سابقة 10→11 و13 (ALTER ADD COLUMN NOT NULL DEFAULT).
+        private val MIGRATION_14_15 = object : androidx.room.migration.Migration(14, 15) {
+            override fun migrate(d: androidx.sqlite.db.SupportSQLiteDatabase) {
+                d.execSQL("ALTER TABLE `invoices` ADD COLUMN `origCurrency` TEXT NOT NULL DEFAULT ''")
+                d.execSQL("ALTER TABLE `invoices` ADD COLUMN `origTotal` INTEGER NOT NULL DEFAULT 0")
+                d.execSQL("ALTER TABLE `invoices` ADD COLUMN `origFxMicros` INTEGER NOT NULL DEFAULT 0")
+                d.execSQL("ALTER TABLE `expenses` ADD COLUMN `origCurrency` TEXT NOT NULL DEFAULT ''")
+                d.execSQL("ALTER TABLE `expenses` ADD COLUMN `origTotal` INTEGER NOT NULL DEFAULT 0")
+                d.execSQL("ALTER TABLE `expenses` ADD COLUMN `origFxMicros` INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         // قائمة الترقيات مكشوفة للاختبارات (SchemaMigrationTest يشغّل كل ترحيل فعلياً) —
         // تُعرّف بعد الترحيلات لأن تهيئة خصائص Kotlin تتم بترتيب الإعلان
         // [P11-a]: MIGRATION_6_7 أُلحقت بالنهاية — الفهرسة بالموضع في الاختبارات تبقى صحيحة
@@ -777,7 +794,8 @@ class AppGraph(val context: android.content.Context) {
         // [P46-W1]: MIGRATION_11_12 أُلحقت بالنهاية — الفهرس 10 هو جداول الولاء والكوبونات
         // [H1-3]: MIGRATION_12_13 أُلحقت بالنهاية — الفهرس 11 هو RBAC + ZATCA-2 المشترك
         // [Z2-أ]: MIGRATION_13_14 أُلحقت بالنهاية — الفهرس 12 هو أرشيف zatca_docs
-        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
+        // [H4-1]: MIGRATION_14_15 أُلحقت بالنهاية — الفهرس 13 هو ختم الفئة الأصلية
+        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15)
 
         /**
          * [H1-3] مزوّد بذرة رمز المالك — يُربط في AppGraph.db قبل بناء القاعدة بقراءة

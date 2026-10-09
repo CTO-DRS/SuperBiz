@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.WorkspacePremium // [W1] قسم Pro
 import androidx.compose.material.icons.rounded.ManageAccounts // [H1-5][v13] قسم المستخدمين
+import androidx.compose.material.icons.rounded.CurrencyExchange // [H4-1][v15] قسم العملات
 import androidx.compose.foundation.layout.size // [W1] ProSection
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -71,6 +73,7 @@ import com.superbiz.app.ui.components.numberFieldOptions
 import com.superbiz.app.ui.components.PillMode
 import com.superbiz.app.ui.screens.ReAuthDialog
 import com.superbiz.app.ui.theme.Cyan
+import com.superbiz.app.ui.theme.RedDeep // [H4-1][v15] لون الخطأ في محرر السعر
 import com.superbiz.app.ui.theme.VioDeep
 import com.superbiz.app.ui.theme.glassColors
 import com.superbiz.app.util.Money
@@ -118,6 +121,8 @@ fun SettingsHubScreen(
         // [H1-5][v13] المستخدمون — باب المالك وحده (يُقص بنيوياً عن غيره)
         if (sessionIsOwner) add(HubSection("users", Icons.Rounded.ManageAccounts))
         add(HubSection("appearance", Icons.Rounded.Palette))
+        // [H4-1 V 2.5.0] قسم العملات — الأفق الرابع: الأسعار التاريخية وأختام R17
+        add(HubSection("currencies", Icons.Rounded.CurrencyExchange))
         add(HubSection("behavior", Icons.Rounded.Tune))
         add(HubSection("performance", Icons.Rounded.Speed))
         add(HubSection("privacy", Icons.Rounded.PrivacyTip))
@@ -195,6 +200,8 @@ fun SettingsHubScreen(
             // [H1-5][v13] قسم المستخدمين — بطاقة مدخل واحدة إلى شاشة الإدارة
             "users" -> UsersSection(onOpenUsers)
             "appearance" -> AppearanceSection(s, settingsVM)
+            // [H4-1 V 2.5.0] قسم العملات — الأفق الرابع
+            "currencies" -> CurrenciesSection(settingsVM)
             "behavior" -> BehaviorSection(s, settingsVM)
             "performance" -> PerformanceSection(s, settingsVM)
             "privacy" -> PrivacySection(s, settingsVM)
@@ -297,6 +304,8 @@ private fun sectionTitle(key: String): String = when (key) {
     // [P6-M51 إصلاح] توطين عناوين الأقسام الثمانية
     "pro" -> stringResource(R.string.pro_section_title)
     "appearance" -> stringResource(R.string.set_section_appearance)
+    // [H4-1 V 2.5.0] عنوان قسم العملات
+    "currencies" -> stringResource(R.string.set_section_currencies)
     "behavior" -> stringResource(R.string.set_section_behavior)
     "performance" -> stringResource(R.string.set_section_performance)
     "privacy" -> stringResource(R.string.set_section_privacy)
@@ -824,6 +833,9 @@ private fun DataSection(
     // [P36-BK] توحيد المسارين في واجهة واحدة: دمجية (BackupRestoreRepo) أو استبدال كامل
     // (BackupRepo عبر ReAuth) — ورقاقة التغطية 23/23 صارت صادقة في المسارين معاً
     BackupCard(vm)
+    Spacer(Modifier.height(8.dp))
+    // [H4-6 V 2.5.0] استيراد CSV (أصناف/أطراف) — جولة الذهاب-الإياب مع التصدير
+    CsvImportCard(vm)
     Spacer(Modifier.height(8.dp))
     // [P6-M51 إصلاح] توطين صف هدف المبيعات
     SettingRow(
@@ -1626,4 +1638,169 @@ private fun Throwable.backupDisplayMessage(context: android.content.Context): St
     is BackupFormatException -> message ?: context.getString(R.string.bk_err_unsupported)
     is java.io.IOException -> context.getString(R.string.bk_err_io, message ?: "")
     else -> context.getString(R.string.bk_err_generic, message ?: this::class.java.simpleName)
+}
+
+// ═══════════════════ [H4-1 V 2.5.0] قسم العملات — الأفق الرابع ═══════════════════
+// الكتالوج هو مصدر السعر الوحيد (rateToBase وحدات أجنبية لكل 1 أساس)، وR17 يشتق
+// منه micros حتمياً عند كل ختم — تعديل السعر هنا ينعكس على كل اختام الإدخال الجديدة
+// دون مسّ الصفوف المختومة سابقاً (السعر التاريخي محفوظ على الصف نفسه).
+
+@Composable
+private fun CurrenciesSection(settingsVM: SettingsVM) {
+    val g = glassColors()
+    val currencies by settingsVM.currencies.collectAsState()
+    // حوار تعديل السعر — حالة واحدة للقسم
+    var editing by remember { mutableStateOf<com.superbiz.app.data.db.Currency?>(null) }
+
+    GlassCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(14.dp)) {
+            Text(
+                stringResource(R.string.set_section_currencies),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = g.textPrimary
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                stringResource(R.string.cur_section_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = g.textSecondary
+            )
+        }
+    }
+    Spacer(Modifier.height(8.dp))
+    currencies.forEach { c ->
+        GlassCard(Modifier.fillMaxWidth()) {
+            Row(
+                Modifier.padding(horizontal = 14.dp, vertical = 10.dp).fillMaxWidth().clickable { editing = c },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "${c.nameAr} — ${c.nameEn}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = g.textPrimary
+                    )
+                    Text(
+                        // [H4-1] الصدق الاتجاهي: السعر الكتالوجي بوحدات العملة لكل 1 من الأساس
+                        stringResource(R.string.cur_rate_row, c.code, com.superbiz.app.util.Money.num(c.rateToBase)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = g.textSecondary
+                    )
+                }
+                if (c.isBase) {
+                    BizPill(stringResource(R.string.cur_base_badge), g.accent, mode = PillMode.BADGE)
+                }
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+    }
+    editing?.let { c ->
+        CurrencyRateDialog(c, settingsVM) { editing = null }
+    }
+}
+
+@Composable
+private fun CurrencyRateDialog(
+    currency: com.superbiz.app.data.db.Currency,
+    settingsVM: SettingsVM,
+    onDismiss: () -> Unit
+) {
+    val g = glassColors()
+    // العرض المبدئي: السعر الكتالوجي كما هو — التحرير بنفس الدلالة (وحدات لكل 1 أساس)
+    var text by remember { mutableStateOf(com.superbiz.app.util.Money.num(currency.rateToBase)) }
+    var err by remember { mutableStateOf<Int?>(null) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = g.surfaceStrong,
+        title = { Text(stringResource(R.string.cur_edit_title, currency.code), color = g.textPrimary) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.imePadding()) {
+                com.superbiz.app.ui.components.BizField(
+                    text, { text = it },
+                    stringResource(R.string.cur_rate_hint),
+                    keyboard = com.superbiz.app.ui.components.numberFieldOptions()
+                )
+                // معاينة الاشتقاق الحتمي R17 — ما سيُختَم فعلاً على الفواتير الجديدة
+                val parsed = com.superbiz.app.util.Money.parse(text)
+                val micros = parsed?.let { com.superbiz.app.domain.algo.FxStampMath.rateMicrosFromCatalog(it) }
+                Text(
+                    if (micros == null) stringResource(R.string.cur_rate_invalid)
+                    else stringResource(
+                        R.string.cur_micros_preview,
+                        com.superbiz.app.domain.algo.FxStampMath.formatRate(micros)
+                    ),
+                    color = if (micros == null) RedDeep else g.textSecondary,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                err?.let { res ->
+                    Text(stringResource(res), color = RedDeep, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val v = com.superbiz.app.util.Money.parse(text)
+                val micros = v?.let { com.superbiz.app.domain.algo.FxStampMath.rateMicrosFromCatalog(it) }
+                if (v == null || micros == null) {
+                    err = R.string.cur_rate_invalid
+                } else {
+                    settingsVM.updateRate(currency.code, v)
+                    onDismiss()
+                }
+            }) { Text(stringResource(R.string.save), color = g.accent, fontWeight = FontWeight.Bold) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = g.textSecondary) }
+        }
+    )
+}
+
+// ═══════════════════ [H4-6 V 2.5.0] بطاقة استيراد CSV ═══════════════════
+
+@Composable
+private fun CsvImportCard(settingsVM: SettingsVM) {
+    val g = glassColors()
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    // توست نتيجة الاستيراد من الـVM (notifyToast نصي)
+    val toast by settingsVM.toast.collectAsState()
+    androidx.compose.runtime.LaunchedEffect(toast) {
+        toast?.let {
+            android.widget.Toast.makeText(ctx, it, android.widget.Toast.LENGTH_LONG).show()
+            settingsVM.clearToast()
+        }
+    }
+    val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri -> uri?.let { settingsVM.importCsv(it) } }
+
+    GlassCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(14.dp)) {
+            Text(
+                stringResource(R.string.csv_import_title),
+                style = MaterialTheme.typography.bodyLarge,
+                color = g.textPrimary
+            )
+            Text(
+                stringResource(R.string.csv_import_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = g.textSecondary
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.csv_import_action),
+                color = g.accent,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(g.accent.copy(alpha = 0.18f))
+                    .clickable {
+                        launcher.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain"))
+                    }
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            )
+        }
+    }
 }

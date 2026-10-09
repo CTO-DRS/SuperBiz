@@ -98,7 +98,7 @@ fun KpiBoardScreen(
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Rounded.Edit, null, Modifier.size(16.dp), tint = Vio)
+                    Icon(Icons.Rounded.Edit, stringResourceCompat(R.string.a11y_kpi_edit), Modifier.size(16.dp), tint = Vio)
                     Spacer(Modifier.width(4.dp))
                     Text(
                         stringResource(R.string.kpi_edit_targets),
@@ -116,7 +116,7 @@ fun KpiBoardScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
-                        Icons.Rounded.Lock, null,
+                        Icons.Rounded.Lock, stringResourceCompat(R.string.a11y_kpi_lock),
                         tint = Amber, modifier = Modifier.size(40.dp)
                     )
                     Spacer(Modifier.height(12.dp))
@@ -139,7 +139,7 @@ fun KpiBoardScreen(
                         shape = RoundedCornerShape(14.dp)
                     ) {
                         Icon(
-                            Icons.Rounded.WorkspacePremium, null,
+                            Icons.Rounded.WorkspacePremium, stringResourceCompat(R.string.a11y_kpi_upgrade),
                             Modifier.size(18.dp), tint = Color.White
                         )
                         Spacer(Modifier.width(8.dp))

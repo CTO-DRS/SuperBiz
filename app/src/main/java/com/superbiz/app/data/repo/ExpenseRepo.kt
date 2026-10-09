@@ -24,14 +24,34 @@ class ExpenseRepo(private val db: AppDatabase, private val ledger: LedgerRepo) {
 
     fun all(): Flow<List<Expense>> = db.expenses().all()
 
-    /** إضافة مصروف حقيقي: سجل + قيد مزدوج ذرّي — [P33-P8] amount قروش Long */
-    suspend fun add(amount: Long, category: String, note: String, date: Long = System.currentTimeMillis()): Long {
+    /** إضافة مصروف حقيقي: سجل + قيد مزدوج ذرّي — [P33-P8] amount قروش */
+    suspend fun add(amount: Long, category: String, note: String, date: Long = System.currentTimeMillis()): Long =
+        addStamped(amount, "", 0L, 0L, category, note, date)
+
+    /**
+     * [H4-1 V 2.5.0] إضافة بفئة أصلية مختومة — العملة الأجنبية تُحوَّل قروش أساس عند
+     * المستدعي (Money.foreignToBasePiasters — نقطة التحويل الوحيدة R17)، والمستودع
+     * يخزّن قروش الأساس في amount (وحدة القياس الموحدة P33-P8 لا تتغير) ويختَم
+     * الفئة الأصلية بسعرها التاريخي على الصف نفسه.
+     */
+    suspend fun addStamped(
+        amount: Long,
+        origCurrency: String,
+        origTotal: Long,
+        origFxMicros: Long,
+        category: String,
+        note: String,
+        date: Long = System.currentTimeMillis()
+    ): Long {
         // [P33-P8] عتبة 0.005/isFinite حُذفتا — مقارنة صحيحة تامة (Long لا يكون NaN)
         require(amount > 0L) { "amount must be positive" }
         var id = 0L
         db.withTransaction {
             id = db.expenses().insert(
-                Expense(amount = amount, category = category.trim(), note = note.trim(), date = date)
+                Expense(
+                    amount = amount, category = category.trim(), note = note.trim(), date = date,
+                    origCurrency = origCurrency, origTotal = origTotal, origFxMicros = origFxMicros
+                )
             )
             ledger.postInternal(
                 com.superbiz.app.domain.AccountingEngine.cashOut(

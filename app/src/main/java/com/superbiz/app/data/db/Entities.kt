@@ -163,7 +163,16 @@ data class Invoice(
     val buyerName: String = "",         // بيانات المشتري المقنة للفواتير القياسية B2B
     val buyerVat: String = "",
     val buyerAddress: String = "",
-    val zatcaStatus: Int = 0            // حالة الربط: 0 غير مطبق ← 1 بالقائمة ← 2 مبلغة/مخلصة
+    val zatcaStatus: Int = 0,           // حالة الربط: 0 غير مطبق ← 1 بالقائمة ← 2 مبلغة/مخلصة
+    // [H4-1 V 2.5.0] ختم الفئة الأصلية — الأفق الرابع (عملات متعددة):
+    // الأعمدة المالية أعلاه تبقى قروش الأساس حصراً (وحدة القياس الموحدة P33-P8)،
+    // وهذه الأعمدة الثلاثة توثّق الفئة الأصلية بسعرها التاريخي المختوم عند الإدخال:
+    // origCurrency: رمز العملة الأصلية ("" = الفئة بالأساس نفسه — كل الصفوف التاريخية)
+    // origTotal: الإجمالي الأصلي بوحدات 2dp عالمية من العملة الأصلية (ليس minorUnits كتالوجها)
+    // origFxMicros: سعر الختم — قروش الأساس لكل وحدة أجنبية × 1e6 (عقد R17 بند 2)
+    val origCurrency: String = "",
+    val origTotal: Long = 0,
+    val origFxMicros: Long = 0
 ) {
     val open: Long get() = total - paid  // [P33-P8] مساواة تامة — لا تقريب
     val isSale: Boolean get() = type == 0
@@ -269,11 +278,15 @@ data class CheckEntity(
 @Entity(tableName = "expenses", indices = [Index("date"), Index("category")])
 data class Expense(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val amount: Long,  // [P33-P8] قروش
+    val amount: Long,  // [P33-P8] قروش الأساس دائماً — وحدة القياس الموحدة
     val category: String = "",
     val note: String = "",
     val date: Long,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    // [H4-1 V 2.5.0] ختم الفئة الأصلية — نفس عقد أعمدة invoices الثلاثة أعلاه
+    val origCurrency: String = "",
+    val origTotal: Long = 0,
+    val origFxMicros: Long = 0
 )
 
 @Entity(tableName = "rules")

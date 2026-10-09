@@ -419,7 +419,8 @@ private fun InvoiceCard(
                     discount = ctx.getString(R.string.inv_text_discount),
                     tax = ctx.getString(R.string.inv_text_tax),
                     total = ctx.getString(R.string.inv_text_total),
-                    remaining = ctx.getString(R.string.inv_text_remaining)
+                    remaining = ctx.getString(R.string.inv_text_remaining),
+                    originalAmount = ctx.getString(R.string.cur_orig_amount)
                 )
             )
             val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
@@ -776,6 +777,35 @@ fun InvoiceEditor(vm: InvoicesVM, appVM: AppVM) {
                 )
                 Spacer(Modifier.height(10.dp))
 
+                // [H4-1 V 2.5.0] منتقي عملة الفاتورة — الأسعار تُدخل بهذه العملة،
+                // والحفظ يحوّل قروش أساس عبر R17 ويختَم الفئة الأصلية بسعرها التاريخي
+                val currencies by vm.currencies.collectAsState()
+                val editorCur by vm.editorCurrency.collectAsState()
+                if (currencies.isNotEmpty()) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        currencies.forEach { c ->
+                            val selected = c.code == editorCur
+                            Text(
+                                c.code + " " + c.symbol,
+                                color = if (selected) Color.White else g.textPrimary,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                fontSize = 12.sp,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (selected) g.accent else g.textSecondary.copy(alpha = 0.08f))
+                                    .clickable { vm.editorCurrency.value = c.code }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                }
+
                 // الأصناف
                 Text(stringResourceCompat(R.string.invoice_items), style = MaterialTheme.typography.titleSmall, color = g.textSecondary)
                 Spacer(Modifier.height(6.dp))
@@ -801,7 +831,7 @@ fun InvoiceEditor(vm: InvoicesVM, appVM: AppVM) {
                                         IconButton(onClick = {
                                             vm.editorItems.value = items.filterIndexed { idx, _ -> idx != i }
                                         }) {
-                                            Icon(Icons.Rounded.RemoveCircleOutline, null, tint = RedDeep)
+                                            Icon(Icons.Rounded.RemoveCircleOutline, stringResourceCompat(R.string.a11y_remove_invoice_line), tint = RedDeep)
                                         }
                                     }
                                 }
@@ -925,9 +955,17 @@ fun InvoiceEditor(vm: InvoicesVM, appVM: AppVM) {
 
                 Spacer(Modifier.height(8.dp))
                 // الإجماليات
+                // [H4-1] العملة الفعالة للمعاينة: الأجنبية تعرض فئتها + سطر «المعادل بالأساس»
+                val foreignCur = currencies.firstOrNull { it.code == editorCur && !it.isBase }
+                val displaySymbol = foreignCur?.symbol ?: symbol
+                val baseEquivalent = foreignCur?.let { fc ->
+                    vm.rateMicrosFor(fc.code)?.let { m ->
+                        com.superbiz.app.domain.algo.FxStampMath.toBasePiasters(total, 2, m)
+                    }
+                }
                 Row {
                     Text(stringResourceCompat(R.string.subtotal), color = g.textSecondary, modifier = Modifier.weight(1f))
-                    Text(Money.formatP(sub, symbol), color = g.textPrimary)  // [P33-P8] قروش
+                    Text(Money.formatP(sub, displaySymbol), color = g.textPrimary)  // [P33-P8] قروش
                 }
                 Row {
                     // [P42-R3] الصدق الإقراري: عند الوعي بالسطر قد تختلف نسبة كل سطر عن نسبة
@@ -937,11 +975,18 @@ fun InvoiceEditor(vm: InvoicesVM, appVM: AppVM) {
                         else stringResourceCompat(R.string.tax) + " (${Money.num(taxRate)}%)",
                         color = g.textSecondary, modifier = Modifier.weight(1f)
                     )
-                    Text(Money.formatP(tax, symbol), color = g.textPrimary)  // [P33-P8] قروش
+                    Text(Money.formatP(tax, displaySymbol), color = g.textPrimary)  // [P33-P8] قروش
                 }
                 Row {
                     Text(stringResourceCompat(R.string.total), fontWeight = FontWeight.Bold, color = g.textPrimary, modifier = Modifier.weight(1f))
-                    Text(Money.formatP(total, symbol), fontWeight = FontWeight.ExtraBold, color = g.accent, fontSize = 17.sp)  // [P33-P8] قروش
+                    Text(Money.formatP(total, displaySymbol), fontWeight = FontWeight.ExtraBold, color = g.accent, fontSize = 17.sp)  // [P33-P8] قروش
+                }
+                if (baseEquivalent != null) {
+                    // المعادل التقريبي بقروش الأساس — نفس دالة الحفظ (R17) فلا مفاجأة عند التخزين
+                    Row {
+                        Text(stringResourceCompat(R.string.cur_base_equivalent), color = g.textSecondary, modifier = Modifier.weight(1f))
+                        Text(Money.formatP(baseEquivalent, symbol), color = g.textSecondary)
+                    }
                 }
                 Spacer(Modifier.height(10.dp))
                 // [P7-L11 إصلاح] عرض خطأ الإدخال بدل الفشل الصامت (نمط M6-47/M6-48)

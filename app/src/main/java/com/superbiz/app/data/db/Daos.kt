@@ -1350,7 +1350,9 @@ interface ZatcaDocDao {
     // التدقيق على audit_log (ALTER nullable) + 9 أعمدة هوية على invoices (ALTER ببذور آمنة)
     // (ترحيل 12→13 في SuperBizApp — لا جدول قائم يُعاد بناؤه ولا صف يُعاد كتابته عدا سطر المالك المزروع)
     // [Z2-أ V 1.5.0] جدول zatca_docs بإنشاء فقط (ترحيل 13→14 في SuperBizApp — إلحاقي خالص)
-    version = 14,
+    // [H4-1 V 2.5.0] ختم الفئة الأصلية — 6 أعمدة إلحاقية على invoices/expenses
+    // (ترحيل 14→15 في SuperBizApp — ALTER ADD COLUMN ببذور محايدة: "" = بالأساس نفسه)
+    version = 15,
     exportSchema = true
 )
 

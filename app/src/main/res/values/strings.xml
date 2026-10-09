@@ -2479,4 +2479,24 @@
     <string name="r16_story_overdue_flat">الذمم المتأخرة مستقرة عند %1$s</string>
     <string name="r16_story_overdue_new">ظهرت ذمم متأخرة جديدة بقيمة %1$s</string>
     <string name="r16_story_target">أنجزت %1$s من هدف المبيعات (%2$s)</string>
+    <string name="set_section_currencies">العملات</string>
+    <string name="cur_section_desc">كتالوج العملات هو مصدر السعر الوحيد — كل إدخال أجنبي يُحوَّل قروش الأساس ويُختَم بسعره التاريخي على الصف نفسه، والتقارير تبقى موحّدة بعملة الأساس</string>
+    <string name="cur_rate_row">سعر %1$s: %2$s وحدة لكل 1 من الأساس</string>
+    <string name="cur_base_badge">الأساس</string>
+    <string name="cur_edit_title">سعر %1$s</string>
+    <string name="cur_rate_hint">وحدات العملة لكل 1 من الأساس (مثال 0.2665)</string>
+    <string name="cur_micros_preview">سيُختَم بسعر %1$s ريال لكل وحدة</string>
+    <string name="cur_rate_invalid">سعر غير صالح — أدخل رقماً موجباً بنقطة عشرية أو الفاصلة العربية</string>
+    <string name="cur_base_equivalent">المعادل بالأساس</string>
+    <string name="cur_orig_amount">الفئة الأصلية</string>
+    <string name="csv_import_title">استيراد CSV</string>
+    <string name="csv_import_desc">استورد أصنافاً أو أطرافاً من ملف يصدّره التطبيق نفسه — الملف الواحد معاملة واحدة، والصف التالف يُتخطى بسبب مسمّى، والرصيد يُدار بالقيود لا بالنص</string>
+    <string name="csv_import_action">اختيار ملف CSV</string>
+    <string name="csv_import_done">استُورد %1$d صفاً — تُخطّي %2$d</string>
+    <string name="csv_import_unknown">لم يُتعرف على نوع الملف</string>
+    <string name="csv_import_denied">الاستيراد باب المالك وحده</string>
+    <string name="a11y_remove_invoice_line">حذف هذا السطر</string>
+    <string name="a11y_kpi_edit">تعديل الهدف</string>
+    <string name="a11y_kpi_lock">مقفل — متاح في النسخة Pro</string>
+    <string name="a11y_kpi_upgrade">الترقية إلى Pro</string>
 </resources>

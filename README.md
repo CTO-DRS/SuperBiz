@@ -1,12 +1,12 @@
 # SuperBiz
 
-**Version: V 2.0.0**
-**المنسّق الذكي — ذكاء محلي يتنبأ ويشرح أصوله**
+**Version: V 2.5.0**
+**التوسع العالمي — عملات متعددة محاسبياً صحيحة + استيراد CSV**
 
 ![SuperBiz](assets/banner.png)
 
-![Version](https://img.shields.io/badge/الإصدار-V%202.0.0-8B5CF6?style=flat-square&labelColor=0B1026)
-![Tests](https://img.shields.io/badge/الاختبارات-1629%20خضراء-34D399?style=flat-square&labelColor=0B1026)
+![Version](https://img.shields.io/badge/الإصدار-V%202.5.0-8B5CF6?style=flat-square&labelColor=0B1026)
+![Tests](https://img.shields.io/badge/الاختبارات-1666%20خضراء-34D399?style=flat-square&labelColor=0B1026)
 ![Platform](https://img.shields.io/badge/Android-7.0%2B%20(minSdk%2024)-3B82F6?style=flat-square&labelColor=0B1026)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-8B5CF6?style=flat-square&labelColor=0B1026)
 ![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-22D3EE?style=flat-square&labelColor=0B1026)
@@ -17,7 +17,7 @@
 
 ---
 
-> ⬇️ **تحميل جاهز للتثبيت:** حزمة **APK موقّعة** (وأيضًا AAB للمتجر) متاحة مباشرةً من [إصدار V 2.0.0](https://github.com/CTO-DRS/SuperBiz/releases/tag/v2.0.0) — تُبنى وتُوقّع وتُرفق آليًا مع كل وسم `v*` عبر GitHub Actions.
+> ⬇️ **تحميل جاهز للتثبيت:** حزمة **APK موقّعة** (وأيضًا AAB للمتجر) متاحة مباشرةً من [إصدار V 2.5.0](https://github.com/CTO-DRS/SuperBiz/releases/tag/v2.5.0) — تُبنى وتُوقّع وتُرفق آليًا مع كل وسم `v*` عبر GitHub Actions.
 
 ## وصف المشروع
 
@@ -25,9 +25,10 @@ SuperBiz هو تطبيق أندرويد أصلي (Native) لإدارة الأع�
 
 - **المنصة:** Android Native
 - **اللغة:** Kotlin + Jetpack Compose (Material 3)
-- **الواجهة:** العربية أولًا (RTL أصيل) مع دعم إنجليزي كامل (2235 نصًا × لغتين بتطابق تام)
-- **قاعدة البيانات:** Room (مخطط v12 — 25 جدولًا بمفاتيح أجنبية كاملة، المال مخزَّن Long قروش)
-- **الاختبارات:** 1629 اختبار وحدة أخضر في 133 ملف اختبار
+- **الواجهة:** العربية أولًا (RTL أصيل) مع دعم إنجليزي كامل (2375 نصًا × لغتين بتطابق تام) وخطة لغات موسعة جاهزة (`docs/LANGUAGE_PLAN.md`)
+- **العملات:** متعددة — فواتير ومصروفات بعملات أجنبية تُختَم بسعرها التاريخي، وتقارير موحّدة بعملة الأساس، وصفر Double في أي مسار مالي (موجة R17 + مخطط v15)
+- **قاعدة البيانات:** Room (مخطط v15 — 25 جدولًا بمفاتيح أجنبية كاملة، المال مخزَّن Long قروش)
+- **الاختبارات:** 1666 اختبار وحدة أخضر في 145 ملف اختبار
 - **الحجم:** 190 ملف Kotlin (~67 ألف سطر) · 29 شاشة Compose · 17 مستودع بيانات · 57 ملف محركات ومنطق نق Pure
 
 ## الهدف من التطبيق
