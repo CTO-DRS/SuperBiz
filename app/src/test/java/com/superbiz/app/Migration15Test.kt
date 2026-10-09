@@ -116,9 +116,12 @@ class Migration15Test {
             val invTotal = scalar(db, "SELECT total FROM invoices WHERE number = 'INV-1501'")
 
             val migration = AppGraph.MIGRATIONS[13]
+            // بعدها تُستكمل السلسلة إلى 16 عند فتح Room (انظر الإغلاق أدناه)
             assertEquals(14, migration.startVersion)
             assertEquals(15, migration.endVersion)
             migration.migrate(db)
+            // [H4-3 V 3.0.0] استكمال السلسلة إلى v16 (أعمدة المزامنة) — الفتحة النهائية بمخطط اليوم
+            AppGraph.MIGRATIONS[14].migrate(db)
 
             // 1) الأعمدة الستة بألفتها المتوقعة (TEXT/INTEGER)
             for (col in listOf("origCurrency", "origTotal", "origFxMicros")) {
@@ -136,7 +139,7 @@ class Migration15Test {
             assertEquals(0L, rowCount(db, "PRAGMA foreign_key_check"))
 
             // ═══ التحقق الحاسم: فتح القاعدة نفسها بRoom v15 ═══
-            db.version = 15
+            db.version = 16
             db.close()
 
             val ctx = ApplicationProvider.getApplicationContext<Context>()

@@ -43,6 +43,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.superbiz.app.R
+import com.superbiz.app.domain.algo.R18Kpi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.superbiz.app.domain.KpiBoardP47
 import com.superbiz.app.ui.components.GlassCard
 import com.superbiz.app.ui.components.parseNum
@@ -155,6 +158,7 @@ fun KpiBoardScreen(
 
         // ══ لوحة المؤشرات — محرك نقي على بيانات الشهر الفعلية ══
         val cal = Calendar.getInstance()
+        val homeFlow = home
         val fraction = KpiBoardP47.monthFraction(
             cal.get(Calendar.DAY_OF_MONTH), cal.getActualMaximum(Calendar.DAY_OF_MONTH)
         )
@@ -188,6 +192,32 @@ fun KpiBoardScreen(
                 color = g.textSecondary
             )
             Spacer(Modifier.height(8.dp))
+            // [H4-7][V 3.0.0] بطاقة المؤشرات الكاملة — نبض العمل أعلى اللوحة
+            val pulseCtx = androidx.compose.ui.platform.LocalContext.current
+            val pulseState = androidx.compose.runtime.produceState<R18Kpi.Pulse?>(initialValue = null, appVM) {
+                value = withContext(Dispatchers.IO) {
+                    val graph = com.superbiz.app.AppGraph.from(pulseCtx.applicationContext)
+                    runCatching {
+                        R18Kpi.pulse(
+                            R18Kpi.Input(
+                                salesMonthPiasters = com.superbiz.app.util.Money.toPiasters(homeFlow.salesMonth),
+                                profitMonthPiasters = com.superbiz.app.util.Money.toPiasters(homeFlow.profitMonth),
+                                expensesMonthPiasters = com.superbiz.app.util.Money.toPiasters(homeFlow.expensesMonth),
+                                overduePiasters = com.superbiz.app.util.Money.toPiasters(homeFlow.overdue),
+                                lowStockCount = homeFlow.lowStockCount,
+                                totalProducts = graph.db.products().allOnce().size,
+                                cash90NetPiasters = null,
+                                dayOfMonth = cal.get(Calendar.DAY_OF_MONTH),
+                                daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+                            )
+                        )
+                    }.getOrNull()
+                }
+            }
+            pulseState.value?.let { pulse ->
+                com.superbiz.app.ui.insights.FullPulseCard(pulse, symbol)
+                Spacer(Modifier.height(10.dp))
+            }
             kpis.forEach { k -> KpiCard(k, symbol, fraction) ; Spacer(Modifier.height(10.dp)) }
             // [H3-5] روايات الأداء — كل سطر يحمل أساسه الخام (الشفافية الكاملة)
             com.superbiz.app.ui.insights.KpiNarrativesCard(smartHome.stories, symbol)

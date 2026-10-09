@@ -228,6 +228,7 @@ class AppVM(app: Application) : AndroidViewModel(app) {
                 com.superbiz.app.core.AppPrefs.mirrorChartsRtl = s.mirrorChartsRtl
                 com.superbiz.app.core.AppPrefs.animationsEnabled = s.animationsEnabled
                 com.superbiz.app.core.AppPrefs.arabicReceiptMode = s.arabicReceiptMode
+                com.superbiz.app.core.AppPrefs.invoiceTemplate = s.invoiceTemplate
                 com.superbiz.app.core.AppPrefs.defaultLowStockQty = s.defaultLowStockQty
                 com.superbiz.app.core.AppPrefs.lowStockAlerts = s.lowStockAlerts
                 com.superbiz.app.core.AppPrefs.receivableAlerts = s.receivableAlerts

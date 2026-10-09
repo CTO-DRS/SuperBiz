@@ -477,8 +477,14 @@ object ReceiptFactory {
         val totals = mutableListOf<Pair<String, String>>(
             ctx.getString(R.string.subtotal) to Money.numP(inv.subtotal)
         )
-        if (inv.discount > 0L) totals += ctx.getString(R.string.discount) to Money.numP(inv.discount)
+        val template = InvoiceTemplate.fromId(com.superbiz.app.core.AppPrefs.invoiceTemplate)
+        // [H4-6] COMPACT يحذف صف الخصم — إيصال حراري أقصر
+        if (inv.discount > 0L && template.showDiscountRow) totals += ctx.getString(R.string.discount) to Money.numP(inv.discount)
         if (inv.taxAmount > 0L) totals += ctx.getString(R.string.tax) to Money.numP(inv.taxAmount)
+        // [H4-6] DETAILED يعرض الرقم الضريبي للطرف إن وجد
+        if (template.showPartyVat && !party?.taxNumber.isNullOrBlank()) {
+            totals += ctx.getString(R.string.det_vat_label) to (party?.taxNumber ?: "")
+        }
         totals += ctx.getString(R.string.total) to Money.formatP(inv.total, symbol)
         if (inv.paid > 0L) {
             totals += ctx.getString(R.string.paid_amount) to Money.numP(inv.paid)
