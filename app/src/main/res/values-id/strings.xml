@@ -838,7 +838,7 @@
     <string name="whatsapp_open_failed">Gagal membuka WhatsApp</string>
     <string name="r9_hint_generic">Bagaimana dihitung? Dari data Anda yang nyata — kartu disembunyikan tanpa data</string>
     <string name="r9_stress_title">Kasir di Bawah Tekanan</string>
-    <string name="r9_stress_base">Skenario normal (100% dari aliran kas)</string>
+    <string name="r9_stress_base">Skenario normal (aliran kas 100%)</string>
     <string name="r9_stress_stress">Skenario tekanan (70%)</string>
     <string name="r9_stress_severe">Skenario krisis (40%)</string>
     <string name="r9_days_unit">%1$d hari</string>
@@ -885,7 +885,7 @@
     <string name="r9_holt_title">Proyeksi Penjualan Bulan Depan</string>
     <string name="r9_holt_value">Nilai Proyeksi (Holt)</string>
     <string name="r9_shifts_title">Rencana Jam Kerja yang Disarankan</string>
-    <string name="r9_shifts_hint">Distribusikan 40 jam per minggu berdasarkan proporsi penjualan per jam — abaikan di bawah 5% dari puncak</string>
+    <string name="r9_shifts_hint">Distribusikan 40 jam per minggu berdasarkan proporsi penjualan per jam — abaikan di bawah 5% puncak</string>
     <string name="r9_shifts_hour">Jam %1$d:00</string>
     <string name="r9_shifts_val">%1$s jam</string>
     <string name="r9_sweep_title">Pemindaian Faktur Cerdas</string>
@@ -1122,7 +1122,7 @@
     <string name="r12_cart_momentum">Perubahan sejak awal jendela: %1$+.1f٪</string>
     <string name="r12_void_title">Pemantauan Pembatalan Tagihan</string>
     <string name="r12_void_note">Rasio pembatalan minggu terakhir vs minggu sebelumnya</string>
-    <string name="r12_void_pct">%1$d pembatalan dari %2$d — %3$.1f%</string>
+    <string name="r12_void_pct">%1$d pembatalan dari %2$d — %3$.1f%%</string>
     <string name="r12_void_rising">Pembatalan meningkat — lihat penyebabnya</string>
     <string name="r12_void_calm">Tingkat pembatalan terkendali</string>
     <string name="r12_overpaid_title">Faktur kelebihan pembayaran</string>
@@ -1142,7 +1142,7 @@
     <string name="r12_never_qty">Tanpa penjualan — stok %1$d</string>
     <string name="r12_stale_title">Pemasukan paling lambat terjual (90 hari)</string>
     <string name="r12_stale_note">Berapa banyak yang terjual dari stok baru masuk</string>
-    <string name="r12_stale_pct">Hanya terjual %1$d%</string>
+    <string name="r12_stale_pct">Hanya terjual %1$d%%</string>
     <string name="r12_gaps_title">Kategori tanpa penjualan sama sekali</string>
     <string name="r12_gaps_note">Produks yang ditampilkan tapi penjualan di kategorinya nol</string>
     <string name="r12_gaps_row">%1$d produk tanpa satupun penjualan</string>
@@ -1150,7 +1150,7 @@
     <string name="r12_creep_note">Rata-rata harga unit per bulan dari baris pembelian</string>
     <string name="r12_creep_first">Awal jendela</string>
     <string name="r12_creep_last">Bulan terakhir</string>
-    <string name="r12_creep_slope">Kemiringan bulanan: %1$+.1f%</string>
+    <string name="r12_creep_slope">Kemiringan bulanan: %1$+.1f%%</string>
     <string name="r12_creep_spike">Lonjakan harga tajam — atur ulang harga atau negosiasi</string>
     <string name="r12_creep_creeping">Kenaikan bertahap harga — pantau margin Anda</string>
     <string name="r12_creep_falling">Harga membaik — peluang untuk margin lebih baik</string>
@@ -1163,7 +1163,7 @@
     <string name="r12_drift_title">Migrasi konsentrasi pelanggan (90 hari)</string>
     <string name="r12_drift_note">Indeks HHI untuk separuh kedua dibandingkan dengan separuh pertama</string>
     <string name="r12_drift_hhi">Konsentrasi: %1$d ← %2$d poin</string>
-    <string name="r12_drift_top">Pelanggan terbesar: %1$d% ← %2$d%</string>
+    <string name="r12_drift_top">Pelanggan terbesar: %1$d%% ← %2$d%%</string>
     <string name="r12_drift_concentrating">Ketergantungan pada sejumlah kecil pelanggan meningkat — berbahaya</string>
     <string name="r12_drift_diversifying">Basis pelanggan Anda sehat terdiversifikasi</string>
     <string name="r12_drift_stable">Struktur pelanggan stabil</string>
@@ -1264,11 +1264,11 @@
     <string name="r13_riser_shift">Pergeseran jelas dalam percampuran pengeluaran — lihat kategori ini</string>
     <string name="r13_riser_climb">Kenaikan halus untuk pangsa kategori — untuk pemantauan</string>
     <string name="r13_cut_title">Rencana pemotongan pengeluaran 10%</string>
-    <string name="r13_cut_note">Jika Anda memotong 10% dari pengeluaran 120 hari terakhir — setiap kategori akan dipotong dengan proporsi berdasarkan sisa terbesar</string>
+    <string name="r13_cut_note">Jika Anda memotong 10% pengeluaran 120 hari terakhir — setiap kategori dipotong dengan proporsi sisa terbesar</string>
     <string name="r13_cut_row">Pemotongan yang diusulkan: %1$s</string>
     <string name="r13_balgini_title">Ketimpangan distribusi piutang (Gini)</string>
     <string name="r13_balgini_note">0 berarti piutang didistribusikan secara merata dan 1 berarti satu pelanggan membawa semua utang</string>
-    <string name="r13_balgini_value">Koefisien Gini piutang: %1$d%</string>
+    <string name="r13_balgini_value">Koefisien Gini piutang: %1$d%%</string>
     <string name="r13_balgini_high">Piutan Anda terkonsentrasi pada sekelompok kecil pelanggan — risiko koleksi yang terpusat</string>
     <string name="r13_balgini_mid">Konsentrasi sedang piutang pada segmen pelanggan</string>
     <string name="r13_balgini_low">Distribusi piutang yang sehat dan seimbang pada pelanggan Anda</string>
@@ -1276,18 +1276,18 @@
     <string name="r14_abc_note">Pentingnya pendapatan (ABC) × volatilitas permintaan (XYZ) — AX adalah harta karun, CZ adalah beban potensial</string>
     <string name="r14_abc_title">Matriks ABC×XYZ</string>
     <string name="r14_abc_treasure">Harta karun stabil: %1$s</string>
-    <string name="r14_band_good">Bagus 35–50%: %1$d</string>
-    <string name="r14_band_low">Rendah 10–20%: %1$d</string>
+    <string name="r14_band_good">Bagus 35–50%%: %1$d</string>
+    <string name="r14_band_low">Rendah 10–20%%: %1$d</string>
     <string name="r14_band_neg">Negatif: %1$d</string>
     <string name="r14_band_note">Distribusi produk yang terjual ke dalam pita marjinal — di mana katalog Anda terkonsentrasi?</string>
-    <string name="r14_band_ok">Diterima 20–35%: %1$d</string>
-    <string name="r14_band_thin">Tipis 0–10%: %1$d</string>
+    <string name="r14_band_ok">Diterima 20–35%%: %1$d</string>
+    <string name="r14_band_thin">Tipis 0–10%%: %1$d</string>
     <string name="r14_band_title">Pita Marjinal</string>
-    <string name="r14_band_top">Luar biasa ≥50%: %1$d</string>
+    <string name="r14_band_top">Luar biasa ≥50%%: %1$d</string>
     <string name="r14_band_worst">Yang paling cepat ditangani: %1$s</string>
     <string name="r14_blend_note">Prediksi gabungan (Holt + rata-rata bergerak) yang terboboti berdasarkan kesalahan setiap komponen dalam backcasting</string>
     <string name="r14_blend_title">Perkiraan Minggu-minggu Mendatang</string>
-    <string name="r14_blend_w">Bobot Holt: %1$d%</string>
+    <string name="r14_blend_w">Bobot Holt: %1$d%%</string>
     <string name="r14_blend_week">Minggu +%1$d</string>
     <string name="r14_borda_note">Menggabungkan peringkat pendapatan, kuantitas, dan keuntungan (perhitungan Borda) — lebih kuat daripada metrik tunggal manapun</string>
     <string name="r14_borda_rank">Peringkat %1$d</string>
@@ -1662,7 +1662,7 @@
     <string name="visit_last_yesterday">Kemarin</string>
     <string name="visit_row_log">Kunjungan</string>
     <string name="visit_empty">Belum ada kunjungan yang dicatat — catat kunjungan dari kartu favorit manapun</string>
-    <string name="visit_more_rows">+ %1$pihak lainnya...</string>
+    <string name="visit_more_rows">+%1$d pihak lainnya…</string>
     <string name="visit_distance_line">Jarak dari lokasi favorit: %1$s</string>
     <string name="visit_overdue_hint">Belum dikunjungan selama lebih dari %1$d hari</string>
     <string name="route_sort_chip">Terdekat dulu</string>
@@ -2428,4 +2428,14 @@
     <string name="pulse_hint_pro">Termasuk proyeksi kas 90 hari di versi Pro</string>
     <string name="det_vat_label">Nomor pajak</string>
     <string name="webhook_endpoint_label">Alamat:</string>
+    <!-- ═══ [H5 V 3.2.0] الأفق الخامس — العالمية ═══ -->
+    <string name="invoice_tax_caption">Faktur Pajak</string>
+    <string name="jurisdiction_title">Yurisdiksi pajak Teluk</string>
+    <string name="jurisdiction_sub">Menetapkan tarif default undang-undang, judul faktur, dan profil kepatuhan: Arab Saudi 15% · UEAs 5% · Bahrain 10%</string>
+    <string name="jurisdiction_sa">Arab Saudi · 15%</string>
+    <string name="jurisdiction_ae">UEA · 5%</string>
+    <string name="jurisdiction_bh">Bahrain · 10%</string>
+    <string name="jurisdiction_zatca_note">Tautan ZATCA (Fatoora) hanya tersedia di yurisdiksi Saudi — tautan yang aktif tetap senyap di tempat lain.</string>
+    <string name="jurisdiction_apply_rate">Terapkan tarif default yurisdiksi</string>
+    <string name="jurisdiction_note_history">Faktur tersimpan menyimpan potongan tarifnya sendiri — mengubah yurisdiksi tidak pernah menulis ulang riwayat. Ubah mata uang yurisdiksi lewat pemilih mata uang yang sama.</string>
 </resources>

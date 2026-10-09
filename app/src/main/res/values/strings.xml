@@ -2551,4 +2551,14 @@
     <string name="pulse_hint_pro">بما في ذلك توقع النقد 90 يوماً في النسخة Pro</string>
     <string name="det_vat_label">الرقم الضريبي</string>
     <string name="webhook_endpoint_label">العنوان:</string>
+    <!-- ═══ [H5 V 3.2.0] الأفق الخامس — العالمية ═══ -->
+    <string name="invoice_tax_caption">فاتورة ضريبية</string>
+    <string name="jurisdiction_title">الولاية الضريبية الخليجية</string>
+    <string name="jurisdiction_sub">تحدد نسبة القانون الافتراضية وملصق الفاتورة وبيئة الامتثال: السعودية 15% · الإمارات 5% · البحرين 10%</string>
+    <string name="jurisdiction_sa">السعودية · 15%</string>
+    <string name="jurisdiction_ae">الإمارات · 5%</string>
+    <string name="jurisdiction_bh">البحرين · 10%</string>
+    <string name="jurisdiction_zatca_note">ربط منصة فاتورة (ZATCA) متاح حصراً في الولاية السعودية — الربط المفعّل يبقى صامتاً خارجها.</string>
+    <string name="jurisdiction_apply_rate">تطبيق نسبة الولاية الافتراضية</string>
+    <string name="jurisdiction_note_history">الفواتير المحفوظة تحمل نسبتها اللحظية — تغيير الولاية لا يعيد كتابة التاريخ. تبديل عملة الولاية من منتقي العملة نفسه.</string>
 </resources>

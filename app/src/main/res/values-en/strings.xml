@@ -2551,4 +2551,14 @@
     <string name="pulse_hint_pro">Includes the 90-day cash forecast in the Pro version</string>
     <string name="det_vat_label">VAT number</string>
     <string name="webhook_endpoint_label">URL:</string>
+    <!-- ═══ [H5 V 3.2.0] الأفق الخامس — العالمية ═══ -->
+    <string name="invoice_tax_caption">Tax Invoice</string>
+    <string name="jurisdiction_title">Gulf tax jurisdiction</string>
+    <string name="jurisdiction_sub">Sets the statutory default rate, invoice caption and compliance profile: Saudi Arabia 15% · UAE 5% · Bahrain 10%</string>
+    <string name="jurisdiction_sa">Saudi Arabia · 15%</string>
+    <string name="jurisdiction_ae">UAE · 5%</string>
+    <string name="jurisdiction_bh">Bahrain · 10%</string>
+    <string name="jurisdiction_zatca_note">ZATCA (Fatoora) linking is available in the Saudi jurisdiction only — an enabled link stays silent elsewhere.</string>
+    <string name="jurisdiction_apply_rate">Apply jurisdiction default rate</string>
+    <string name="jurisdiction_note_history">Saved invoices keep their own rate snapshot — changing jurisdiction never rewrites history. Switch the jurisdiction currency with the same currency picker.</string>
 </resources>

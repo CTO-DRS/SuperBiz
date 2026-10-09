@@ -20,6 +20,12 @@ object SeedDefaults {
         if (db.currencies().count() == 0) {
             db.currencies().upsertAll(defaultCurrencies())
         }
+        // [H5-3 V 3.2.0] إثراء ولاية البحرين — يُزرع ما غاب فقط (idempotent):
+        // التاجر القائم يأخذ BHD دون مسّ أسعار قائمة، وعقد [P50-5]: دقة 2-عشرية
+        // = دقة تقريب ضريبة الفاتورة البحرينية الرسمية (أقرب 10 فلس).
+        val existing = db.currencies().allOnce().map { it.code }.toSet()
+        val additions = upgradeCurrencies().filter { it.code !in existing }
+        if (additions.isNotEmpty()) db.currencies().upsertAll(additions)
         if (db.rules().count() == 0) {
             db.rules().upsert(Rule(kind = "DUE_REMIND", enabled = true, daysBefore = 3))
             db.rules().upsert(Rule(kind = "CHECK_REMIND", enabled = true, daysBefore = 5))
@@ -36,5 +42,13 @@ object SeedDefaults {
         Currency("AED", "درهم إماراتي", "UAE Dirham", "د.إ", 0.9785, false),
         Currency("EGP", "جنيه مصري", "Egyptian Pound", "ج.م", 12.95, false),
         Currency("YER", "ريال يمني", "Yemeni Rial", "ر.ي", 664.5, false)
+    )
+
+    /**
+     * [H5-3 V 3.2.0] عملة ولاية البحرين — سعر مرجعي عند الإصدار بنفس عقد v1
+     * (BHD لكل 1 SAR ≈ 0.2665 USD ÷ 2.6526 USD/BHD ≈ 0.1005).
+     */
+    fun upgradeCurrencies(): List<Currency> = listOf(
+        Currency("BHD", "دينار بحريني", "Bahraini Dinar", "د.ب", 0.1005, false)
     )
 }

@@ -462,7 +462,10 @@ object ReceiptFactory {
             )
         } catch (_: Exception) { null }
         val typeText = ctx.getString(if (inv.isSale) R.string.type_sale else R.string.type_purchase)
-        val title = ctx.getString(R.string.receipt_invoice) + " " + typeText + " • " + inv.number
+        // [H5-3 V 3.2.0] ملصق «فاتورة ضريبية» على الإيصال الحراري عند وجود الرقم الضريبي
+        // (B2B — ولايات الخليج الثلاث) — نفس شرط QR المُوحّد
+        val taxCaption = if (vatNumber.isNotBlank()) ctx.getString(R.string.invoice_tax_caption) + " • " else ""
+        val title = taxCaption + ctx.getString(R.string.receipt_invoice) + " " + typeText + " • " + inv.number
         val dateText = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.US).format(Date(inv.date))
 
         // [P33-P8] العتبات مساواة صحيحة بلا عتبة فاصلة عائمة (المبالغ قروش Long)

@@ -247,17 +247,8 @@ fun InventoryScreen(appVM: AppVM, nav: NavHostController) {
                     Brush.linearGradient(listOf(GreenDeep, Green))
                 ) {
                     // وظيفة 13 — تصدير المخزون المرشَّح كما هو عبر مسار FileProvider الآمن
-                    val header = listOf(
-                        activity.getString(R.string.name),
-                        activity.getString(R.string.sku),
-                        activity.getString(R.string.barcode),
-                        activity.getString(R.string.unit),
-                        activity.getString(R.string.cost_price),
-                        activity.getString(R.string.sale_price),
-                        activity.getString(R.string.stock_qty),
-                        activity.getString(R.string.reorder_level),
-                        activity.getString(R.string.inv_stock_value)
-                    )
+                    // [H5-4 V 3.2.0] الرؤوس من عقد التصدير الموحد
+                    val header = com.superbiz.app.export.ExportSchemas.inventoryHeaders(activity)
                     val rows = visibleProducts.map { p ->
                         listOf<Any?>(
                             p.name, p.sku, p.barcode, p.unit,

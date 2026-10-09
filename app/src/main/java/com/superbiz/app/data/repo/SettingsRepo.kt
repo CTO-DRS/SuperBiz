@@ -103,7 +103,10 @@ data class Settings(
     // [P46-W1] جولة 7: نقاط الولاء والكوبونات — المعطّل افتراضياً (قرار منتج صريح)
     val loyaltyEnabled: Boolean = false,
     val loyaltyEarnDivisor: Long = 1000L,   // قروش صافية لكل نقطة (1000 = كل 10 ريال نقطة)
-    val loyaltyPointValue: Long = 10L       // قروش قيمة النقطة عند الاستبدال (10 = جوهر 1%)
+    val loyaltyPointValue: Long = 10L,       // قروش قيمة النقطة عند الاستبدال (10 = جوهر 1%)
+    // [H5-3 V 3.2.0] «الأفق الخامس — العالمية»: الولاية الضريبية الخليجية
+    // SA/AE/BH — الافتراضي SA فشل مغلق نحو السلوك التاريخي (عقد GulfTax [P51-4])
+    val taxJurisdiction: String = "SA"
 )
 
 class SettingsRepo(private val context: Context) {
@@ -179,6 +182,8 @@ class SettingsRepo(private val context: Context) {
         val loyaltyEnabled = booleanPreferencesKey("loyalty_enabled")
         val loyaltyEarnDivisor = longPreferencesKey("loyalty_earn_divisor")
         val loyaltyPointValue = longPreferencesKey("loyalty_point_value")
+        // [H5-3 V 3.2.0] الولاية الضريبية الخليجية
+        val taxJurisdiction = stringPreferencesKey("tax_jurisdiction")
     }
 
     val settings: Flow<Settings> = context.dataStore.data.map { p ->
@@ -253,7 +258,9 @@ class SettingsRepo(private val context: Context) {
             // [P46-W1] جولة 7: الولاء — افتراضات آمنة (معطّل + عقد الجوهر 1%)
             loyaltyEnabled = p[K.loyaltyEnabled] ?: false,
             loyaltyEarnDivisor = p[K.loyaltyEarnDivisor] ?: 1000L,
-            loyaltyPointValue = p[K.loyaltyPointValue] ?: 10L
+            loyaltyPointValue = p[K.loyaltyPointValue] ?: 10L,
+            // [H5-3 V 3.2.0] افتراض آمن: SA تاريخياً (الترقية بلا تغيير سلوك)
+            taxJurisdiction = p[K.taxJurisdiction] ?: "SA"
         )
     }
 
@@ -434,6 +441,13 @@ class SettingsRepo(private val context: Context) {
     /** قروش قيمة النقطة عند الاستبدال — ≥ 1 بعقد fail-closed (صفر = بلا استبدال) */
     suspend fun setLoyaltyPointValue(v: Long) = context.dataStore.edit {
         it[K.loyaltyPointValue] = v.coerceIn(1L, 1_000_000L)
+    }
+
+    // ═══ [H5-3 V 3.2.0] مُحدّث الولاية الضريبية ═══
+
+    /** الولاية SA/AE/BH — خارج الثلاثية يعود إلى SA (عقد GulfTax [P51-4]) */
+    suspend fun setTaxJurisdiction(code: String) = context.dataStore.edit {
+        it[K.taxJurisdiction] = if (com.superbiz.app.domain.GulfTax.CODES.contains(code)) code else "SA"
     }
 
     // ═══ [H1-3][v13] بذرة المالك للترحيل ═══

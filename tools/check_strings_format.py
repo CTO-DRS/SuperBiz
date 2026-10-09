@@ -19,6 +19,7 @@
 
 بلا أي اعتماديات خارجية — مكتبة python القياسية فقط (re + xml.etree).
 """
+import glob
 import os
 import re
 import sys
@@ -27,7 +28,15 @@ import xml.etree.ElementTree as ET
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "app", "src", "main", "res")
 AR = os.path.join(RES, "values", "strings.xml")
-EN = os.path.join(RES, "values-en", "strings.xml")
+
+def locale_files():
+    """[H5-2 V 3.0.0] كل ملفات اللغات values-*/strings.xml (مستثنياً values-night الثيمي)"""
+    out = []
+    for p in sorted(glob.glob(os.path.join(RES, "values-*", "strings.xml"))):
+        if os.path.basename(os.path.dirname(p)) == "values-night":
+            continue
+        out.append(p)
+    return out
 
 # مقام صحيح وفق نحو java.util.Formatter الكامل: %[index$][flags][width][.precision][conversion]
 VALID = re.compile(r"%(?:(\d+)\$)?[-#+ 0,(]*\d*(?:\.\d+)?[sSdFfbnxXeEgGaAc%]")
@@ -90,31 +99,33 @@ def arities(path, tag):
 
 
 def main():
-    # 0) سلامة بنية XML (رسالة نظيفة بدل traceback)
-    for label, path in (("values(ar)", AR), ("values-en", EN)):
+    # 0) سلامة بنية XML لكل اللغات (رسالة نظيفة بدل traceback) — [H5-2] الخمس
+    all_files = [("values(ar)", AR)] + [
+        (os.path.basename(os.path.dirname(p)), p) for p in locale_files()
+    ]
+    for label, path in all_files:
         try:
             ET.parse(path)
         except ET.ParseError as e:
-            failures.append(f"[{label}] XML غير سليم: {e}")
+            failures.append(f"[{label}] XML parse error: {e}")
             print(f"FAIL {len(failures)} | WARN {len(warnings)}")
             return 1
 
-    # 1) تناظر المفاتيح بين الغتين
+    # 1) تناظر المفاتيح و arity: كل لغة ضد الافتراضي — [H5-2 V 3.0.0]
     ar_keys = arities(AR, "ar")
-    en_keys = arities(EN, "en")
-    if set(ar_keys) != set(en_keys):
-        diff = sorted(set(ar_keys) ^ set(en_keys))
-        failures.append(f"تفاوت مفاتيح ar/en ({len(diff)}): {', '.join(diff[:20])}")
+    for label, path in all_files[1:]:
+        loc_keys = arities(path, label)
+        if set(loc_keys) != set(ar_keys):
+            diff = sorted(set(ar_keys) ^ set(loc_keys))
+            failures.append(f"key mismatch {label} ({len(diff)}): {', '.join(diff[:20])}")
+        mismatch = {k: (ar_keys[k], loc_keys[k]) for k in ar_keys
+                    if k in loc_keys and ar_keys[k] != loc_keys[k]}
+        for k, (a, e) in sorted(mismatch.items()):
+            failures.append(f"arity mismatch: [{label}][{k}] ar={a} {label}={e}")
 
-    # 2) تناظر arity لكل مفتاح مشترك
-    mismatch = {k: (ar_keys[k], en_keys[k]) for k in ar_keys
-                if k in en_keys and ar_keys[k] != en_keys[k]}
-    for k, (a, e) in sorted(mismatch.items()):
-        failures.append(f"عدم تطابق arity: [{k}] ar={a} en={e}")
-
-    # 3) فحص بنية المقاسم داخل كل غة
-    scan_file(AR, "ar")
-    scan_file(EN, "en")
+    # 2) فحص بنية المقاسم داخل كل لغة
+    for label, path in all_files:
+        scan_file(path, label)
 
     print(f"=== strings format scan: FAIL={len(failures)} WARN={len(warnings)} ===")
     for f in failures:

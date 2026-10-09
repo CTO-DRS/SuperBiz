@@ -554,7 +554,7 @@
     <string name="pos_insufficient">Alınan Tutar, Toplamdan Düşük</string>
     <string name="rep_runway_title">Nakit Piste</string>
     <string name="rep_burn">Günlük Yakma Oranı: %1$s</string>
-    <string name="rep_runway_days">Yaklaşık %1 günlük likidite</string>
+    <string name="rep_runway_days">Yaklaşık %1$d günlük likidite</string>
     <string name="rep_runway_ok">Pozitif Akış — Nakit Yakma Yok</string>
     <string name="rep_hours_title">Yoğun Saatler</string>
     <string name="rep_hours_sub">Günlük saatlere göre fatura dağılımı</string>
@@ -795,7 +795,7 @@
     <string name="home_health_0">Zayıf Durum — Düşük likidite veya karlılık</string>
     <string name="ins_hint_generic">Sadece yerel verilerinizden hesaplanır — İnternet gerekmez</string>
     <string name="ins_cashgap_title">Yaklaşnak Nakit Boşluğu</string>
-    <string name="ins_cashgap_week">%1. Hafta</string>
+    <string name="ins_cashgap_week">%1$d. Hafta</string>
     <string name="ins_cashgap_low">Beklenen açık %1$s</string>
     <string name="ins_jump_title">Masraf Atlaması</string>
     <string name="ins_jump_line">Normalden %1$d%% daha yüksek</string>
@@ -1445,7 +1445,7 @@
     <string name="r15_pareto_broad">Dengeli dağılım — az sayıda ürüne bağımlı değil</string>
     <string name="r15_zipf_title">Baş Konsantrasyonu (Zipf)</string>
     <string name="r15_zipf_note">Zipf Yasası\'na göre beklenenin en üst %20\'lik ürün payı</string>
-    <string name="r15_zipf_head">Gerçek %1$s% vs. Beklenen %2$s%</string>
+    <string name="r15_zipf_head">Gerçek %1$s%% vs. Beklenen %2$s%%</string>
     <string name="r15_cycle_title">Satışlarda Baskın Döngü</string>
     <string name="r15_cycle_note">42 günlük gelir için Ortalama Döngü Süresi (DFT) — en güçlü ritmi yakala</string>
     <string name="r15_cycle_days">Döngü uzunluğu: %1$s gün</string>
@@ -1466,7 +1466,7 @@
     <string name="r15_kappa_weak">Zayıf uyum — müşterilerle plan şartlarını gözden geçirin</string>
     <string name="r15_churn_title">%1$s Kayıp Riski</string>
     <string name="r15_churn_note">Son alıştan bu yana geçen süre ve satın alma sayısına dayalı Lojistik Regresyon modeli</string>
-    <string name="r15_churn_prob">Kayıp olasılığı: %1$s%</string>
+    <string name="r15_churn_prob">Kayıp olasılığı: %1$s%%</string>
     <string name="r15_rfm_title">En İyi Müşteri için RFM Puanı</string>
     <string name="r15_rfm_note">Sınırlar: Tekrar 2/4/6/8 · Tutar 500/1500/3000/6000 · Son alış 7/14/30/60 gün önce</string>
     <string name="r15_rfm_scores">Son/Tekrar/Tutar: %1$s/%2$s/%3$s</string>
@@ -1664,7 +1664,7 @@
     <string name="visit_empty">Henüz kaydedilmiş ziyaret yok — Favori kartından bir ziyaret kaydedin</string>
     <string name="visit_more_rows">ve %1$d başka taraf...</string>
     <string name="visit_distance_line">Kayıtlı konumdan mesafe: %1$s</string>
-    <string name="visit_overdue_hint">%1\'den fazla gün önce ziyaret edilmedi</string>
+    <string name="visit_overdue_hint">%1$d günden uzun süre ziyaret edilmedi</string>
     <string name="route_sort_chip">Önce yakınlar</string>
     <string name="route_no_location">Konum yok</string>
     <string name="visit_delete_title">Ziyareti sil?</string>
@@ -2428,4 +2428,14 @@
     <string name="pulse_hint_pro">Pro sürümünde 90 günlük nakit tahmini dahildir</string>
     <string name="det_vat_label">Vergi No</string>
     <string name="webhook_endpoint_label">Adres:</string>
+    <!-- ═══ [H5 V 3.2.0] الأفق الخامس — العالمية ═══ -->
+    <string name="invoice_tax_caption">Vergi Faturası</string>
+    <string name="jurisdiction_title">Körfez vergi bölgesi</string>
+    <string name="jurisdiction_sub">Yasal varsayılan oranı, fatura başlığını ve uyum profilini belirler: Suudi Arabistan %15 · BAE %5 · Bahreyn %10</string>
+    <string name="jurisdiction_sa">Suudi Arabistan · %15</string>
+    <string name="jurisdiction_ae">BAE · %5</string>
+    <string name="jurisdiction_bh">Bahreyn · %10</string>
+    <string name="jurisdiction_zatca_note">ZATCA (Fatoora) bağlantısı yalnızca Suudi bölgesinde kullanılabilir — etkin bir bağlantı başka bölgelerde sessiz kalır.</string>
+    <string name="jurisdiction_apply_rate">Bölgenin varsayılan oranını uygula</string>
+    <string name="jurisdiction_note_history">Kayıtlı faturalar kendi oran anlık görüntüsünü taşır — bölge değişikliği geçmişi yeniden yazmaz. Bölge para birimini aynı para birimi seçicisinden değiştirin.</string>
 </resources>

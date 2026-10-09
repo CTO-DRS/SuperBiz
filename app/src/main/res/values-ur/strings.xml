@@ -549,7 +549,7 @@
     <string name="pos_change">واپسی رقم گاہک کو: %1$s</string>
     <string name="pos_change_breakdown">واپسی رقم تفصیل</string>
     <string name="pos_hold_cart">کارٹ کو ہولڈ کریں</string>
-    <string name="pos_resume_cart">کارٹ کو جاری کریں (%1%d آئٹمز · %2$s)</string>
+    <string name="pos_resume_cart">کارٹ دوبارہ شروع کریں (%1$d آئٹمز · %2$s)</string>
     <string name="pos_cart_held">کارٹ ہولڈ ہوا — جب چاہیں جاری کریں</string>
     <string name="pos_insufficient">دتہ ہوا رقم کل سے کم ہے</string>
     <string name="rep_runway_title">کیش رن وے</string>
@@ -995,7 +995,7 @@
     <string name="r11_aov_momentum">%1$s%% کا مومنٹم دو حصوں کے درمیان</string>
     <string name="r11_aov_title">بیج کا اوسطاً رجحان</string>
     <string name="r11_bounce_overall">کل فیصد %1$d%%</string>
-    <string name="r11_bounce_row">%1%d %2$d سے واپس آئے</string>
+    <string name="r11_bounce_row">%2$d چیکس میں سے %1$d واپس</string>
     <string name="r11_bounce_title">ہر پارٹی کے لیے چیک واپسی کا شمار</string>
     <string name="r11_budget_new">کوئی مباحثہ کی بنیاد کے بغیر ایک نیا زمرہ</string>
     <string name="r11_budget_note">متوقع = پچھلے مکمل تین مہینوں میں اسی زمرے کا اوسط</string>
@@ -1030,7 +1030,7 @@
     <string name="r11_leak_overall">کل ڈسکاؤنٹ فیصد %1$s%%</string>
     <string name="r11_leak_row">%1$d%% ڈسکاؤنٹ کل سے</string>
     <string name="r11_leak_title">پارٹی کے مطابق ڈسکاؤنٹ لیک (90 دن)</string>
-    <string name="r11_marginaudit_count">%1$d سے %2%d لائنز مارجن کی بنیاد سے نیچے</string>
+    <string name="r11_marginaudit_count">%2$d لائنز میں سے %1$d مارجن کی بنیاد سے نیچے</string>
     <string name="r11_marginaudit_note">پچھلے 60 دنوں میں مصنوعات کی اصل قیمت کے مقابلے میں فروخت کی قیمت</string>
     <string name="r11_marginaudit_row">%1$d%% ہمارش</string>
     <string name="r11_marginaudit_title">ہمارن کی بنیاد پر لائنز نیچے (10%)</string>
@@ -1162,8 +1162,8 @@
     <string name="r12_uplift_neutral">%1$+.0f کا خنثی اثر</string>
     <string name="r12_drift_title">کاروباری گاہکوں کا انحراف (90 دن)</string>
     <string name="r12_drift_note">پچھلے نصف کے مقابلے میں HHI شمار</string>
-    <string name="r12_drift_hhi">مرکوزیت: %1$d ← %2+d نقاط</string>
-    <string name="r12_drift_top">سب سے بڑا گاہک: %1$d٪ ← %2+d٪</string>
+    <string name="r12_drift_hhi">مرکوزیت: %1$d ← %2$d پوائنٹس</string>
+    <string name="r12_drift_top">سب سے بڑا گاہک: %1$d٪ ← %2$d٪</string>
     <string name="r12_drift_concentrating">کم گاہکوں پر انحصار بڑھ رہا ہے — خطرہ</string>
     <string name="r12_drift_diversifying">آپ کے گاہکوں کی بنیاد صحیح طریقے سے پھیل رہی ہے</string>
     <string name="r12_drift_stable">گاہکوں کا ڈھانچہ مستقل ہے</string>
@@ -1343,10 +1343,10 @@
     <string name="r14_mix_delta">فرق: %1$s پوائنٹس</string>
     <string name="r14_mix_note">مکمل ادائیگی والی بلڈز کا اوسط مارجین، کھلے رہنما والی بلڈز کے مقابلے میں (90 دن)</string>
     <string name="r14_mix_title">مکمل ادائیگی کا مارجین کھلے رہنما کے مقابلے میں</string>
-    <string name="r14_mover_down">%1%d درجہ نیچے گیا</string>
+    <string name="r14_mover_down">%1$d تیزی سے گھٹے</string>
     <string name="r14_mover_note">آمدنی کے لحاظ سے مصنوع کی درجہ بندی میں تبدیلی، آخری 30 دنوں اور پچھلے دوران کے درمیان</string>
     <string name="r14_mover_title">بلند اور نیچے آنے والے مصنوعات</string>
-    <string name="r14_mover_up">%1%d درجہ اوپر گیا</string>
+    <string name="r14_mover_up">%1$d تیزی سے بڑھے</string>
     <string name="r14_res_cov">کور: %1$s×</string>
     <string name="r14_res_day">ہر کام کے دن کے لیے درکار</string>
     <string name="r14_res_note">کرایہ اور تنخواہ کام کے دنوں میں بانٹی گئی ہے — اور اسے روزانہ اوسط جمع کے ساتھ موازنہ کیا گیا ہے</string>
@@ -1678,7 +1678,7 @@
     <string name="bk_export_ok">%1$d ریکارځ برآشد ہو گئے</string>
     <string name="bk_import_ok_title">بحالی مکمل ہو گئی</string>
     <string name="bk_import_ok_line">%1$d مشتری شامل کیے، %2$d کو چھوڑ دیا، %3$d مصنوع شامل کیے، %4$d کو چھوڑ دیا</string>
-    <string name="bk_import_failed_rows">%1%d خراب صفوں کو نظر انداز کیا گیا</string>
+    <string name="bk_import_failed_rows">%1$d خراب صفوں کو نظرانداز کیا گیا</string>
     <string name="bk_tables_line"> دریافت شدہ جدول: %1$s</string>
     <string name="bk_warn">بحالی صرف غیر موجودہ مشتریوں اور مصنوعات کو شامل کرتی ہے — فواٹر یا لین دین کو تبدیل نہیں کرتی</string>
     <string name="bk_fail_title">عمل ناموفق</string>
@@ -1697,11 +1697,11 @@
     <string name="vr_need_notif_perm">وارننگ دکھانے کے لیے نوٹیفیکیشن کی اجازت درکار ہے — براہ کرم ایپ کی ترتیبات سے حاصل کریں</string>
     <string name="vr_need_exact">درست وقت وارننگز اجازت نہیں ہیں — وارننگ میں تاخیر ہو سکتی ہے</string>
     <string name="vr_time_dialog_title">روزانہ وارننگ کا وقت منتخب کریں</string>
-    <string name="vr_notif_title">%1$d گاہک %2+d دن سے زیادہ نہیں ملاقات کیے</string>
+    <string name="vr_notif_title">%1$d گاہک %2$d دن سے زیادہ سے ملاقات نہیں ہوئی</string>
     <string name="vr_notif_body">فہرست دیکھنے اور قریب سے ترتیب دینے کے لیے فوریات اسکرین کھولیں</string>
     <string name="bk_desc2">تمام ڈیٹا کو JSON فائل میں برآمد کریں یا پچھلے بیک اپ سے گاہکوں، مصنوعات، ملاقاتوں اور اخراجات کو بحال کریں</string>
-    <string name="bk_import_visits_line">ملاقاتیں: %1$d شامل کی گئیں، %2+d چھوڑ دی گئیں</string>
-    <string name="bk_import_expenses_line">اخراجات: %1+d شامل کی گئے، %2+d چھوڑ دیے گئے</string>
+    <string name="bk_import_visits_line">ملاقاتیں: %1$d شامل، %2$d چھوڑی گئیں</string>
+    <string name="bk_import_expenses_line">اخراجات: %1$d شامل، %2$d چھوڑے گئے</string>
     <string name="bk_warn2">بحال کرنا صرف غیر موجودہ گاہکوں، مصنوعات، ملاقاتوں اور اخراجات کو شامل کرتا ہے — فاٹوں یا ادائیگیوں یا لین دین کو تبدیل نہیں کرتا</string>
     <string name="zat_title">ZATCA فاٹوں کا پرچم (مرحلہ-2)</string>
     <string name="zat_desc">فیشن میں ڈیجیٹل دستخط، ہیش اور پبلک کلید شامل کرنا — آلے کی کلید کے ساتھ مقامی دستخط (رسمی توثیق ZATCA انٹیگریشن کی ضرورت ہے)</string>
@@ -1709,11 +1709,11 @@
     <string name="zat_status_off">غیر فعال — QR کوڈ صرف پہلے پانچ مرحلے کے میدانوں کو رکھتا ہے</string>
     <string name="zat_key_fail">اس آلے پر دستخط کی کلے تیار کرنے میں ناکام — پرچم فعال نہیں ہوا</string>
     <string name="bk_desc3">تمام ڈیٹا کو JSON فائل میں برآمد کریں یا پچھلے بیک اپ سے گاہکوں، مصنوعات، ملاقاتوں، اخراجات، چیکوں اور قسط کے منصوبے کو بحال کریں</string>
-    <string name="bk_import_checks_line">چیک: %1+d شامل کیے گئے، %2+d چھوڑ دیے گئے</string>
-    <string name="bk_import_plans_line">قسط کے منصوبے: %1+d شامل کیے گئے، %2+d چھوڑ دیے گئے</string>
-    <string name="bk_import_installments_line">قستیں: %1+d شامل کی گئیں، %2+d چھوڑ دی گئیں</string>
+    <string name="bk_import_checks_line">چیکس: %1$d شامل، %2$d چھوڑے گئے</string>
+    <string name="bk_import_plans_line">اقساط کے منصوبے: %1$d شامل، %2$d چھوڑے گئے</string>
+    <string name="bk_import_installments_line">اقساط: %1$d شامل، %2$d چھوڑی گئیں</string>
     <string name="bk_warn3">بحال کرنا صرف غیر موجودہ گاہکوں، مصنوعات، ملاقاتوں، اخراجات، چیکوں، قسط کے منصوبوں اور قستوں کو شامل کرتا ہے — فاٹوں یا ادائیگیوں یا لین دین کو تبدیل نہیں کرتا</string>
-    <string name="vr_more_names">اور %1+d اور گاہک…</string>
+    <string name="vr_more_names">اور %1$d گاہک…</string>
     <string name="zat_export_t">پبلک کلید برآمد کریں</string>
     <string name="zat_export_d">اپنی پبلک کلید شیئر کریں تاکہ آڈیٹر اور گاہک فاٹوں کے دستخطات کی تصدیق کر سکیں</string>
     <string name="zat_fp_label">کلید عام کا اثر انگشت (SHA-256)</string>
@@ -2073,7 +2073,7 @@
     <string name="inv_kpi_outstanding">وصول نہیں ہوئی رقم</string>
     <string name="inv_kpi_collected">اس مہینے وصول ہوئی</string>
     <string name="inv_kpi_prev">پچھلے مہینے کی فروخت</string>
-    <string name="hero_chk_hint">%1%d جمع کرنے کا انتظار کر رہے inward چیکس</string>
+    <string name="hero_chk_hint">صرف %1$d واپس آنے والے چیکس</string>
     <string name="chk_kpi_outgoing">ادا کرنے کا عمل جاری</string>
     <string name="chk_kpi_deposited">ڈپوزٹ کیا گیا</string>
     <string name="chk_kpi_cleared">وصول ہو گیا</string>
@@ -2081,7 +2081,7 @@
     <string name="hero_inst_hint">%1$d فعال ادائیگی کی منصوبہ بندیاں</string>
     <string name="inst_kpi_active">فعال منصوبے</string>
     <string name="inst_kpi_agreements">کل معاہدے</string>
-    <string name="hero_stock_hint">%1%d موجودہ اسٹاک میں مصنوعات</string>
+    <string name="hero_stock_hint">صرف %1$d خالی آئٹمز</string>
     <string name="stock_kpi_retail">متوقع رٹیل مارکیٹ ویلیو</string>
     <string name="stock_kpi_margin">متوقع منافع</string>
     <string name="stock_kpi_low">کم اسٹاک</string>
@@ -2121,7 +2121,7 @@
     <string name="unit_piece">ٹکڑا</string>
     <string name="err_currency_invalid_rate">%1$s کو بنیادی کرنسی نہیں بنا سکتے: ناموزون شرح (%2$s)</string>
     <string name="err_pinvault_upgrade_failed">پن والٹ کو کیسٹور میں اپ ڈیٹ کرنے میں ناکام — آپ کا موجودہ پن باقی رہا</string>
-    <string name="err_currency_base_ignored">سیٹنگ فائل سے نامعلوم بنیادی کرنسی کو نظرانداز کیا گیا (%1$s) — موجودہ کرنسی %2.rے رہی</string>
+    <string name="err_currency_base_ignored">سیٹنگ فائل سے نامعلوم بنیادی کرنسی نظرانداز کی گئی (%1$s) — موجودہ کرنسی %2$s رہی</string>
     <string name="err_report_needs_notifications">نوٹیفیکیشن کی اجازت مسترد — رپورٹ چکر کی تشکیل نہیں ہوگی جب تک اجازت نہیں دی جاتی</string>
     <string name="err_report_not_surfaced">شیڈولڈ رپورٹ سامنے نہیں آ سکی — اگلے چکر میں دوبارہ کوشش کی جائے گی</string>
     <string name="a11y_clear_cart">کارٹ خالی کریں</string>
@@ -2193,9 +2193,9 @@
     <string name="loyalty_settings_hint">فروخت پر نقات حاصل کریں اور انہیں ڈسکاؤنٹ + ڈسکاؤنٹ کوپونز کے طور پر استعمال کریں</string>
     <string name="loyalty_enable">وفاداری کے نقات فعال کریں</string>
     <string name="loyalty_earn_label">حصول: ہر نقطے کیلئے پیسے</string>
-    <string name="loyalty_earn_hint">%1 روپے صاف میں ہر 1 نقطہ (معمول پیشکش: ہر 1000 = ہر 10 روپے)</string>
+    <string name="loyalty_earn_hint">ہر %1$d قروش صاف پر 1 نقطہ (معمول: ہر 1000 = ہر 10 ریال)</string>
     <string name="loyalty_value_label">استعمال: نقطے کی قیمت (روپے)</string>
-    <string name="loyalty_value_hint">استعمال کرتے وقت 1 نقطہ = %1 روپے</string>
+    <string name="loyalty_value_hint">استعمال کے وقت 1 نقطہ = %1$d قروش</string>
     <string name="coupons_manage">کوپونز کی انتظامیہ</string>
     <string name="coupons_empty">کوئی کوپون نہیں — پہلا کوپون شامل کریں</string>
     <string name="coupons_done">مکمل</string>
@@ -2346,30 +2346,30 @@
     <string name="r16_stories_title">کارکردگی کی کہانیاں</string>
     <string name="r16_stories_note">ہر کہانی اپنے نیچے خام نمبرات دکھاتی ہے — کوئی بھی نتیجہ اصل کے بغیر نہیں</string>
     <string name="r16_story_sales_up">فروخت میں اضافہ %1$s — %2$s سے %3$s تک</string>
-    <string name="r16_story_sales_down">بیچ %1$s ڈاؤن — %2$s سے %3.tk تک</string>
-    <string name="r16_story_sales_flat">بیچ تقریباً مستحکم (%1$s) — %2.k کے قریب</string>
-    <string name="r16_story_margin">بیچ کا مارجن %1$s — منافع %2.s</string>
-    <string name="r16_story_expenses_up">خرچوں کا حصہ بیچ میں %1.s سے %2.s بڑھ گیا</string>
-    <string name="r16_story_expenses_down">خرچوں کا حصہ بیچ میں %1.s سے %2.s کم ہوا</string>
-    <string name="r16_story_overdue_up">متعطل قرضات %1.s بڑھ گئیں — %2.s تک پہنچ گئیں</string>
-    <string name="r16_story_overdue_down">متعطل قرضات %1.s بہتری کر رہی ہیں — اب %2.s</string>
-    <string name="r16_story_overdue_flat">متعطل قرضات %1.s پر مستحکم ہیں</string>
-    <string name="r16_story_overdue_new">%1.s کی نئی متعطل قرضات نمودار ہوئیں</string>
-    <string name="r16_story_target">بیچ کے ہدف (%2.s) کا %1.s مکمل ہوا</string>
+    <string name="r16_story_sales_down">بیچ %1$s کمی — %2$s سے %3$s تک</string>
+    <string name="r16_story_sales_flat">بیچ تقریباً مستحکم (%1$s) — %2$s کے قریب</string>
+    <string name="r16_story_margin">بیچ کا مارجن %1$s — منافع %2$s</string>
+    <string name="r16_story_expenses_up">بیچ میں اخراجات کا حصہ %1$s سے %2$s بڑھا</string>
+    <string name="r16_story_expenses_down">بیچ میں اخراجات کا حصہ %1$s سے %2$s کم ہوا</string>
+    <string name="r16_story_overdue_up">تاخیر شدہ واجبات %1$s خراب — اب %2$s</string>
+    <string name="r16_story_overdue_down">تاخیر شدہ واجبات %1$s بہتر — اب %2$s</string>
+    <string name="r16_story_overdue_flat">تاخیر شدہ واجبات %1$s پر مستحکم</string>
+    <string name="r16_story_overdue_new">%1$s کی نئی تاخیر شدہ واجبات نمودار ہوئیں</string>
+    <string name="r16_story_target">سیلز ہدف کا (%2$s) %1$s مکمل ہوا</string>
     <string name="set_section_currencies">کرنسیاں</string>
     <string name="cur_section_desc">کرنسی کا کیٹلاگ واحد قیمت کا ذریعہ ہے — ہر غیر ملکی ان پٹ بنیادی کی قیمت میں تبدیل ہو جاتا ہے اور اسی لائن پر تاریخی قیمت پر لکھا جاتا ہے، رپورٹیں بنیادی کرنسی میں یکساں رہتی ہیں</string>
-    <string name="cur_rate_row">%1.s کا ریٹ: %2.s فی 1 بنیادی</string>
+    <string name="cur_rate_row">%1$s کی شرح: ہر 1 بنیادی کے لیے %2$s یونٹ</string>
     <string name="cur_base_badge">بنیادی</string>
-    <string name="cur_edit_title">%1.s کا ریٹ</string>
+    <string name="cur_edit_title">%1$s کی شرح</string>
     <string name="cur_rate_hint">بنیادی فی یونٹ (مثال 0.2665)</string>
-    <string name="cur_micros_preview">یہ %1.s فی یونٹ کی قیمت پر لکھا جائے گا</string>
+    <string name="cur_micros_preview">ہر یونٹ کے لیے %1$s کی شرح پر سیل ہوگا</string>
     <string name="cur_rate_invalid">غلط ریٹ — مثبت نمبر یا ڈوٹ ڈالئیں</string>
     <string name="cur_base_equivalent">بنیادی کا مساوی</string>
     <string name="cur_orig_amount">اصل رقم</string>
     <string name="csv_import_title">CSV ان پورٹ</string>
     <string name="csv_import_desc">اپلیکیشن کے ذریعے نکالی گئی فائل سے آئیٹمز یا پارٹیز ان پورٹ کریں — ایک فائل ایک ٹرانزکشن ہے، غلط لائن کا نام کی وجہ سے چھوڑ دی جاتی ہے، بیلنس کنسٹرنٹس سے نہیں بلکہ ٹیکسٹ سے مانی جاتی ہے</string>
     <string name="csv_import_action">CSV فائل منتخب کریں</string>
-    <string name="csv_import_done">%1.d لائنیں ان پورٹ کیں — %2.d چھوڑ دی گئیں</string>
+    <string name="csv_import_done">%1$d لائنیں درآمد — %2$d چھوڑی گئیں</string>
     <string name="csv_import_unknown">فائل کی شناخت نہیں ہو سکی</string>
     <string name="csv_import_denied">مالک ہی ان پورٹ کر سکتا ہے</string>
     <string name="a11y_remove_invoice_line">اس لائن کو ہٹائیں</string>
@@ -2409,7 +2409,7 @@
     <string name="pulse_comp_overdue">چھوٹے (بیچ سے)</string>
     <string name="pulse_comp_stock">اسٹاک (کل سے محفوظ)</string>
     <string name="pulse_comp_cash">نقد (90 دن کی پیش گوئی)</string>
-    <string name="pulse_raw_count">%1%d یونٹ</string>
+    <string name="pulse_raw_count">%1$d یونٹس</string>
     <string name="webhook_title">ویب ہوک ایکسپورٹ</string>
     <string name="webhook_desc">ہر نیو انvoie پر آپ کے متعین پتے پر فوری نوٹیفیکیشن — آپ کا سرور، اختیاری طور پر کلیدی سائنچر کے ساتھ</string>
     <string name="webhook_url_hint">https://</string>
@@ -2428,4 +2428,14 @@
     <string name="pulse_hint_pro">Pro ورژن میں 90 دن کا نقدی پیشن گوئی شامل ہے</string>
     <string name="det_vat_label">ٹیک نمبر</string>
     <string name="webhook_endpoint_label">پتہ:</string>
+    <!-- ═══ [H5 V 3.2.0] الأفق الخامس — العالمية ═══ -->
+    <string name="invoice_tax_caption">ٹیکس انوائس</string>
+    <string name="jurisdiction_title">خلیجی ٹیکس دائرہ اختیار</string>
+    <string name="jurisdiction_sub">قانونی ڈیفالٹ شرح، انوائس کا عنوان اور تعمیل کا پروفائل مقرر کرتا ہے: سعودی عرب 15% · متحدہ عرب امارات 5% · بحرین 10%</string>
+    <string name="jurisdiction_sa">سعودی عرب · 15%</string>
+    <string name="jurisdiction_ae">متحدہ عرب امارات · 5%</string>
+    <string name="jurisdiction_bh">بحرین · 10%</string>
+    <string name="jurisdiction_zatca_note">ZATCA (Fatoora) ربط صرف سعودی دائرے میں دستیاب ہے — باہر فعال لنک خاموش رہتا ہے۔</string>
+    <string name="jurisdiction_apply_rate">دائرے کی ڈیفالٹ شرح لاگو کریں</string>
+    <string name="jurisdiction_note_history">محفوظ شدہ انوائس اپنی شرح کا اسنیپ شاٹ رکھتی ہیں — دائرہ تبدیل کرنا تاریخ کو دوبارہ نہیں لکھتا۔ دائرے کی کرنسی اسی کرنسی منتخب کنندہ سے بدلیں۔</string>
 </resources>

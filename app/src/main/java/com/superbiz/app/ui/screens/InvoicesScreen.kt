@@ -146,21 +146,8 @@ fun InvoicesScreen(appVM: AppVM, nav: NavHostController) {
                     Brush.linearGradient(listOf(GreenDeep, Green))
                 ) {
                     val pmap = partiesList.associateBy { it.id }
-                    val header = listOf(
-                        activity.getString(R.string.invoice_number),
-                        activity.getString(R.string.transaction_type),
-                        activity.getString(R.string.party),
-                        activity.getString(R.string.date),
-                        activity.getString(R.string.due_date),
-                        activity.getString(R.string.subtotal),
-                        activity.getString(R.string.discount),
-                        activity.getString(R.string.tax),
-                        activity.getString(R.string.total),
-                        activity.getString(R.string.paid_amount),
-                        activity.getString(R.string.inst_remaining),
-                        activity.getString(R.string.status),
-                        activity.getString(R.string.base_currency)
-                    )
+                    // [H5-4 V 3.2.0] الرؤوس من عقد التصدير الموحد (مصدر واحد لا نسخ)
+                    val header = com.superbiz.app.export.ExportSchemas.invoicesHeaders(activity)
                     val rows = invoices.map { inv ->
                         listOf<Any?>(
                             inv.number,

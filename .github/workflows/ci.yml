@@ -38,10 +38,11 @@ jobs:
           python - <<'PY'
           import xml.etree.ElementTree as ET
 
-          paths = [
-              "app/src/main/res/values/strings.xml",
-              "app/src/main/res/values-en/strings.xml",
-          ]
+          # [H5-2 V 3.2.0] كل اللغات المشحونة — لا قائمة صلبة
+          import glob
+          paths = ["app/src/main/res/values/strings.xml"]
+          paths += [p for p in sorted(glob.glob("app/src/main/res/values-*/strings.xml"))
+                    if "values-night" not in p]
           for p in paths:
               root = ET.parse(p).getroot()
               print("OK", p, "-", len(root.findall("string")), "<string> entries")
@@ -190,25 +191,30 @@ jobs:
               r'<string name="([^"]+)"',
               (root / "res/values/strings.xml").read_text(encoding="utf-8"),
           ))
-          en_defined = set(re.findall(
-              r'<string name="([^"]+)"',
-              (root / "res/values-en/strings.xml").read_text(encoding="utf-8"),
-          ))
+          # [H5-2 V 3.2.0] كل اللغات — توازن مجموع المفاتيح في الجميع
+          import glob
+          all_defined = {defined}
+          for loc in sorted(glob.glob("app/src/main/res/values-*/strings.xml")):
+              if "values-night" in loc:
+                  continue
+              all_defined.add(frozenset(re.findall(
+                  r'<string name="([^"]+)"',
+                  pathlib.Path(loc).read_text(encoding="utf-8"),
+              )))
           used = set()
           for kt in root.rglob("*.kt"):
               used |= set(re.findall(r'R\.string\.(\w+)', kt.read_text(encoding="utf-8")))
 
           missing = used - defined
-          en_gap = defined ^ en_defined
           ok = True
           if missing:
               ok = False
               print("MISSING in values/strings.xml (used in code):")
               for k in sorted(missing): print("  -", k)
-          if en_gap:
-              ok = False
-              print("AR/EN key sets differ:")
-              for k in sorted(en_gap): print("  -", k)
+          for s in sorted(all_defined, key=len):
+              if s != defined:
+                  ok = False
+                  print(f"locale key-set mismatch: missing={sorted(defined - s)[:10]} extra={sorted(s - defined)[:10]}")
           print(f"defined={len(defined)} used={len(used)}")
           print("R.string usage guard:", "PASS" if ok else "FAIL")
           sys.exit(0 if ok else 1)

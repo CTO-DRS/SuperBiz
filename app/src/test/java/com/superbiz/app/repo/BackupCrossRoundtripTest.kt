@@ -667,14 +667,14 @@ class BackupCrossRoundtripTest {
         SeedDefaults.ensure(dbA)
 
         val currencies = dbA.currencies().allOnce()
-        assertEquals(6, currencies.size)
+        assertEquals(7, currencies.size) // [H5-3 V 3.2.0] +BHD (إثراء البحرين idempotent)
         assertEquals("SAR", currencies.single { it.isBase }.code)
         val kinds = dbA.rules().allOnce().map { it.kind }.toSet()
         assertEquals(setOf("DUE_REMIND", "CHECK_REMIND", "LOW_STOCK", "AUTO_BACKUP"), kinds)
 
         // آمن للتكرار (idempotent): نداء ثانٍ لا يضاعف
         SeedDefaults.ensure(dbA)
-        assertEquals(6, dbA.currencies().count())
+        assertEquals(7, dbA.currencies().count()) // [H5-3 V 3.2.0] +BHD
         assertEquals(4, dbA.rules().count())
         Unit
     }
@@ -709,7 +709,7 @@ class BackupCrossRoundtripTest {
         assertEquals(4_556L, prod.salePrice)
 
         // بعد الاستعادة يعمل البذر: العملات والقواعد عادت (الملف القديم لا يحملها)
-        assertEquals(6, dbB.currencies().count())
+        assertEquals(7, dbB.currencies().count()) // [H5-3 V 3.2.0] +BHD
         assertEquals(4, dbB.rules().count())
         f.delete()
         Unit

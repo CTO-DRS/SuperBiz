@@ -532,8 +532,17 @@ fun ProfileScreen(appVM: AppVM, settingsVM: SettingsVM, nav: NavHostController) 
                     Text(stringResourceCompat(R.string.settings_language), color = g.textPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // [H5-2 V 3.2.0] اللغات الست كاملة — الأسماء بلغتها الأصلية دائماً
                     FilterPill("العربية", settings.language == "ar") { settingsVM.setLanguage("ar") }
                     FilterPill("English", settings.language == "en") { settingsVM.setLanguage("en") }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterPill("Türkçe", settings.language == "tr") { settingsVM.setLanguage("tr") }
+                    FilterPill("Français", settings.language == "fr") { settingsVM.setLanguage("fr") }
+                    FilterPill("اردو", settings.language == "ur") { settingsVM.setLanguage("ur") }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterPill("Bahasa", settings.language == "id") { settingsVM.setLanguage("id") }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Rounded.Brush, null, tint = g.accent2, modifier = Modifier.size(18.dp))
