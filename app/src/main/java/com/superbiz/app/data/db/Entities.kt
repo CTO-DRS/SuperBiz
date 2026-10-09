@@ -7,6 +7,13 @@ import androidx.room.PrimaryKey
 
 // فهرس المؤرشف — قوائم الأطراف تُرشّح بـ archived في كل استعلامات القوائم
 // (M-3.6 توحيد): فهرس الاسم من خط التدقيق (قوائم الأطراف ترتب بالاسم) بجانب فهرس المؤرشف من خط التطوير
+/**
+ * [H4-3][v16] حقول المزامنة للجداول القابلة للمزامنة (9 جداول — ADR-002 D3):
+ * - syncUpdatedAt: ساعة LWW تحفظها مشغّلات SQLite (MAX(ساعة+1, الآن)) — لا يعدها كود التطبيق.
+ * - originDeviceId/originId: هوية الأصل — '' يعني صفاً أصلياً محلياً، وإلا صفاً مستورَداً.
+ * تُضاف إلى: parties/products/visits/coupons/statement_templates/signatures/stamps/note_templates
+ * (العملات بعمود الساعة حصراً — الرمز نفسه هوية).
+ */
 @Entity(tableName = "parties", indices = [Index("archived"), Index("name")])
 data class Party(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -30,7 +37,11 @@ data class Party(
     val city: String? = null,        // [P17-a] المدينة
     val country: String? = null,     // [P17-a] الدولة
     val website: String? = null,     // [P17-a] الموقع الإلكتروني
-    val accountNumber: String? = null // [P17-a] رقم الحساب/الملف لدى التاجر
+    val accountNumber: String? = null, // [P17-a] رقم الحساب/الملف لدى التاجر
+    // [H4-3][v16] مزامنة — انظر توثيق الحقول أعلاه
+    val syncUpdatedAt: Long = 0,
+    val originDeviceId: String = "",
+    val originId: Long = 0
 ) {
     val isCustomer: Boolean get() = type == 0 || type == 2
     val isSupplier: Boolean get() = type == 1 || type == 2
@@ -90,7 +101,11 @@ data class Product(
     val reorderLevel: Double = 0.0,
     val category: String = "",
     val createdAt: Long = System.currentTimeMillis(),
-    val archived: Boolean = false
+    val archived: Boolean = false,
+    // [H4-3][v16] مزامنة — stockQty مستثنى من الدمج (ملك الجهاز المحلي — ADR-002 D3)
+    val syncUpdatedAt: Long = 0,
+    val originDeviceId: String = "",
+    val originId: Long = 0
 ) {
     val stockValue: Long get() = Math.round(stockQty * costPrice)
     val isLow: Boolean get() = reorderLevel > 0 && stockQty <= reorderLevel
@@ -305,7 +320,9 @@ data class Currency(
     val nameEn: String,
     val symbol: String,
     val rateToBase: Double = 1.0,   // [P20-FIX agent10] وحدات هذه العملة لكل 1 من الأساسية (1 ريال = 0.2665 دولار حسب SeedDefaults) — المعادل الأساسي = المبلغ ÷ rate
-    val isBase: Boolean = false
+    val isBase: Boolean = false,
+    // [H4-3][v16] مزامنة — الرمز نفسه هوية، بلا أعمدة أصل
+    val syncUpdatedAt: Long = 0
 )
 
 @Entity(
@@ -380,7 +397,12 @@ data class Visit(
     val visitedAt: Long = System.currentTimeMillis(),
     val lat: Double? = null,        // موقع اللحظة عند التسجيل (قد يكون غائباً = زيارة بلا موقع)
     val lng: Double? = null,
-    val note: String = ""
+    val note: String = "",
+    // [H4-3][v16] مزامنة — partyRef هوية الطرف الأصلية "od|oid" (فارغة للأصلية المحلية)
+    val partyRef: String = "",
+    val syncUpdatedAt: Long = 0,
+    val originDeviceId: String = "",
+    val originId: Long = 0
 )
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -403,7 +425,11 @@ data class StatementTemplateEntity(
     val isDefault: Boolean = false,    // القالب المطبق افتراضياً عند الإصدار
     val favorite: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    // [H4-3][v16] مزامنة
+    val syncUpdatedAt: Long = 0,
+    val originDeviceId: String = "",
+    val originId: Long = 0
 )
 
 /** [P17-a] تواقيع مالك العمل — صورة تُطبع أسفل الكشف؛ واحدة افتراضية بمعاملة Room (أول clearance) */
@@ -415,7 +441,11 @@ data class SignatureEntity(
     val imagePath: String,             // ملف داخل filesDir
     val isDefault: Boolean = false,
     val active: Boolean = true,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    // [H4-3][v16] مزامنة
+    val syncUpdatedAt: Long = 0,
+    val originDeviceId: String = "",
+    val originId: Long = 0
 )
 
 /** [P17-a] أختام الشركة — صورة تُطبع على الكشف؛ ختم افتراضي واحد بمعاملة Room */
@@ -426,7 +456,11 @@ data class StampEntity(
     val imagePath: String,
     val isDefault: Boolean = false,
     val active: Boolean = true,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    // [H4-3][v16] مزامنة
+    val syncUpdatedAt: Long = 0,
+    val originDeviceId: String = "",
+    val originId: Long = 0
 )
 
 /** [P17-a] قوالب ملاحظات جاهزة تُدرَج في حقل ملاحظات الكشف */
@@ -435,7 +469,11 @@ data class NoteTemplateEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String,
     val body: String,
-    val isDefault: Boolean = false     // الملاحظة المعبأة افتراضياً في كشف جديد
+    val isDefault: Boolean = false,     // الملاحظة المعبأة افتراضياً في كشف جديد
+    // [H4-3][v16] مزامنة
+    val syncUpdatedAt: Long = 0,
+    val originDeviceId: String = "",
+    val originId: Long = 0
 )
 
 /**
@@ -639,7 +677,11 @@ data class CouponEntity(
     val usedCount: Int = 0,
     val active: Boolean = true,
     val note: String = "",
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    // [H4-3][v16] مزامنة
+    val syncUpdatedAt: Long = 0,
+    val originDeviceId: String = "",
+    val originId: Long = 0
 )
 
 /** ثوابت نوع الكوبون — مرآة ثوابت LoyaltyP46 لاستخدامها في قيم افتراضية بلا استيراد حلقي */
@@ -737,4 +779,26 @@ data class ZatcaDocEntity(
     val rejectReason: String = "", // آخر سبب رفض معياري (فارغ = لا رفض)
     val attemptCount: Int = 0,     // محاولات فاشلة عابرة — يتتصفح التراجع الأسّي
     val clearedXml: String = ""    // [O3] النسخة المخلّصة الموقعة من الهيئة (القياسية) — فارغة للمبسطة
+)
+
+/**
+ * [H4-3][v16] دفتر تغييرات المزامنة (ADR-002 D4) — سجل التغييرات المحلية الجاهزة
+ * للدفع (imported=0، تكتبه مشغّلات SQLite) وذاكرة ساعات الشواهد المستوردة
+ * (imported=1, deleted=1) لردّ الصفوف اليتيمة المتأخرة. يُقَطَّع ما دُفع (imported=0)
+ * بعد نجاح الدفعة؛ الشواهد تبقى — هي صغيرة وتحمس بقاء قرار الحذف.
+ * originDeviceId: '' لأصل محلي (يُستبدل بمعرّف الجهاز عند التصدير) — وللعملات: رمز العملة.
+ */
+@Entity(
+    tableName = "sync_log",
+    indices = [Index("imported"), Index("updatedAt")]
+)
+data class SyncLogEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val tableName: String,
+    val originDeviceId: String,
+    val originId: Long,
+    val updatedAt: Long,
+    val deleted: Boolean = false,
+    val imported: Boolean = false,
+    val at: Long = System.currentTimeMillis()
 )

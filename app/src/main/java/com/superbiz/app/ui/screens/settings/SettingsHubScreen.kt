@@ -40,6 +40,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -622,6 +624,12 @@ private fun DataSection(
     // [Z2-ب V 1.5.0] بطاقة الربط الضريبي (فاتورة) — بوابة الميزة D2 + لوحة حالات
     // الإبلاغ/التخليص — إيقاع البطاقات الذاتية نفسه بلا معاملات
     ZatcaLinkCard()
+    Spacer(Modifier.height(8.dp))
+    SyncLinkCard()   // [H4-3][V 3.0.0] المزامنة المشفرة — بوابة ADR-002 مزدوجة الأبواب
+    Spacer(Modifier.height(8.dp))
+    WebhookCard()    // [H4-6][V 3.0.0] تصدير الويب هوك
+    Spacer(Modifier.height(8.dp))
+    TemplateCard()   // [H4-6][V 3.0.0] قالب الفاتورة المطبوعة
     Spacer(Modifier.height(8.dp))
 
     // [P17-c] بطاقتا إدارة التواقيع والأختام — بجانب ZatcaCard بنفس الإيقاع،
@@ -1801,6 +1809,110 @@ private fun CsvImportCard(settingsVM: SettingsVM) {
                     }
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             )
+        }
+    }
+}
+
+/**
+ * [H4-6][V 3.0.0] بطاقة الويب هوك — تفعيل + عنوان HTTPS + توقيع اختياري
+ * ونتيجة آخر إرسال (شفافية تشغيلية كاملة، صمت افتراضاً).
+ */
+@Composable
+private fun WebhookCard() {
+    val g = glassColors()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    data class WhState(val enabled: Boolean, val url: String, val lastAt: Long, val lastOk: Boolean)
+    val st = androidx.compose.runtime.produceState(WhState(false, "", 0, false), context) {
+        val graph = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { com.superbiz.app.AppGraph.from(context.applicationContext) }
+        val last = graph.webhook.lastResult()
+        value = WhState(graph.webhook.enabledOnce(), graph.webhook.urlOnce(), last.first, last.second)
+    }
+
+    GlassCard(corner = 18.dp) {
+        Column(Modifier.fillMaxWidth()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.webhook_title), style = MaterialTheme.typography.titleMedium, color = g.textPrimary)
+                    Spacer(Modifier.height(2.dp))
+                    Text(stringResource(R.string.webhook_desc), style = MaterialTheme.typography.bodySmall, color = g.textSecondary)
+                }
+                Switch(checked = st.value.enabled, onCheckedChange = { on ->
+                    if (!com.superbiz.app.domain.rbac.SessionState.effective().can(com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE)) return@Switch
+                    scope.launch(kotlinx.coroutines.Dispatchers.IO) { com.superbiz.app.AppGraph.from(context.applicationContext).webhook.setEnabled(on) }
+                })
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                stringResource(R.string.webhook_endpoint_label) + " " + st.value.url.ifEmpty { stringResource(R.string.sync_endpoint_unset) },
+                style = MaterialTheme.typography.bodySmall, color = g.textSecondary
+            )
+            if (st.value.lastAt > 0) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    stringResource(R.string.webhook_last) + " " + java.text.DateFormat.getDateTimeInstance().format(java.util.Date(st.value.lastAt)) +
+                        " — " + stringResource(if (st.value.lastOk) R.string.webhook_ok else R.string.webhook_fail),
+                    style = MaterialTheme.typography.bodySmall, color = g.textSecondary
+                )
+            } else {
+                Spacer(Modifier.height(4.dp))
+                Text(stringResource(R.string.webhook_never), style = MaterialTheme.typography.bodySmall, color = g.textSecondary)
+            }
+            var url by remember { mutableStateOf("") }
+            if (st.value.url.isEmpty()) {
+                Spacer(Modifier.height(6.dp))
+                OutlinedTextField(
+                    value = url, onValueChange = { url = it }, singleLine = true,
+                    placeholder = { Text(stringResource(R.string.webhook_url_hint)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(6.dp))
+                TextButton(onClick = {
+                    val trimmed = url.trim()
+                    if (trimmed.startsWith("https://") && trimmed.length > 8) {
+                        scope.launch(kotlinx.coroutines.Dispatchers.IO) { com.superbiz.app.AppGraph.from(context.applicationContext).webhook.setUrl(trimmed) }
+                    }
+                }) { Text(stringResource(R.string.sync_save)) }
+            }
+        }
+    }
+}
+
+/** [H4-6][V 3.0.0] بطاقة اختيار قالب الفاتورة — ثلاثة أصناف بمواصفات معلنة. */
+@Composable
+private fun TemplateCard() {
+    val g = glassColors()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var selected by remember { mutableStateOf(com.superbiz.app.core.AppPrefs.invoiceTemplate) }
+    val names = listOf(
+        stringResource(R.string.template_classic),
+        stringResource(R.string.template_detailed),
+        stringResource(R.string.template_compact)
+    )
+    GlassCard(corner = 18.dp) {
+        Column(Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.template_title), style = MaterialTheme.typography.titleMedium, color = g.textPrimary)
+            Spacer(Modifier.height(2.dp))
+            Text(stringResource(R.string.template_desc), style = MaterialTheme.typography.bodySmall, color = g.textSecondary)
+            Spacer(Modifier.height(8.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                names.forEachIndexed { i, name ->
+                    val isSel = selected == i
+                    TextButton(onClick = {
+                        selected = i
+                        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                            com.superbiz.app.AppGraph.from(context.applicationContext).settings.setInvoiceTemplate(i)
+                        }
+                    }) {
+                        Text(
+                            name,
+                            color = if (isSel) g.accent else g.textSecondary,
+                            style = if (isSel) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
         }
     }
 }

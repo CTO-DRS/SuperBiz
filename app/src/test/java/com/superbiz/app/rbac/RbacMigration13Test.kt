@@ -248,11 +248,13 @@ class RbacMigration13Test {
 
         // ═══ التحقق الحاسم: فتح القاعدة نفسها بRoom — مطابقة بايتية للمخطط ═══
         // [Z2-أ V 1.5.0]: إكمال السلسلة إلى v14 (أرشيف zatca_docs بإنشاء فقط) —
-        // [H4-1 V 2.5.0]: وإكمالها إلى v15 (ختم الفئة الأصلية) — المخطط الحالي 15
+        // [H4-1 V 2.5.0]: وإكمالها إلى v15 (ختم الفئة الأصلية) —
+        // [H4-3 V 3.0.0]: وإلى v16 (أعمدة المزامنة + دفتر sync_log) — المخطط الحالي 16
         // فالفتحة النهائية تكون بمخطط اليوم كاملاً
         AppGraph.MIGRATIONS[12].migrate(db)
         AppGraph.MIGRATIONS[13].migrate(db)
-        db.version = 15   // كما يفعل MigrationContainer داخلياً بعد migrate()
+        AppGraph.MIGRATIONS[14].migrate(db)
+        db.version = 16   // كما يفعل MigrationContainer داخلياً بعد migrate()
         db.close()
 
         val ctx = ApplicationProvider.getApplicationContext<Context>()
@@ -333,14 +335,14 @@ class RbacMigration13Test {
     fun migration12to13_isInMigrationsListAndWiredInBuilder() {
         // عقد التسجيل: الترحيل الأخير في القائمة المكشوفة للاختبارات
         // [H4-1 V 2.5.0]: أُلحق 14→15 بالنهاية — القائمة صارت 14، والفهرس 11 (12→13) سليم مكانه
-        assertEquals(14, AppGraph.MIGRATIONS.size)
+        assertEquals(15, AppGraph.MIGRATIONS.size)
         // [Z2-أ V 1.5.0]: أُلحق 13→14 بالنهاية — مشترك RBAC+ZATCA-2 صار الفهرس 11
         val shared = AppGraph.MIGRATIONS[11]
         assertEquals(12, shared.startVersion)
         assertEquals(13, shared.endVersion)
         val last = AppGraph.MIGRATIONS.last()
-        // [H4-1 V 2.5.0]: الأخير الآن ختم الفئة الأصلية 14→15
-        assertEquals(14, last.startVersion)
-        assertEquals(15, last.endVersion)
+        // [H4-3 V 3.0.0]: الأخير الآن المزامنة المشفرة 15→16
+        assertEquals(15, last.startVersion)
+        assertEquals(16, last.endVersion)
     }
 }

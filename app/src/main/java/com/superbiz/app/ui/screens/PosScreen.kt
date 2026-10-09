@@ -204,13 +204,17 @@ fun PosScreen(appVM: AppVM, nav: NavHostController) {
             if (products.isEmpty()) {
                 EmptyState(stringResourceCompat(R.string.pos_no_products), Icons.Rounded.PointOfSale)
             } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 104.dp),
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    items(products, key = { it.id }) { p -> ProductTile(p) { vm.addToCart(p) } }
+                // [H4-4][V 3.0.0] أعمدة تكيفية — فئة النافذة تحدد عدد الأعمدة (2/3/5)
+                androidx.compose.foundation.layout.BoxWithConstraints(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                    val maxCols = com.superbiz.app.ui.adaptive.AdaptiveMath.posColumns(maxWidth.value.toInt())
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(maxCols),
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(products, key = { it.id }) { p -> ProductTile(p) { vm.addToCart(p) } }
+                    }
                 }
             }
 

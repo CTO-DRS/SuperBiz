@@ -24,6 +24,13 @@ interface PartyDao {
     @Query("SELECT * FROM parties WHERE id = :id")
     suspend fun byId(id: Long): Party?
 
+    /** [H4-3][v16] بحث مزامنة — صف مستورد بهوية أصلية (originDeviceId|originId) */
+    @Query("SELECT * FROM parties WHERE originDeviceId = :od AND originId = :oid LIMIT 1")
+    suspend fun byOrigin(od: String, oid: Long): Party?
+
+    @Query("SELECT * FROM parties WHERE id = :id LIMIT 1")
+    suspend fun byIdOnce(id: Long): Party?
+
     @Query("SELECT * FROM parties WHERE id = :id")
     fun byIdFlow(id: Long): Flow<Party?>
 
@@ -248,6 +255,13 @@ interface ProductDao {
 
     @Query("SELECT * FROM products WHERE id = :id")
     suspend fun byId(id: Long): Product?
+
+    @Query("SELECT * FROM products WHERE id = :id LIMIT 1")
+    suspend fun byIdOnce(id: Long): Product?
+
+    /** [H4-3][v16] بحث مزامنة — صف مستورد بهوية أصلية */
+    @Query("SELECT * FROM products WHERE originDeviceId = :od AND originId = :oid LIMIT 1")
+    suspend fun byOrigin(od: String, oid: Long): Product?
 
     @Query("SELECT * FROM products WHERE barcode = :bc LIMIT 1")
     suspend fun byBarcode(bc: String): Product?
@@ -810,6 +824,10 @@ interface StatementTemplateDao {
     @Query("SELECT * FROM statement_templates WHERE id = :id")
     suspend fun byId(id: Long): StatementTemplateEntity?
 
+    /** [H4-3][v16] بحث مزامنة — صف مستورد بهوية أصلية */
+    @Query("SELECT * FROM statement_templates WHERE originDeviceId = :od AND originId = :oid LIMIT 1")
+    suspend fun byOrigin(od: String, oid: Long): StatementTemplateEntity?
+
     @Query("UPDATE statement_templates SET isDefault = 0")
     suspend fun clearDefault()
 
@@ -896,6 +914,10 @@ interface NoteTemplateDao {
 
     @Query("SELECT * FROM note_templates WHERE id = :id")
     suspend fun byId(id: Long): NoteTemplateEntity?
+
+    /** [H4-3][v16] بحث مزامنة — صف مستورد بهوية أصلية */
+    @Query("SELECT * FROM note_templates WHERE originDeviceId = :od AND originId = :oid LIMIT 1")
+    suspend fun byOrigin(od: String, oid: Long): NoteTemplateEntity?
 
     @Query("UPDATE note_templates SET isDefault = 0")
     suspend fun clearDefault()
@@ -999,6 +1021,13 @@ interface CurrencyDao {
 
     @Query("SELECT COUNT(*) FROM currencies")
     suspend fun count(): Int
+
+    /** [H4-3][v16] بحث مزامنة — الرمز نفسه هوية */
+    @Query("SELECT * FROM currencies WHERE code = :code LIMIT 1")
+    suspend fun byCodeOnce(code: String): Currency?
+
+    @Query("DELETE FROM currencies WHERE code = :code")
+    suspend fun delete(code: String)
 }
 
 @Dao
@@ -1106,6 +1135,16 @@ interface VisitDao {
     @Insert
     suspend fun insert(v: Visit): Long
 
+    /** [H4-3][v16] upsert للمزامنة فقط — تطبيق الصفوف الواردة بهوية أصلية */
+    @androidx.room.Upsert
+    suspend fun upsert(v: Visit): Long
+
+    @Query("SELECT * FROM visits WHERE id = :id LIMIT 1")
+    suspend fun byIdOnce(id: Long): Visit?
+
+    @Query("SELECT * FROM visits WHERE originDeviceId = :od AND originId = :oid LIMIT 1")
+    suspend fun byOrigin(od: String, oid: Long): Visit?
+
     /**
      * [P13-a] حذف سجل زيارة واحد نهائياً — الاستثناء الوحيد على قاعدة «لا حذف»:
      * حذف صريح بموافقة المستخدم (تأكيد الواجهة في VisitsSection) لتصحيح تسجيل خاطئ.
@@ -1185,6 +1224,10 @@ interface CouponDao {
 
     @Query("SELECT * FROM coupons WHERE id = :id LIMIT 1")
     suspend fun byId(id: Long): CouponEntity?
+
+    /** [H4-3][v16] بحث مزامنة — صف مستورد بهوية أصلية */
+    @Query("SELECT * FROM coupons WHERE originDeviceId = :od AND originId = :oid LIMIT 1")
+    suspend fun byOrigin(od: String, oid: Long): CouponEntity?
 
     /** حذف إداري صريح من شاشة الإدارة — الاستهلاك لا يحذف الكوبون (usedCount يتكفل) */
     @Query("DELETE FROM coupons WHERE id = :id")
@@ -1317,6 +1360,31 @@ interface ZatcaDocDao {
     @Query("UPDATE zatca_docs SET clearedXml = :xml WHERE invoiceId = :id")
     suspend fun markClearedXml(id: Long, xml: String)
 }
+
+/**
+ * [H4-3][v16] دفتر المزامنة — انظر SyncLogEntity (ADR-002 D4).
+ */
+@Dao
+interface SyncLogDao {
+    @Query("SELECT * FROM sync_log WHERE imported = 0 ORDER BY id")
+    suspend fun pendingLocal(): List<SyncLogEntity>
+
+    @Query("SELECT * FROM sync_log WHERE deleted = 1")
+    suspend fun allTombstones(): List<SyncLogEntity>
+
+    @Query("SELECT COUNT(*) FROM sync_log WHERE imported = 0")
+    suspend fun pendingCount(): Int
+
+    @Upsert
+    suspend fun upsert(e: SyncLogEntity): Long
+
+    /** بعد دفعة ناجحة — ما دُفع محلياً لم يعد ضرورياً (الشواهد المستوردة تبقى). */
+    @Query("DELETE FROM sync_log WHERE imported = 0")
+    suspend fun prunePushed()
+
+    @Query("DELETE FROM sync_log")
+    suspend fun clearAll()
+}
 @androidx.room.Database(
     entities = [
         Party::class, JournalEntry::class, JournalLine::class, Product::class,
@@ -1330,6 +1398,8 @@ interface ZatcaDocDao {
         StatementRuleEntity::class, AuditLogEntity::class,
         // [P46-W1] نقاط الولاء والكوبونات — جدولان بإنشاء فقط (ترحيل 11→12 في SuperBizApp)
         LoyaltyEntryEntity::class, CouponEntity::class,
+        // [H4-3][v16] دفتر المزامنة
+        SyncLogEntity::class,
         // [H1-3][H1-4] هوية المستخدمين والأدوار — جدولان بإنشاء فقط + عمودا إسناد التدقيق
         // + أعمدة هوية ZATCA-2 على الفواتير — كلها في ترحيل مشترك واحد (ترحيل 12→13 في SuperBizApp)
         UserEntity::class, UserSecretEntity::class,
@@ -1352,9 +1422,13 @@ interface ZatcaDocDao {
     // [Z2-أ V 1.5.0] جدول zatca_docs بإنشاء فقط (ترحيل 13→14 في SuperBizApp — إلحاقي خالص)
     // [H4-1 V 2.5.0] ختم الفئة الأصلية — 6 أعمدة إلحاقية على invoices/expenses
     // (ترحيل 14→15 في SuperBizApp — ALTER ADD COLUMN ببذور محايدة: "" = بالأساس نفسه)
-    version = 15,
+    // [H4-3 V 3.0.0] مزامنة E2E — sync_log + أعمدة هوية وساعة على الجداول التسعة
+    // (ترحيل 15→16 في SuperBizApp — إلحاقي خالص + مشغّلات SQLite لعقد LWW)
+    version = 16,
     exportSchema = true
 )
+
+
 
 abstract class AppDatabase : androidx.room.RoomDatabase() {
     abstract fun parties(): PartyDao
@@ -1386,4 +1460,5 @@ abstract class AppDatabase : androidx.room.RoomDatabase() {
     abstract fun users(): UserDao
     abstract fun userSecrets(): UserSecretDao
     abstract fun zatcaDocs(): ZatcaDocDao
+    abstract fun syncLog(): SyncLogDao
 }

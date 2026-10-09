@@ -76,10 +76,13 @@ object InvoicePdf {
                 R.string.inv_pdf_paid,
                 Money.formatP(invoice.paid, currencySymbol), Money.formatP(invoice.open, currencySymbol)
             ),
-            tafqitLine = com.superbiz.app.domain.ArabicWords.amountInWords(
+            tafqitLine = if (com.superbiz.app.print.InvoiceTemplate.fromId(
+                    com.superbiz.app.core.AppPrefs.invoiceTemplate
+                ).showTafqit
+            ) com.superbiz.app.domain.ArabicWords.amountInWords(
                 // [P33-P8] التفقيط يستقبل ريال Double (خارج نطاق هذه الموجة) — الحدود via fromPiasters
                 Money.fromPiasters(invoice.total), tafqitUnit(currencySymbol), tafqitFraction(currencySymbol)
-            )
+            ) else ""
         )
         // [P20-FIX agent15]: رقم الفاتورة من استيراد قديم قد يحمل / \ : * ? — كان يُبنى به مسار
         // في مجلد غير موجود فيفشل التصدير نهائياً لكل فاتورة مصابة (FileNotFoundException)

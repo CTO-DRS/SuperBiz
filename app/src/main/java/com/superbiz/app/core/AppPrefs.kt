@@ -40,6 +40,9 @@ object AppPrefs {
     /** متقدم: أسلوب الطباعة العربية للطابعات الحرارية — 0 = CP1256 (متوافق أوسع)، 1 = UTF-8 */
     @Volatile var arabicReceiptMode: Int = 0
 
+    /** [H4-6] قالب الفاتورة المطبوعة — 0 كلاسيكي / 1 مفصّل / 2 مضغوط */
+    @Volatile var invoiceTemplate: Int = 0
+
     /** متقدم: حدّ المخزون المنخفض الافتراضي للمنتجات بلا حدّ خاص */
     @Volatile var defaultLowStockQty: Int = 5
 

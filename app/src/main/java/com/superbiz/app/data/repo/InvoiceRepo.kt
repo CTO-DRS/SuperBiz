@@ -20,6 +20,9 @@ class InvoiceRepo(
     // أي تغيير على الفواتير (حفظ/إلغاء) يجدد ويدجات الشاشة الرئيسية — نفس نمط LedgerRepo
     var onMutate: (() -> Unit)? = null
 
+    /** [H4-6][V 3.0.0] إشعار فاتورة جديدة — يُستدعى بعد نجاح الحفظ بمعرّفها (ويب هوك). */
+    var onInvoiceCreated: ((Long) -> Unit)? = null
+
     fun invoices(): Flow<List<Invoice>> = db.invoices().all()
 
     // قائمة تشمل الفواتير الملغاة — لرقاقة فلتر «ملغاة» الصادقة في شاشة الفواتير
@@ -202,6 +205,7 @@ class InvoiceRepo(
             }
         }
         onMutate?.invoke()
+        onInvoiceCreated?.invoke(invId)
         return invId
     }
 

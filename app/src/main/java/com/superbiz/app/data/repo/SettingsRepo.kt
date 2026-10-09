@@ -74,6 +74,7 @@ data class Settings(
     val mirrorChartsRtl: Boolean = true,     // مظهر: عكس الرسوم البيانية في العربي
     val animationsEnabled: Boolean = true,   // أداء: تفعيل الحركات والتمرير الباطني
     val arabicReceiptMode: Int = 0,          // متقدم: طباعة عربية 0=CP1256 / 1=UTF-8
+    val invoiceTemplate: Int = 0,            // [H4-6] قالب الفاتورة 0=كلاسيكي / 1=مفصّل / 2=مضغوط
     val defaultLowStockQty: Int = 5,         // متقدم: حدّ المخزون المنخفض الافتراضي
     val lowStockAlerts: Boolean = true,      // إشعارات: تنبيه المخزون المنخفض
     val receivableAlerts: Boolean = true,    // إشعارات: تنبيه الذمم المتأخرة
@@ -151,6 +152,7 @@ class SettingsRepo(private val context: Context) {
         val mirrorChartsRtl = booleanPreferencesKey("mirror_charts_rtl")
         val animations = booleanPreferencesKey("animations_enabled")
         val arabicReceiptMode = intPreferencesKey("arabic_receipt_mode")
+        val invoiceTemplate = intPreferencesKey("invoice_template")
         val defaultLowStockQty = intPreferencesKey("default_low_stock_qty")
         val lowStockAlerts = booleanPreferencesKey("low_stock_alerts")
         val receivableAlerts = booleanPreferencesKey("receivable_alerts")
@@ -223,6 +225,7 @@ class SettingsRepo(private val context: Context) {
             mirrorChartsRtl = p[K.mirrorChartsRtl] ?: true,
             animationsEnabled = p[K.animations] ?: true,
             arabicReceiptMode = p[K.arabicReceiptMode] ?: 0,
+            invoiceTemplate = p[K.invoiceTemplate] ?: 0,
             defaultLowStockQty = p[K.defaultLowStockQty] ?: 5,
             lowStockAlerts = p[K.lowStockAlerts] ?: true,
             receivableAlerts = p[K.receivableAlerts] ?: true,
@@ -344,6 +347,7 @@ class SettingsRepo(private val context: Context) {
     suspend fun setMirrorChartsRtl(v: Boolean) = context.dataStore.edit { it[K.mirrorChartsRtl] = v }
     suspend fun setAnimationsEnabled(v: Boolean) = context.dataStore.edit { it[K.animations] = v }
     suspend fun setArabicReceiptMode(v: Int) = context.dataStore.edit { it[K.arabicReceiptMode] = if (v == 1) 1 else 0 }
+    suspend fun setInvoiceTemplate(v: Int) = context.dataStore.edit { it[K.invoiceTemplate] = if (v in 0..2) v else 0 }
     suspend fun setDefaultLowStockQty(v: Int) = context.dataStore.edit { it[K.defaultLowStockQty] = v.coerceIn(0, 9999) }
     suspend fun setLowStockAlerts(v: Boolean) = context.dataStore.edit { it[K.lowStockAlerts] = v }
     suspend fun setReceivableAlerts(v: Boolean) = context.dataStore.edit { it[K.receivableAlerts] = v }

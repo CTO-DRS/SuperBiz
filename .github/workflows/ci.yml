@@ -24,6 +24,9 @@ jobs:
       - name: String format scanner
         run: python tools/check_strings_format.py
 
+      - name: Locale coverage (H4-2)
+        run: python tools/check_locale_coverage.py
+
       # [Z2-أ V 1.5.0] فاحص حدود ADR-001 D1: لا استيراد لـnetwork خارج حزمته
       # وسلك التوصيل الجذري — أي تسرب شبكي جديد = فشل فوري قبل أي بناء
       - name: Network boundary scanner (ADR-001)

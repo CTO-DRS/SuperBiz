@@ -44,7 +44,7 @@ class AppGraph(val context: android.content.Context) {
             // [H1-3][v13]: أُضيف MIGRATION_12_13 — نسيانه هنا يعني فشل فتح قاعدة v12 القائمة
             // [Z2-أ][v14]: أُضيف MIGRATION_13_14 — نسيانه هنا يعني فشل فتح قاعدة v13 القائمة
             // [H4-1][v15]: أُضيف MIGRATION_14_15 — نسيانه هنا يعني فشل فتح قاعدة v14 القائمة
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
             .build()
     }
     val settings by lazy { SettingsRepo(context) }
@@ -72,6 +72,27 @@ class AppGraph(val context: android.content.Context) {
         InvoiceRepo(db, loyalty, stamper).also { repo ->
             // حفظ/إلغاء فاتورة (ومنها POS) يجدد ويدجات الشاشة الرئيسية فوراً
             repo.onMutate = { com.superbiz.app.widget.WidgetSync.push(context) }
+            // [H4-6][V 3.0.0] إشعار الويب هوك عند فاتورة جديدة — إطفائي، صامت بلا تفعيل
+            repo.onInvoiceCreated = { invId ->
+                CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                    runCatching {
+                        if (!webhook.enabledOnce()) return@launch
+                        val inv = db.invoices().byId(invId) ?: return@launch
+                        val payload = com.superbiz.app.domain.export.WebhookKit.invoiceCreated(
+                            invoiceId = inv.id,
+                            invoiceNumber = inv.number,
+                            totalPiasters = inv.total,
+                            taxPiasters = inv.taxAmount,
+                            partyName = inv.partyId?.let { db.parties().byId(it)?.name },
+                            currencyCode = "SAR",
+                            origCurrency = inv.origCurrency,
+                            origTotal = inv.origTotal,
+                            at = System.currentTimeMillis()
+                        )
+                        webhookClient.send(payload)
+                    }
+                }
+            }
         }
     }
     val inventory by lazy {
@@ -104,6 +125,11 @@ class AppGraph(val context: android.content.Context) {
 
     /** بوابة الميزة المزدوجة — خارج تفعيلها الصريح يبقى التطبيق صامتاً شبكياً كلياً */
     val zatcaLink by lazy { com.superbiz.app.data.repo.ZatcaEnableStore(context) }
+    val sync by lazy { com.superbiz.app.data.repo.SyncEnableStore(context) }
+    val syncEngine by lazy { com.superbiz.app.data.repo.SyncEngine(db, sync) }
+    val syncClient by lazy { com.superbiz.app.network.SyncClient(sync) }
+    val webhook by lazy { com.superbiz.app.data.repo.WebhookStore(context) }
+    val webhookClient by lazy { com.superbiz.app.network.WebhookClient(webhook) }
 
     /**
      * عميل منصة فاتورة — يُحقن هنا فقط (سلك التوصيل الجذري المصرَّح به في
@@ -785,6 +811,90 @@ class AppGraph(val context: android.content.Context) {
             }
         }
 
+
+        /**
+         * [H4-3][v16] ترحيل المزامنة E2E (ADR-002 D3/D4) — إلحاقي خالص:
+         * 1) أعمدة هوية وساعة على الجداول التسعة القابلة للمزامنة (DEFAULT محايدة).
+         * 2) sync_log — دفتر تغييرات المزامنة.
+         * 3) _sync_applying — حارس مشغّلات (صف واحد) يكبت الالتقاط أثناء تطبيق
+         *    الوارد كي لا تنتفخ ساعة LWW ولا يعود الصف المستورد دفتراً.
+         * 4) 27 مشغّلاً: لكل جدول (INSERT/UPDATE يلمسان الساعة ويدفعان دفتراً،
+         *    DELETE يكتب شاهداً) — التقاط صفري اللمس لكتابات Room والاستعادة كليهما.
+         * العقد: ساعة LWW لا يكتبها كود التطبيق إطلاقاً — مشغّلات فقط.
+         */
+        /**
+         * حراسة المشغّلات دلالية لا تعتمد recursive_triggers (يواجه "too many levels
+         * of trigger recursion" الذي كشفه اختبار التقارب):
+         * - INSERT يشترط ساعة = 0 (إدخال محلي؛ إدراج المحرك يحمل ساعة واردة > 0).
+         * - UPDATE يشترط ساعة غير متغيّرة (تحرير مستخدم يكتب الكيان بساعته القديمة؛
+         *   تطبيق المحرك يكتب ساعة واردة جديدة فلا يُطلق شيئاً — التعرّش ينقطع عند 1).
+         * - DELETE خلف حارس العلم — المحرك يسجل شواهد الوارد بنفسه (imported=1).
+         */
+        private fun syncTouchSql(table: String, originNew: String, originOld: String): List<String> {
+            val nowMs = "CAST((julianday('now') - 2440587.5) * 86400000 AS INTEGER)"
+            // هوية الدفتر: صف أصلي (originDeviceId='') يُعرَّف بمعرّفه المحلي NEW.id،
+            // وصف مستورد يُعرَّف بهوية أصلية NEW.originId — CASE واحد يحسمها في SQL
+            val oidNew = "CASE WHEN NEW.`originDeviceId` = '' THEN NEW.`id` ELSE NEW.`originId` END"
+            val oidOld = "CASE WHEN OLD.`originDeviceId` = '' THEN OLD.`id` ELSE OLD.`originId` END"
+            val ledgerLive = "INSERT INTO `sync_log` (`tableName`,`originDeviceId`,`originId`,`updatedAt`,`deleted`,`imported`,`at`) " +
+                "VALUES ('$table', $originNew, $oidNew, (SELECT syncUpdatedAt FROM `$table` WHERE rowid = NEW.rowid), 0, 0, $nowMs)"
+            val ledgerDel = "INSERT INTO `sync_log` (`tableName`,`originDeviceId`,`originId`,`updatedAt`,`deleted`,`imported`,`at`) " +
+                "VALUES ('$table', $originOld, $oidOld, OLD.`syncUpdatedAt`, 1, 0, $nowMs)"
+            return listOf(
+                "CREATE TRIGGER IF NOT EXISTS `trg_sync_${table}_i` AFTER INSERT ON `$table` " +
+                    "WHEN NEW.`syncUpdatedAt` = 0 BEGIN " +
+                    "UPDATE `$table` SET `syncUpdatedAt` = MAX((SELECT syncUpdatedAt FROM `$table` WHERE rowid = NEW.rowid) + 1, $nowMs) WHERE rowid = NEW.rowid; " +
+                    ledgerLive + "; END",
+                "CREATE TRIGGER IF NOT EXISTS `trg_sync_${table}_u` AFTER UPDATE ON `$table` " +
+                    "WHEN OLD.`syncUpdatedAt` = NEW.`syncUpdatedAt` BEGIN " +
+                    "UPDATE `$table` SET `syncUpdatedAt` = MAX((SELECT syncUpdatedAt FROM `$table` WHERE rowid = NEW.rowid) + 1, $nowMs) WHERE rowid = NEW.rowid; " +
+                    ledgerLive + "; END",
+                "CREATE TRIGGER IF NOT EXISTS `trg_sync_${table}_d` AFTER DELETE ON `$table` " +
+                    "WHEN (SELECT v FROM `_sync_applying`) = 0 BEGIN " +
+                    ledgerDel + "; END"
+            )
+        }
+
+        /**
+         * [H4-3] SQL زمن التشغيل للمزامنة: الحارس + 27 مشغّلاً — مشترك بين
+         * MIGRATION_15_16 واختبار التقارب (قواعد الذاكرة تبنيه بعد فتح v16).
+         */
+        internal fun syncRuntimeSql(): List<String> {
+            val identityTables = listOf("parties", "products", "visits", "coupons", "statement_templates", "signatures", "stamps", "note_templates")
+            val out = mutableListOf(
+                "CREATE TABLE IF NOT EXISTS `_sync_applying` (`v` INTEGER NOT NULL)",
+                "INSERT OR IGNORE INTO `_sync_applying` (`v`) VALUES (0)"
+            )
+            for (t in identityTables) out += syncTouchSql(t, "NEW.`originDeviceId`", "OLD.`originDeviceId`")
+            out += syncTouchSql("currencies", "NEW.`code`", "OLD.`code`")
+            return out
+        }
+
+        private val MIGRATION_15_16 = object : androidx.room.migration.Migration(15, 16) {
+            override fun migrate(d: androidx.sqlite.db.SupportSQLiteDatabase) {
+                // 1) أعمدة الهوية والساعة — 8 جداول بهوية أصل، والعملات بساعة حصراً
+                val identityTables = listOf("parties", "products", "visits", "coupons", "statement_templates", "signatures", "stamps", "note_templates")
+                for (t in identityTables) {
+                    d.execSQL("ALTER TABLE `$t` ADD COLUMN `syncUpdatedAt` INTEGER NOT NULL DEFAULT 0")
+                    d.execSQL("ALTER TABLE `$t` ADD COLUMN `originDeviceId` TEXT NOT NULL DEFAULT ''")
+                    d.execSQL("ALTER TABLE `$t` ADD COLUMN `originId` INTEGER NOT NULL DEFAULT 0")
+                }
+                d.execSQL("ALTER TABLE `currencies` ADD COLUMN `syncUpdatedAt` INTEGER NOT NULL DEFAULT 0")
+                d.execSQL("ALTER TABLE `visits` ADD COLUMN `partyRef` TEXT NOT NULL DEFAULT ''")
+
+                // 2) الدفتر + 3) الحارس + 4) المشغّلات — من المساعد المشترك مع الاختبارات
+                d.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `sync_log` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`tableName` TEXT NOT NULL, `originDeviceId` TEXT NOT NULL, `originId` INTEGER NOT NULL, " +
+                        "`updatedAt` INTEGER NOT NULL, `deleted` INTEGER NOT NULL DEFAULT 0, " +
+                        "`imported` INTEGER NOT NULL DEFAULT 0, `at` INTEGER NOT NULL)"
+                )
+                d.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_log_imported` ON `sync_log` (`imported`)")
+                d.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_log_updatedAt` ON `sync_log` (`updatedAt`)")
+                for (sql in syncRuntimeSql()) d.execSQL(sql)
+            }
+        }
+
         // قائمة الترقيات مكشوفة للاختبارات (SchemaMigrationTest يشغّل كل ترحيل فعلياً) —
         // تُعرّف بعد الترحيلات لأن تهيئة خصائص Kotlin تتم بترتيب الإعلان
         // [P11-a]: MIGRATION_6_7 أُلحقت بالنهاية — الفهرسة بالموضع في الاختبارات تبقى صحيحة
@@ -795,7 +905,7 @@ class AppGraph(val context: android.content.Context) {
         // [H1-3]: MIGRATION_12_13 أُلحقت بالنهاية — الفهرس 11 هو RBAC + ZATCA-2 المشترك
         // [Z2-أ]: MIGRATION_13_14 أُلحقت بالنهاية — الفهرس 12 هو أرشيف zatca_docs
         // [H4-1]: MIGRATION_14_15 أُلحقت بالنهاية — الفهرس 13 هو ختم الفئة الأصلية
-        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15)
+        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
 
         /**
          * [H1-3] مزوّد بذرة رمز المالك — يُربط في AppGraph.db قبل بناء القاعدة بقراءة
