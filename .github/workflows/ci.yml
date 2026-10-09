@@ -193,7 +193,7 @@ jobs:
           ))
           # [H5-2 V 3.2.0] كل اللغات — توازن مجموع المفاتيح في الجميع
           import glob
-          all_defined = {defined}
+          all_defined = {frozenset(defined)}
           for loc in sorted(glob.glob("app/src/main/res/values-*/strings.xml")):
               if "values-night" in loc:
                   continue
