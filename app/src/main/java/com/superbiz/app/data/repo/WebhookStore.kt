@@ -60,8 +60,24 @@ class WebhookStore(private val context: Context) {
         }
     }.getOrDefault("")
 
-    suspend fun setEnabled(v: Boolean) { context.webhookDataStore.edit { it[kEnabled] = v } }
-    suspend fun setUrl(v: String) { context.webhookDataStore.edit { it[kUrl] = v.trim() } }
+    // [RVW-13 V 3.2.4] العنوان/التفعيل/السر ملك المالك حصراً (Op.BACKUP_RESTORE — عقد البوابة نفسه
+    // المطبق على مفتاح التفعيل في البطاقة). البوابة هنا في طبقة البيانات لا الواجهة:
+    // إعادة توجيه عنوان HTTPS مفعّل تُخرج الأحداث الموقّعة بسر المالك إلى مستلم غريب.
+    suspend fun setEnabled(v: Boolean) {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
+        context.webhookDataStore.edit { it[kEnabled] = v }
+    }
+
+    suspend fun setUrl(v: String) {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
+        context.webhookDataStore.edit { it[kUrl] = v.trim() }
+    }
 
     /**
      * [AUD-7 إصلاح] الحفظ — لا يلمس القرص إلا مشفّراً بصيغة ks: (فشل مغلق:
@@ -69,6 +85,11 @@ class WebhookStore(private val context: Context) {
      * والعاري القديم يُحذف مع كل حفظ ناجح (طهارة نهائية لأي تثبيت قديم)
      */
     suspend fun setSecret(v: String) {
+        // [RVW-13 V 3.2.4] نفس بوابة العنوان والتفعيل — سر توقيع HMAC مادة مالك
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
         val trimmed = v.trim()
         context.webhookDataStore.edit { p ->
             if (trimmed.isEmpty()) {
