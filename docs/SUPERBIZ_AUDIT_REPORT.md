@@ -108,7 +108,9 @@
 | تقارب المزامنة | `--tests SyncConvergenceTest` | **8/8 أخضر** |
 | انحدار النسخ | `--tests BackupZatcaAuditTest` (جديد) | **4/4 أخضر** |
 | حدود الزمن | `--tests TimeMathTest SalesMathTest` | **20/20 أخضر** |
-| الحقيبة الكاملة | `./gradlew testReleaseUnitTest` | انظر `REMEDIATION_LOG.md` للنتيجة الفعلية المُسجّلة |
+| عقد خزنة PIN | `--tests PinVaultAndLockoutTest PinVaultSettingsUpgradeTest` | **8/8 أخضر** |
+| الحقيبة الكاملة | `./gradlew testReleaseUnitTest` | **1725 اختباراً، 0 فاشل، 0 متخطى عبر 154 ملف اختبار** (من XML النتائج الفعلية) |
+| بناء حزمة كاملة | `./gradlew assembleDebug` | **BUILD SUCCESSFUL — app-debug-unsigned.apk (26.6MB)** |
 
 ## 7. حدود التحقق في بيئة هذا التدقيق
 
