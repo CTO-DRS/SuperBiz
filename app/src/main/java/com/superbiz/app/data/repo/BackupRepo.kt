@@ -110,6 +110,11 @@ class BackupRepo(
         // [P46-W1] جولة 7 — جدولا الولاء والكوبونات (اكتمال 25/25)
         root.put("loyalty_entries", JSONArray(db.loyalty().allOnce().map { loyaltyEntryJson(it) }))
         root.put("coupons", JSONArray(db.coupons().allOnce().map { couponJson(it) }))
+        // [AUD-1 إصلاح] أرشيف ZATCA (v14) — الجدول السادس والعشرون: كان غائبًا عن النسخ
+        // والاستعادة تمامًا فكانت سلسلة PIH (latestHash) وأرشيف الست سنوات يفقدان صمتًا
+        // بعد أي استعادة، ويُعاد إصدار ICV مكرر ضد فواتير مبلَّغة أصلًا. الإضافة تراكمية
+        // (الصيغة تبقى 3) والقارئ متسامح: ملفات ما قبل الإصلاح بلا المفتاح ⇒ لا أرشيف يُستعاد
+        root.put("zatca_docs", JSONArray(db.zatcaDocs().allOnce().map { zatcaDocJson(it) }))
         } // [تدقيق H-3] نهاية معاملة اللقطة المتسقة
         // أرشيف الشيكات (DataStore مستقل) لم يكن يُصدَّر — بعد الاستعادة
         // كانت كل الشيكات المؤرشفة تعود إلى القائمة النشطة
@@ -281,6 +286,12 @@ class BackupRepo(
         .put("archived", p.archived).put("createdAt", p.createdAt)
         // تاريخ إنشاء المنتج لم يكن يُصدَّر — كان يُكتب زمن الاستعادة (نمط partyJson)
 
+    // [AUD-1 إصلاح] اعتماد v13..v16 كاملًا — كان المسار مجمّدًا على حقول v10:
+    // أعمدة هوية ZATCA (uuid/icv/pih/subtype/delivery/buyer*/status) كانت تُفقد بعد كل
+    // استعادة فيفقد الربط سلسلة ICV/PIH وحالة الإبلاغ، وختم الفئة الأصلية (orig*) كان
+    // يضيع على مسار JSON (وكان مسار الدمج BackupKit وحده يغطيه).
+    // الإضافة تراكمية: الصيغة تبقى 3 والقارئات القديمة تتجاهل المفاتيح الجديدة بأمان
+    // (نفس عقد P36-BK حرفيًا) — القارئ عندنا متسامح (opt) فيقبل النسخ القديمة أيضًا.
     private fun invoiceJson(i: Invoice) = JSONObject()
         .put("id", i.id).put("number", i.number).put("partyId", i.partyId).put("type", i.type)
         .put("date", i.date).put("dueDate", i.dueDate).put("subtotal", i.subtotal)
@@ -288,6 +299,17 @@ class BackupRepo(
         .put("total", i.total).put("paid", i.paid).put("costTotal", i.costTotal)
         .put("status", i.status).put("currency", i.currency).put("fxRate", i.fxRate)
         .put("note", i.note)
+        .put("uuid", i.uuid).put("icv", i.icv).put("pih", i.pih)
+        .put("zatcaSubtype", i.zatcaSubtype).put("deliveryDate", i.deliveryDate)
+        .put("buyerName", i.buyerName).put("buyerVat", i.buyerVat).put("buyerAddress", i.buyerAddress)
+        .put("zatcaStatus", i.zatcaStatus)
+        .put("origCurrency", i.origCurrency).put("origTotal", i.origTotal).put("origFxMicros", i.origFxMicros)
+
+    private fun zatcaDocJson(d: com.superbiz.app.data.db.ZatcaDocEntity) = JSONObject()
+        .put("invoiceId", d.invoiceId).put("xml", d.xml).put("xmlHash", d.xmlHash)
+        .put("subtype", d.subtype).put("issuedAt", d.issuedAt)
+        .put("reportedAt", d.reportedAt).put("rejectReason", d.rejectReason)
+        .put("attemptCount", d.attemptCount).put("clearedXml", d.clearedXml)
 
     private fun checkJson(c: CheckEntity) = JSONObject()
         .put("id", c.id).put("number", c.number).put("partyId", c.partyId)
@@ -510,7 +532,8 @@ class BackupRepo(
                     // [P33-P8] قروش — النسخ القديمة (≤2) ريال Double تُحوَّل via moneyField
                     costPrice = moneyField(j, "costPrice", legacyRiyal),
                     salePrice = moneyField(j, "salePrice", legacyRiyal),
-                    stockQty = j.optDouble("stockQty"), reorderLevel = j.optDouble("reorderLevel"),
+                    // [AUD-9 إصلاح] نفس فخ NaN — المفاتيح الغائبة كانت تفشل بقيد NOT NULL
+                    stockQty = j.optDouble("stockQty", 0.0), reorderLevel = j.optDouble("reorderLevel", 0.0),
                     category = j.optString("category"), archived = j.optBoolean("archived"),
                     createdAt = j.optLong("createdAt"))
             }
@@ -523,14 +546,29 @@ class BackupRepo(
                     // [P33-P8] المبالغ قروش — taxRate/fxRate نسب تبقى Double
                     subtotal = moneyField(j, "subtotal", legacyRiyal, required = true),
                     discount = moneyField(j, "discount", legacyRiyal),
-                    taxRate = j.optDouble("taxRate"),
+                    // [AUD-9 إصلاح] optDouble بلا افتراض تعيد NaN للمفتاح الغائب — وNaN
+                    // يُربَط NULL في SQLite فيفشل الاستعادة كلها بقيود NOT NULL. الافتراض
+                    // المتسامح (0.0) يوافق بذرة الكيان — وfxRate كان له افتراض أصلاً
+                    taxRate = j.optDouble("taxRate", 0.0),
                     taxAmount = moneyField(j, "taxAmount", legacyRiyal),
                     total = moneyField(j, "total", legacyRiyal, required = true),
                     paid = moneyField(j, "paid", legacyRiyal),
                     costTotal = moneyField(j, "costTotal", legacyRiyal),
                     status = j.optInt("status"),
                     currency = j.optString("currency", "SAR"), fxRate = j.optDouble("fxRate", 1.0),
-                    note = j.optString("note"))
+                    note = j.optString("note"),
+                    // [AUD-1 إصلاح] هوية ZATCA وختم الفئة الأصلية — قراءة متسامحة:
+                    // النسخ القديمة بلا المفاتيح تعود البذور المحايدة ""/0 كما هي,
+                    // وorigTotal/origFxMicros تُقرأ خامتين (وحدات العملة الأصلية وليست قروش الأساس
+                    // فلا تجوز مرورها عبر legacyRiyal)
+                    uuid = j.optString("uuid"), icv = j.optLong("icv"), pih = j.optString("pih"),
+                    zatcaSubtype = j.optString("zatcaSubtype"),
+                    deliveryDate = j.optLong("deliveryDate"),
+                    buyerName = j.optString("buyerName"), buyerVat = j.optString("buyerVat"),
+                    buyerAddress = j.optString("buyerAddress"),
+                    zatcaStatus = j.optInt("zatcaStatus"),
+                    origCurrency = j.optString("origCurrency"),
+                    origTotal = j.optLong("origTotal"), origFxMicros = j.optLong("origFxMicros"))
             }
             val items = ArrayList<InvoiceItem>()
             root.optJSONArray("invoice_items")?.each { j ->
@@ -774,7 +812,44 @@ class BackupRepo(
             val validStStatements = stStatements.filter { it.partyId in partyIds }
             val stStatementIds = validStStatements.map { it.id }.toSet()
             val validStDeliveries = stDeliveries.filter { it.statementId in stStatementIds }
+            // [AUD-1 إصلاح] قراءة أرشيف ZATCA — متسامحة: غياب المفتاح (ملفات ما قبل الإصلاح)
+            // = قائمة فارغة بلا مساس، والأرشفة ذاتها IGNORE فلا تُستبدل صفوف حية
+            val stZatcaDocs = ArrayList<com.superbiz.app.data.db.ZatcaDocEntity>()
+            root.optJSONArray("zatca_docs")?.each { j ->
+                stZatcaDocs += com.superbiz.app.data.db.ZatcaDocEntity(
+                    invoiceId = j.getLong("invoiceId"), xml = j.getString("xml"),
+                    xmlHash = j.getString("xmlHash"), subtype = j.optString("subtype"),
+                    issuedAt = j.getLong("issuedAt"), reportedAt = j.optLong("reportedAt"),
+                    rejectReason = j.optString("rejectReason"),
+                    attemptCount = j.optInt("attemptCount"), clearedXml = j.optString("clearedXml"))
+            }
             val st = root.optJSONObject("settings")
+
+            // ── [AUD-2 إصلاح] التحقق من اتزان القيد المزدوج قبل أي مساس بالقاعدة ──
+            // كل مسارات الحفظ الحية تفرض totalDebit == totalCredit مساواة تامة
+            // (LedgerRepo.post/InvoiceRepo.postJournal عبر AccountingEngine.balanced)،
+            // والاستعادة كانت المسار الوحيد الذي يتجاوز العقد: ملف فاسد/مُحرَّر/مبتور
+            // كان يحقن قيودًا غير متوازنة صمتًا فينحرف ميزان المراجعة والأرصدة قروشًا.
+            // التحقق في مرحلة الفك (قبل المعاملة) — ملف غير متوازن = استعادة كلها مرفوضة
+            // قبل wipeAll، وفق سياسة النواة الصارمة ① الموثقة أعلاه حرفياً:
+            // «قيد بلا سطر مكتمل… = ملف غير قابل للاستعادة».
+            if (jEntries.isNotEmpty()) {
+                val entryIds = jEntries.map { it.id }.toSet()
+                val linesByEntry = jLines.groupBy { it.entryId }
+                for (entry in jEntries) {
+                    val lines = linesByEntry[entry.id]
+                        ?: throw IllegalArgumentException(
+                            "restore rejected: journal entry #${entry.id} has no lines")
+                    val debit = lines.sumOf { it.debit }
+                    val credit = lines.sumOf { it.credit }
+                    if (debit != credit) throw IllegalArgumentException(
+                        "restore rejected: unbalanced journal entry #${entry.id} " +
+                            "(debit=$debit, credit=$credit)")
+                }
+                val orphanLine = jLines.firstOrNull { it.entryId !in entryIds }
+                if (orphanLine != null) throw IllegalArgumentException(
+                    "restore rejected: journal line for missing entry #${orphanLine.entryId}")
+            }
 
             // رفض الملفات الفارغة المحتوى — كانت تمسح قاعدة البيانات كاملة ثم تعيد true
             if (parties.isEmpty() && products.isEmpty() && invoices.isEmpty()) return@withContext false
@@ -789,6 +864,9 @@ class BackupRepo(
                 moves.forEach { db.stockMoves().insert(it) }
                 invoices.forEach { db.invoices().upsert(it) }
                 if (items.isNotEmpty()) db.invoiceItems().insertAll(items)
+                // [AUD-1 إصلاح] استعادة أرشيف ZATCA بعد الفواتير مباشرة — ON CONFLICT IGNORE
+                // (archiveFirst) تعيد الرفض الدفاعي نفسه: صف حي لا يُستبدل أبدًا
+                stZatcaDocs.forEach { db.zatcaDocs().archiveFirst(it) }
                 checks.forEach { db.checks().upsert(it) }
                 plans.forEach { db.installments().insertPlan(it) }
                 if (installments.isNotEmpty()) db.installments().insertInstallments(installments)
@@ -932,6 +1010,9 @@ class BackupRepo(
             }
             true
         } catch (e: Exception) {
+            // [AUD-9 إصلاح] كان الابتلاع الصامت يخفي سبب فشل الاستعادة كلياً —
+            // يُسجَّل السبب في logcat (الشاشة تعرض الفشل العام كما كان)
+            android.util.Log.e("BackupRepo", "importFrom failed: ${e.javaClass.simpleName}: ${e.message}", e)
             false
         }
     }
