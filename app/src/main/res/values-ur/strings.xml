@@ -1680,6 +1680,7 @@
     <string name="bk_import_ok_line">%1$d مشتری شامل کیے، %2$d کو چھوڑ دیا، %3$d مصنوع شامل کیے، %4$d کو چھوڑ دیا</string>
     <string name="bk_import_failed_rows">%1$d خراب صفوں کو نظرانداز کیا گیا</string>
     <string name="bk_tables_line"> دریافت شدہ جدول: %1$s</string>
+    <string name="bk_merge_skips_financial">ضم سے درآمد نہیں ہوئے (صرف پڑھے گئے): %1$s — مالی تاریخ کے لیے مکمل تبدیلی استعمال کریں</string>
     <string name="bk_warn">بحالی صرف غیر موجودہ مشتریوں اور مصنوعات کو شامل کرتی ہے — فواٹر یا لین دین کو تبدیل نہیں کرتی</string>
     <string name="bk_fail_title">عمل ناموفق</string>
     <string name="bk_ok">ٹھیک ہے</string>
@@ -1712,7 +1713,7 @@
     <string name="bk_import_checks_line">چیکس: %1$d شامل، %2$d چھوڑے گئے</string>
     <string name="bk_import_plans_line">اقساط کے منصوبے: %1$d شامل، %2$d چھوڑے گئے</string>
     <string name="bk_import_installments_line">اقساط: %1$d شامل، %2$d چھوڑی گئیں</string>
-    <string name="bk_warn3">بحال کرنا صرف غیر موجودہ گاہکوں، مصنوعات، ملاقاتوں، اخراجات، چیکوں، قسط کے منصوبوں اور قستوں کو شامل کرتا ہے — فاٹوں یا ادائیگیوں یا لین دین کو تبدیل نہیں کرتا</string>
+    <string name="bk_warn3">ضم صرف غائب فریق، مصنوعات، دورے، اخراجات، چیکس، اقساط کے منصوبے، اقساط، اسٹیٹمنٹس ( templates اور قواعد سمیت)، دستخط، اسٹامپس، نوٹ ٹیمپلیٹس، آڈٹ لاگ، وفاداری اور کوپنز شامل کرتا ہے — انوائسز اور ان کی آئٹمز، ادائیگیاں، جریدے اور ان کی لائنیں، اسٹاک کی حرکتیں، کرنسیاں یا قواعد کبھی درآمد نہیں کرتا؛ مالی تاریخ صرف مکمل تبدیلی سے منتقل ہوتی ہے</string>
     <string name="vr_more_names">اور %1$d گاہک…</string>
     <string name="zat_export_t">پبلک کلید برآمد کریں</string>
     <string name="zat_export_d">اپنی پبلک کلید شیئر کریں تاکہ آڈیٹر اور گاہک فاٹوں کے دستخطات کی تصدیق کر سکیں</string>

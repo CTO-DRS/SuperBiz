@@ -239,6 +239,26 @@ object BackupTables {
     )
 }
 
+/**
+ * [RVW-1 إصلاح] الجداول المالية التي لا يدخلها الدمج قط — عقد المسار الدمجي الموثق
+ * في رأس BackupRestoreRepo: الدمج للبيانات المرجعية/الكشوف/الولاء فقط، والتاريخ
+ * المالي (الفواتير وبنودها والمدفوعات والقيود وسطورها وحركات المخزون والعملات
+ * والقواعد) ينتقل عبر «استبدال كامل» حصراً. هذه الجداول تُصدَّر وتُحصى وتُقرأ
+ * من النسخة لكن التنفيذ لا يدرجها — فلا يصح أن يعرض سطر «الجداول المكتشفة»
+ * إياها بلا ملاحظة صريحة، وإلا إيهام المستخدم بدمج لم يحدث.
+ * (فحص استقلالية: لا جدول من هذه القائمة له إدراج في BackupRestoreRepo.importFrom —
+ * والاختبار BackupKitTest.nonMergeableTablesMatchExecutorCoverage يقفل العقد.)
+ */
+val NON_MERGEABLE_TABLES: List<String> = listOf(
+    BackupTables.INVOICES, BackupTables.INVOICE_ITEMS, BackupTables.PAYMENTS,
+    BackupTables.JOURNAL, BackupTables.JOURNAL_LINES, BackupTables.STOCK_MOVES,
+    BackupTables.CURRENCIES, BackupTables.RULES
+)
+
+/** [RVW-1 إصلاح] جداول الاكتشاف التي لن يدخلها الدمج — من خريطة counts الفعلية للملف */
+fun nonMergeableTablesFound(tablesFound: Map<String, Int>): List<String> =
+    NON_MERGEABLE_TABLES.filter { (tablesFound[it] ?: 0) > 0 }
+
 /** [P13-b] مجموع صفوف كل الجداول — يغذي «تم تصدير N سجلاً» — [P34-M1] 23 جدولاً */
 fun totalRows(d: BackupData): Int =
     d.parties.size + d.products.size + d.invoices.size + d.invoiceItems.size +

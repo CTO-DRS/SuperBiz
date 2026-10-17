@@ -1770,6 +1770,7 @@
     <string name="bk_import_ok_line">أُضيف %1$d عميلاً، وتخطي %2$d، وأُضيف %3$d منتجاً، وتخطي %4$d</string>
     <string name="bk_import_failed_rows">تم تجاهل %1$d صفاً تالفاً</string>
     <string name="bk_tables_line">الجداول المكتشفة: %1$s</string>
+    <string name="bk_merge_skips_financial">لم يُستورد بالدمج (قراءة فقط): %1$s — لنقل التاريخ المالي استخدم «استبدال كامل»</string>
     <string name="bk_warn">الاستعادة تضيف العملاء والمنتجات غير الموجودة فقط — لا تعدّل الفواتير أو القيود</string>
     <string name="bk_fail_title">فشل العملية</string>
     <string name="bk_ok">حسناً</string>
@@ -1806,7 +1807,7 @@
     <string name="bk_import_checks_line">الشيكات: أُضيف %1$d، وتخطي %2$d</string>
     <string name="bk_import_plans_line">خطط الأقساط: أُضيفت %1$d، وتخطي %2$d</string>
     <string name="bk_import_installments_line">الأقساط: أُضيف %1$d، وتخطي %2$d</string>
-    <string name="bk_warn3">الاستعادة تضيف العملاء والمنتجات والزيارات والمصروفات والشيكات وخطط الأقساط والأقساط غير الموجودة فقط — لا تعدّل الفواتير أو المدفوعات أو القيود</string>
+    <string name="bk_warn3">الدمج يضيف غير الموجود من الأطراف والمنتجات والزيارات والمصروفات والشيكات وخطط الأقساط والأقساط والكشوف وقوالبها والتواقيع والأختام وقوالب الملاحظات وسجل التدقيق والولاء والكوبونات — ولا يستورد أبدًا الفواتير وبنودها والمدفوعات والقيود وسطورها وحركات المخزون والعملات والقواعد؛ التاريخ المالي ينتقل عبر «استبدال كامل» فقط</string>
     <string name="vr_more_names">و%1$d عملاء آخرين…</string>
 
     <!-- [P16] strings (merged from p16_strings) -->
