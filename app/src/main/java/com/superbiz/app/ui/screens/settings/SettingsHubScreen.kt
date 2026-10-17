@@ -1585,6 +1585,22 @@ private fun BackupCard(
                         color = g.textSecondary,
                         style = MaterialTheme.typography.bodySmall
                     )
+                    // [RVW-1 إصلاح] شفافية الدمج — جداول مالية تُقرأ من النسخة ولا يدخلها
+                    // الدمج (عقد المسار الدمجي الموثق): لا يصح عرضها «مكتشفة» بلا ملاحظة
+                    // صريحة، وإلا إيهام المستخدم بدمج لم يحدث للتاريخ المالي
+                    val nonMergeable = com.superbiz.app.domain.backup
+                        .nonMergeableTablesFound(st.tablesFound)
+                    if (nonMergeable.isNotEmpty()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            stringResource(
+                                R.string.bk_merge_skips_financial,
+                                nonMergeable.joinToString(" · ")
+                            ),
+                            color = g.textSecondary,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             },
             confirmButton = {

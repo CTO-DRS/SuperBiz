@@ -1680,6 +1680,7 @@
     <string name="bk_import_ok_line">%1$d pelanggan ditambahkan, %2$d dilewati, %3$d produk ditambahkan, %4$d dilewati</string>
     <string name="bk_import_failed_rows">%1$d baris rusak diabaikan</string>
     <string name="bk_tables_line">Tabel terdeteksi: %1$s</string>
+    <string name="bk_merge_skips_financial">Tidak diimpor oleh penggabungan (hanya dibaca): %1$s — gunakan Ganti penuh untuk memindahkan riwayat keuangan</string>
     <string name="bk_warn">Pemulihan hanya menambahkan pelanggan dan produk yang belum ada — tidak mengubah Faktur atau Pembatasan</string>
     <string name="bk_fail_title">Gagal Operasi</string>
     <string name="bk_ok">Baik</string>
@@ -1712,7 +1713,7 @@
     <string name="bk_import_checks_line">Cek: Ditambahkan %1$d, dilewati %2$d</string>
     <string name="bk_import_plans_line">Rencana cicilan: Ditambahkan %1$d, dilewati %2$d</string>
     <string name="bk_import_installments_line">Cicilan: Ditambahkan %1$d, dilewati %2$d</string>
-    <string name="bk_warn3">Pemulihan hanya menambahkan pelanggan, produk, kunjungan, pengeluaran, cek, rencana cicilan, dan cicilan yang belum ada — tidak mengubah Faktur, Pembayaran, atau Jurnal</string>
+    <string name="bk_warn3">Penggabungan hanya menambahkan pihak, produk, kunjungan, pengeluaran, cek, rencana angsuran, angsuran, pernyataan beserta templat dan aturannya, tanda tangan, stempel, templat catatan, log audit, loyalitas, dan kupon yang belum ada — tidak pernah mengimpor faktur dan butirnya, pembayaran, jurnal beserta barisnya, pergerakan stok, mata uang, atau aturan; riwayat keuangan hanya lewat Ganti penuh</string>
     <string name="vr_more_names">dan %1$d pelanggan lainnya…</string>
     <string name="zat_export_t">Ekspor Kunci Publik</string>
     <string name="zat_export_d">Bagikan kunci publik Anda agar auditor dan pelanggan dapat memverifikasi tanda tangan faktur</string>
