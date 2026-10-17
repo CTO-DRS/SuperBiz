@@ -135,7 +135,11 @@ class StatementRepo(
             rows = rows,
             summary = summary,
             statementNumber = number,
-            verificationId = StatementService.verificationId(number, now),
+            // [RVW-7 V 3.2.2] لاحقة SecureRandom — معرّف تحقق غير قابل للتخمين
+            // (التوافق الرجعي: المعرّفات المطبوعة سابقاً تتحقق بمطابقتها التامة)
+            verificationId = StatementService.verificationId(
+                number, now, StatementService.newVerificationEntropy()
+            ),
             createdAt = now,
             note = note?.takeIf { it.isNotBlank() },
             lang = lang
