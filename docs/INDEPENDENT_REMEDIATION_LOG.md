@@ -52,3 +52,55 @@ Scope discipline observed: smallest safe fixes consistent with repository conven
 ## Final diff review
 
 Post-change diff inspected (`git diff 31752e7..HEAD`): 12 files (9 code/test + 3… plus docs), no secrets, no unrelated modifications, `local.properties` created locally for the build and **gitignored** (never committed). Working tree clean after commits. No force-push, no history rewrite, no branch deletion, nothing pushed.
+
+---
+
+# Wave R2 (2026-10-18) — Priority Risks Implemented on the Same Review Branch
+
+Directive: continue development by executing the priorities named in the merge decision §6-2. Same discipline as wave 1: smallest safe fixes, Arabic inline-audit comment tags (`[RVW-n V 3.2.2]`), additive-only, no refactoring, no new dependencies, offline-first and no-AI architecture untouched, nothing pushed.
+
+## Commit `356f8be` — fix(privacy): lock-aware widget redaction via process lock signal [RVW-4]
+
+- NEW `domain/AppLockSignal.kt` — JVM-pure process signal (`unlocked`, fail-closed default) + unified decision `shouldRedactWidgets(prefRedact, lockConfigured)`.
+- `widget/ReceivablesWidget.kt` — `WidgetSync.redactOn` routes through the unified decision; settings-read failure now redacts (was: shows).
+- `MainActivity.kt` — signal raised on unlock, lowered on **both** re-lock paths, each followed by `WidgetSync.push(immediate = true)` so masked widgets are re-rendered at once.
+- TEST `WidgetPrivacyTest.kt` — 9 tests (redaction matrix, fail-closed default, credential detection parity).
+
+## Commit `8e5d428` — fix(rbac): honest system attribution in multi-user mode [RVW-5]
+
+- `domain/rbac/Rbac.kt` — `SessionState.SYSTEM` + `multiUserMode`; `effective()` = explicit session → mode identity. Single-owner contract §4.3 byte-identical; SYSTEM role OWNER deliberately (automation-while-locked preserved; enforcement closure = separate owner decision).
+- `vm/UsersVM.kt` — `refreshMultiUserMode()` wired into `refresh()` and `refreshActiveUsers()` (every lock-screen load and admin mutation).
+- TEST `rbac/SessionStateModeTest.kt` — 5 contract tests. (The process-start seed lives in `AppGraph.seedIfFirstRun`, committed with the RVW-6 commit below.)
+
+## Commit `d3bf570` — feat(db): bounded growth — unsynced sync_ledger prune + audit_log cap [RVW-6]
+
+- NEW `domain/Retention.kt` — pure gate `pruneSyncLedger(syncEnabled, fullPushed)` + `AUDIT_KEEP_ROWS = 50_000` with the full policy rationale in-code.
+- `data/db/Daos.kt` — `SyncLogDao.pruneUnsyncedLedger()` (same SQL as `prunePushed`, distinct documented semantics: tombstones never touched) + `AuditLogDao.keepNewest(keep)` (`LIMIT -1 OFFSET :keep`).
+- `SuperBizApp.kt` — `AppGraph.maintenance()` (both branches try-isolated) launched once from `onCreate`; `seedIfFirstRun` also seeds `SessionState.multiUserMode`.
+- TEST `repo/RetentionMaintenanceTest.kt` — 5 tests on real in-memory Room (gate truth table, tombstones untouched, newest-N by append order, below-cap no-op, policy constant).
+
+## Commit `aac7020` — fix(statement): unpredictable verification-ID component [RVW-7]
+
+- `domain/statement/StatementService.kt` — `newVerificationEntropy(count, Random)` (SecureRandom at call sites; `Random` parameter for deterministic tests; ambiguity-free alphabet) + 3-arg `verificationId` overload (blank entropy = historic bytes).
+- `data/repo/StatementRepo.kt` — issuance passes `newVerificationEntropy()`; legacy IDs untouched (exact-match verification keeps old QRs working).
+- TEST: contract locked in `WidgetPrivacyTest` (legacy byte-identity, prefix preservation, alphabet/determinism).
+
+## Commit `<docs+version>` — V 3.2.2 bookkeeping
+
+- `app/build.gradle.kts` — versionCode 10→11, versionName 3.2.1→3.2.2.
+- `CHANGELOG.md` — V 3.2.2 entry (wave R2) prepended in the house format.
+- The four `INDEPENDENT_*` documents updated with wave R2 sections.
+
+## Corrections to wave-1's "deliberately did NOT change" list
+
+Three items on that list were explicit owner-decision holds at the time; the owner's "continue development" directive for these priorities supersedes the holds, and each was implemented contract-preserving (not flipped blindly):
+
+- ~~Widget redaction default (risk 6)~~ → **implemented as RVW-4**, narrower than a default flip: redaction applies only while a lock is configured **and** the app is not open; no-lock devices keep historic behavior.
+- ~~Statement verification IDs (risk 5)~~ → **implemented as RVW-7** compatibility-first: only new statements randomized; every previously printed ID verifies unchanged.
+- ~~sync_log/audit_log retention (risk 7)~~ → **implemented as RVW-6** policy-shaped: never-synced devices only, tombstones never touched automatically, audit cap keeps newest 50k.
+
+Remaining owner-decision holds (unchanged): Argon2id pairing salt (risk 1), RBAC full enforcement closure below VM (risk 2 — RVW-5 delivered the attribution layer; enforcement design remains open), emergency-unlock preventive PIN (risk 3), SMTP NONE removal (risk 4), zatca_docs financial-history merge package (risk 8), release.yml CI-green gate.
+
+## Wave R2 final diff review
+
+`git diff 31752e7..HEAD` after wave R2: 16 files changed (8 modified main sources, 2 new domain files, 3 new test files, build.gradle.kts, CHANGELOG.md, 4 docs) — +~700/−10, every hunk traceable to an RVW tag, no secrets (grep: none), no unrelated modifications, `local.properties` local-only and gitignored, working tree clean after commits. No force-push, no history rewrite, no branch deletion, nothing pushed.
