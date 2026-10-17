@@ -1059,7 +1059,24 @@ class SchemaMigrationTest {
                 assertEquals("صف $t حي", 1L, scalar(db, "SELECT COUNT(*) FROM `$t` WHERE originDeviceId = 'DEV-A'"))
             }
 
-            // 3) byOrigin بعد الترحيل يجد الصف عبر الفهرس (EXPLAIN يكشف مسح الفهرس)
+            // 3) byOrigin بعد الترحيل يجد الصف عبر الفهرس (فحص خطة الاستعلام فعلياً — [RVW-3])
+            // EXPLAIN QUERY PLAN يثبت أن المسح عبر الفهرس الهوياتي لا مسح جدول كامل —
+            // التحقق الأدائي بفحص الخطة لا بالادعاء (عند بذرة صغيرة قد يختار المخطط
+            // المسح الكامل لأرخصه — لذا تُبذر صفوف كافية قبل فحص الخطة)
+            db.execSQL("INSERT INTO `parties` (`originDeviceId`, `originId`) VALUES ('DEV-B', 7), ('DEV-C', 7), ('DEV-D', 7), ('DEV-E', 7), ('DEV-F', 7), ('DEV-G', 7), ('DEV-H', 7), ('DEV-I', 7)")
+            db.query(
+                "EXPLAIN QUERY PLAN SELECT * FROM parties WHERE originDeviceId = 'DEV-A' AND originId = 7"
+            ).use { c ->
+                var usesIdentityIndex = false
+                while (c.moveToNext()) {
+                    val detail = c.getString(c.getColumnIndexOrThrow("detail")) ?: ""
+                    if (detail.contains("index_parties_originDeviceId_originId")) usesIdentityIndex = true
+                }
+                assertTrue(
+                    "byOrigin يستخدم الفهرس الهوياتي (SEARCH USING INDEX) لا مسحاً كاملاً",
+                    usesIdentityIndex
+                )
+            }
             db.query("SELECT * FROM parties WHERE originDeviceId = 'DEV-A' AND originId = 7").use { c ->
                 assertTrue("byOrigin يعيد الصف المستورَد", c.moveToFirst())
             }
