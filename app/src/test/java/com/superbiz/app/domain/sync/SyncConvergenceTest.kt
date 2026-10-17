@@ -295,4 +295,46 @@ class SyncConvergenceTest {
         // وتحرير B (الملاحظة) وصل أيضاً — الدمج حفظ القيمتين لا صراع خاسر
         assertEquals("تعديل B باقٍ", "تعديل من B", dbA.coupons().byId(cid)?.note)
     }
+
+    // ═══════════ [RVW-2] اختبار عدائي موثِّق لحدود AUD-3 المعروفة ═══════════
+    // الاستهلاك المتزامن دون اتصال على جهازين للكوبون نفسه: كلٌّ يرفع العداد 0→1،
+    // ودمج max يجعل التقارب 1 — بينما الاستهلاك الحقيقي 2 (إنفاق مزدوج واحد يفلت).
+    // هذا اختبار «توثيق السقف الحالي» لا تصديق عليه: دمج max يضمن تقارب العداد
+    // ولا يضمن exactly-once موزّعاً — العلاج الجذري دفتر استهلاك append-only يُجمع
+    // (قرار معماري موثق في تعليق AUD-3 داخل SyncEngine — قرار مالك لا إصلاح موجة).
+    // إذا فشل هذا الاختبار يوماً فقد تغيرت الدلالة — راجع العقد قبل «إصلاحه».
+    @Test
+    fun `adversarial documents the known limit - simultaneous offline consumption converges to max but under-counts`() = runBlocking {
+        val relay = Loopback()
+        val now = System.currentTimeMillis()
+
+        // 1) A ينشئ كوبون maxUses=5 ويزامن (B يستورده — usedCount=0 على الجهازين)
+        val cid = dbA.coupons().upsert(
+            com.superbiz.app.data.db.CouponEntity(code = "RACE-1", maxUses = 5, active = true)
+        )
+        round(engineA, relay); round(engineB, relay)
+
+        // 2) دون اتصال: الجهازان يستهلكان الكوبون نفسه معاً (0→1 على كلٍّ على حدة)
+        //    حارس الاستهلاك الذري WHERE usedCount < maxUses يجيز كليهما محلياً بصدق
+        assertEquals(1, dbA.coupons().consume(cid, now))
+        val bRow = dbB.coupons().byOrigin("aaaa-device", cid)!!
+        assertEquals(1, dbB.coupons().consume(bRow.id, now))
+        forceClock(dbA, "coupons", cid, 5_000L)
+        forceClock(dbB, "coupons", bRow.id, 6_000L)
+
+        // 3) تقارب كامل بجولتي دفع وسحب
+        round(engineA, relay); round(engineB, relay)
+        round(engineA, relay); round(engineB, relay)
+
+        // 4) الحكم الموثِّق: العداد يتقارب على max(1,1)=1 — لا 2 — لأن العداد
+        //    مجمَّع لا دفتر أحداث؛ الاستهلاكان حصل فعلاً والواحد فقط ظاهر في العداد.
+        //    النتيجة مقصودة وموثقة كحدود AUD-3 (إنفاق مزدوج موزّع واحد يفلت من max).
+        assertEquals(1, dbA.coupons().byId(cid)?.usedCount)
+        assertEquals(1, dbB.coupons().byOrigin("aaaa-device", cid)?.usedCount)
+        // ودير الصف متقارب بايتياً كأي جدول مزامن — التقارب سليم، العدّ هو المحدود
+        assertEquals(
+            dbA.coupons().byId(cid)?.usedCount,
+            dbB.coupons().byOrigin("aaaa-device", cid)?.usedCount
+        )
+    }
 }
