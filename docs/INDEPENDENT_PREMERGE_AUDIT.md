@@ -84,3 +84,20 @@ Rationale: all nine AUD findings are genuinely fixed and regression-tested; the 
 - `docs/INDEPENDENT_VERIFICATION_RESULTS.md` — claim-by-claim verification + exact test/build output
 - `docs/INDEPENDENT_REMEDIATION_LOG.md` — fixes implemented on the review branch
 - Review branch `review/independent-premerge-2026-10` (4 commits: docs, RVW-1 fix, tests, review log)
+
+---
+
+## 8. Wave R2 Update (2026-10-18) — Decision Status After Implementing the Priorities
+
+The owner directed continued development; the three priorities named in §6-2 (widget redaction, sync_log retention shape, RBAC below the VM layer) and the statement-ID hardening were implemented on the same review branch as **RVW-4 … RVW-7** — full evidence in `INDEPENDENT_REVIEW_FINDINGS.md` §5, per-commit log in `INDEPENDENT_REMEDIATION_LOG.md` (Wave R2), fresh execution in `INDEPENDENT_VERIFICATION_RESULTS.md` §7.
+
+| §6 condition | Status after Wave R2 |
+|---|---|
+| 1. Land RVW-1 with/before the remediation branch | Unchanged — already on this review branch (`e383cef`) |
+| 2. Track the eight owner risks as backlog; widget redaction / sync_log retention / RBAC-below-VM deserve priority | **Substantially executed**: RVW-4 (lock-aware widget redaction, fail-closed), RVW-6 (never-synced sync_ledger prune + 50k audit cap, sync-correctness-preserving), RVW-5 (honest system attribution in multi-user mode) implemented; RVW-7 (unpredictable verification IDs, backward compatible) implemented. Remaining as documented owner decisions: Argon2id pairing salt, RBAC full enforcement closure (attribution layer delivered), emergency-unlock preventive PIN, SMTP NONE, zatca_docs financial-history merge package, release.yml CI gate |
+| 3. Branch is local-only; push/merge is the owner's action | Unchanged — nothing pushed by this review |
+| 4. lintRelease as pre-merge CI gate | Re-verified green this session (5m 21s) on top of wave R2 |
+
+**Re-executed verification (wave R2):** 4 Python gates PASS · full suite **1746/0/0** (157 files) · `assembleDebug` SUCCESSFUL · `lintRelease` SUCCESSFUL — toolchain rebuilt from scratch; version 3.2.2 (code 11).
+
+**Merge-readiness decision: APPROVED WITH CONDITIONS (reaffirmed, conditions now narrower).** No P0/P1 open; every implementable priority condition has been executed with regression tests; what remains are owner decisions that require product/protocol/infrastructure authority by nature (pairing-protocol v2, worker enforcement redesign, enrollment UX, financial-history merge package, release workflow). The decision to merge `review/independent-premerge-2026-10` (and/or fold it into `audit/remediation-2026-10`) remains the owner's; this review pushes and merges nothing.

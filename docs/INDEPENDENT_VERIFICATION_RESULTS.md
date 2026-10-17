@@ -66,3 +66,34 @@ All nine verified **in the live files** (not just diffs) — full evidence table
 - Backup rules: blanket exclusions verified for legacy + Android-12+ paths.
 - Dependencies pinned versions recorded; no vulnerable-version flag among pinned artifacts; no HTTP client library (platform `HttpsURLConnection` only, per ADR-001).
 - Git history secret scan (added-file inventory + pattern grep): clean; only test-fixture password strings in `Argon2idTest`.
+
+---
+
+## 7. Wave R2 Verification (2026-10-18 — this session's own runs)
+
+Environment: toolchain rebuilt from scratch again in this session (the previous session's `/home/z/jdk17` + `/home/z/android-sdk` did not survive — reinstalled via the persisted `scripts/setup_toolchain.sh`: Temurin JDK 17.0.13 + cmdline-tools + platform-36 + build-tools 35.0.0). Every result below is this session's own execution, not an inheritance.
+
+| Check | Command | Result |
+|---|---|---|
+| Kotlin compile | `./gradlew --no-daemon compileReleaseKotlin` | **BUILD SUCCESSFUL** — exit 0 (pre-existing `ExperimentalCoroutinesApi` warnings only) |
+| Wave test classes | `testReleaseUnitTest --tests` (WidgetPrivacyTest + SessionStateModeTest + RetentionMaintenanceTest) | **BUILD SUCCESSFUL** — 19 tests green after one self-caught fix (see incident below) |
+| Strings format gate | `python3 tools/check_strings_format.py` | PASS (exit 0) |
+| Strings parity gate | `python3 tools/check_strings.py` | PASS (exit 0 — no string changes in wave R2) |
+| Locale coverage gate | `python3 tools/check_locale_coverage.py` | PASS (exit 0) |
+| Network boundary gate | `python3 tools/check_network_boundary.py` | PASS (exit 0) |
+| Full unit-test suite | `./gradlew --no-daemon testReleaseUnitTest` | **BUILD SUCCESSFUL** — fresh XMLs parsed: **157** suite files, **1746 tests / 0 failures / 0 errors / 0 skipped** (= wave-1's 1727 + 19 new wave-R2 tests: WidgetPrivacy 9, SessionStateMode 5, RetentionMaintenance 5) |
+| Debug package | `./gradlew --no-daemon assembleDebug` | **BUILD SUCCESSFUL** — `app-debug-unsigned.apk` **29,384,649 bytes** |
+| Lint | `./gradlew --no-daemon lintRelease` | **BUILD SUCCESSFUL in 5m 21s** — exit 0 |
+| Version bump | `app/build.gradle.kts` | versionCode 10→11, versionName "3.2.1"→"3.2.2" verified in file |
+
+**Wave R2 test-compile incident (honest record):** first run of `SessionStateModeTest` failed 1/19 — the test used `assertSame` where `SessionState.start()` creates a structurally-equal copy (the contract is structural equality, not reference identity); fixed the assertion (`assertEquals`), re-run green. No production code was changed to make a test pass; no test was weakened.
+
+**Diff review:** 16 files, all hunks tagged `[RVW-4/5/6/7 V 3.2.2]`, no secrets, no unrelated changes, nothing pushed, branches untouched except the review branch advancing by 6 commits (`356f8be`, `8e5d428`, `d3bf570`, `aac7020`, docs, plus wave-1's four).
+
+## 8. Wave R2 — NOT VERIFIED / residual limits (unchanged from §4 plus)
+
+All §4 items remain NOT VERIFIED for the same reasons (signing, device E2E, live gateways, real relay, JDK-21 leg). Wave-R2-specific residuals, stated plainly:
+
+- Widget re-render timing on re-lock depends on the process getting its scheduled render window; if Android freezes the process before the immediate render completes, the next scheduled/data-change render still shows the mask (eventual consistency — the signal itself is fail-closed and immediate; only the paint is asynchronous).
+- `AppGraph.maintenance()` runs once per process start by design; growth between process starts is bounded by real usage, and the audit cap is generous (50k rows) — this is a bounded-growth policy, not a real-time guard.
+- `SessionState.multiUserMode` is refreshed at process start and on every users read; a worker running in the tiny window between process start and `seedIfFirstRun()` on a multi-user device may still attribute as "owner" (worst case degrades to wave-1 behavior, never worse).
