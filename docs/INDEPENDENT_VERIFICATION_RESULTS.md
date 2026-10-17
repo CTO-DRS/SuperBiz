@@ -97,3 +97,27 @@ All §4 items remain NOT VERIFIED for the same reasons (signing, device E2E, liv
 - Widget re-render timing on re-lock depends on the process getting its scheduled render window; if Android freezes the process before the immediate render completes, the next scheduled/data-change render still shows the mask (eventual consistency — the signal itself is fail-closed and immediate; only the paint is asynchronous).
 - `AppGraph.maintenance()` runs once per process start by design; growth between process starts is bounded by real usage, and the audit cap is generous (50k rows) — this is a bounded-growth policy, not a real-time guard.
 - `SessionState.multiUserMode` is refreshed at process start and on every users read; a worker running in the tiny window between process start and `seedIfFirstRun()` on a multi-user device may still attribute as "owner" (worst case degrades to wave-1 behavior, never worse).
+
+---
+
+## 9. Wave R3 (2026-10-18) — Full Re-Verification at the Tip Commit (this session's own runs)
+
+Purpose: the wave-R2 execution predated the final docs/version commit, and each session's toolchain is rebuilt from scratch. This wave closes the chain by re-executing everything **at the tip `ebc8b4a`** (`review/independent-premerge-2026-10`, working tree clean, remote still untouched — `git ls-remote` shows only `main` @ `672d995`, nothing pushed by this review).
+
+Environment: toolchain rebuilt again from scratch via the persisted `scripts/setup_toolchain.sh` (Temurin JDK 17.0.13 + cmdline-tools + platform-36 + build-tools 35.0.0; 2 vCPU / 3.9 GB RAM). `local.properties` recreated locally, gitignored.
+
+| Check | Command | Result |
+|---|---|---|
+| Strings format gate | `python3 tools/check_strings_format.py` | **PASS** — exit 0 (0 mismatch; 133 legacy intentional % warnings) |
+| Strings parity gate | `python3 tools/check_strings.py` | **PASS** — exit 0 (6 locales × 2437 keys, same order) |
+| Locale coverage gate | `python3 tools/check_locale_coverage.py` | **PASS** — exit 0 (≥95% threshold, reported complete) |
+| Network boundary gate | `python3 tools/check_network_boundary.py` | **PASS** — exit 0 (0 import sites scanned — vacuous-pass note stands, FINDINGS §3) |
+| Full unit-test suite | `./gradlew --no-daemon testReleaseUnitTest` | **BUILD SUCCESSFUL in 4m 39s** — exit 0; fresh XMLs parsed: **157** suite files, **1746 tests / 0 failures / 0 errors / 0 skipped** — matches wave R2's claim exactly |
+| Debug package | `./gradlew --no-daemon assembleDebug` | Attempt 1: **exit 1** — "Gradle build daemon disappeared unexpectedly" (container process-reaping, same transient class documented in §3). Attempt 2: terminated by RMI Kotlin-daemon fallback noise under the 2-vCPU ceiling. Attempt 3 with `-Dkotlin.compiler.execution.strategy=in-process`: **BUILD SUCCESSFUL in 3m 3s** — exit 0; fresh `app-debug-unsigned.apk` **26,641,566 bytes**. Debug APK size is not build-stable (26.6 MB → 29.38 MB → 26.64 MB across three independent toolchains) — documented as such, no defect signal |
+| Lint | `./gradlew --no-daemon -Dkotlin.compiler.execution.strategy=in-process lintRelease` | **BUILD SUCCESSFUL in 5m 20s** — exit 0 |
+| Surviving wave-R2 artifacts | `TEST-*.xml` from the R2 targeted run | Re-parsed before the fresh run: WidgetPrivacy 9 + SessionStateMode 5 + RetentionMaintenance 5 = **19/0/0** — consistent with §7 |
+| Version | `app/build.gradle.kts` | versionCode 11, versionName "3.2.2" verified in file |
+
+**Wave R3 incident record (honest):** the two `assembleDebug` failures above were both daemon-death (environment), not compilation; no source or test change was made to achieve the passing run. Kotlin in-process execution strategy is an invocation flag, not a repository change.
+
+**Wave R3 conclusion:** the full verification matrix is green at the tip commit in a third independent toolchain. All §4 NOT-VERIFIED items remain NOT VERIFIED for the same reasons (owner signing, device E2E, live gateways, real relay, JDK-21 CI leg). The merge-readiness decision in `INDEPENDENT_PREMERGE_AUDIT.md` §6/§8 stands: **APPROVED WITH CONDITIONS**.

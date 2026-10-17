@@ -101,3 +101,9 @@ The owner directed continued development; the three priorities named in §6-2 (w
 **Re-executed verification (wave R2):** 4 Python gates PASS · full suite **1746/0/0** (157 files) · `assembleDebug` SUCCESSFUL · `lintRelease` SUCCESSFUL — toolchain rebuilt from scratch; version 3.2.2 (code 11).
 
 **Merge-readiness decision: APPROVED WITH CONDITIONS (reaffirmed, conditions now narrower).** No P0/P1 open; every implementable priority condition has been executed with regression tests; what remains are owner decisions that require product/protocol/infrastructure authority by nature (pairing-protocol v2, worker enforcement redesign, enrollment UX, financial-history merge package, release workflow). The decision to merge `review/independent-premerge-2026-10` (and/or fold it into `audit/remediation-2026-10`) remains the owner's; this review pushes and merges nothing.
+
+---
+
+## 9. Wave R3 Update (2026-10-18) — Verification Chain Closed at the Tip
+
+The full verification matrix was re-executed at the tip `ebc8b4a` in a third independently rebuilt toolchain: 4 Python gates PASS · full suite **1746/0/0/0** (157 files) · `assembleDebug` SUCCESSFUL · `lintRelease` SUCCESSFUL — with the two transient daemon-death build attempts honestly recorded (environment, not code). Surviving wave-R2 artifacts re-parsed (19/0/0). Remote still untouched (`main` @ `672d995` only); nothing pushed. Full evidence: `INDEPENDENT_VERIFICATION_RESULTS.md` §9. **Decision unchanged: APPROVED WITH CONDITIONS.**
