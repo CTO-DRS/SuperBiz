@@ -44,6 +44,24 @@ class SalesMathTest {
         assertEquals(2, count)
     }
 
+    // ═══════════ [AUD-6] نهاية اليوم DST-safe — ساعة البيع الأخيرة لا تُسقط ═══════════
+    @Test
+    fun `todaySales covers the late-evening hour of a 25h DST day`() {
+        val saved = java.util.TimeZone.getDefault()
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("America/New_York"))
+        try {
+            // 2026-11-01 في نيويورك = يوم 25 ساعة (رجوع التوقيت 2:00→1:00)
+            val c = java.util.Calendar.getInstance().apply { clear(); set(2026, 10, 1, 23, 30, 0) }
+            val lateSale = c.timeInMillis   // 23:30 محلية — كانت تُسقط مع النهاية الثابتة
+            val dayStart = com.superbiz.app.domain.algo.TimeMath.startOfDay(lateSale)
+            val (total, count) = SalesMath.todaySales(listOf(inv(lateSale, 42_00L)), dayStart)
+            assertEquals("بيع 23:30 في يوم 25 ساعة يُحتسب", 42_00L, total)
+            assertEquals(1, count)
+        } finally {
+            java.util.TimeZone.setDefault(saved)
+        }
+    }
+
     @Test
     fun `empty ledger yields zero sales`() {
         val (total, count) = SalesMath.todaySales(emptyList(), dayStart)

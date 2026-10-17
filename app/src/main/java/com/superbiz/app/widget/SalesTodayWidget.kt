@@ -16,11 +16,14 @@ object SalesMath {
     /**
      * مبيعات يوم يبدأ من طابعه الزمني dayStart:
      * (إجمالي المبيعات، عدد الفواتير) من فواتير البيع النشطة (غير الملغاة) فقط.
-     * نهاية اليوم تُحسب تلقائياً +86,399,999 ملّي ثانية.
+     * [AUD-6] نهاية اليوم عبر التقويم (23:59:59.999 المحلية الفعلية — DST-safe).
      * [P33-P8] الإجمالي قروش Long — مجموع صحيح مباشر من الفواتير المخزنة قروش
      */
     fun todaySales(invoices: List<Invoice>, dayStart: Long): Pair<Long, Int> {
-        val dayEnd = dayStart + 86_399_999L
+        // [AUD-6 إصلاح] نهاية اليوم عبر التقويم — كانت dayStart + 86,399,999 ثابتة
+        // ففي يوم 25/23 ساعة (توقيت صيفي) تسقط/تسرّب ساعة من مبيعات اليوم.
+        // TimeMath.endOfDay يحسب منتصف ليلة الغد المحلي فعلياً.
+        val dayEnd = com.superbiz.app.domain.algo.TimeMath.endOfDay(dayStart)
         val todays = invoices.filter { it.isSale && it.status < 3 && it.date in dayStart..dayEnd }
         return todays.sumOf { it.total } to todays.size
     }
