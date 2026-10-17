@@ -134,3 +134,59 @@ Following the owner's directive to continue development, the three priorities na
 | 6 | Widgets show amounts while locked | **RVW-4 implemented** (lock-aware redaction, fail-closed) |
 | 7 | sync_log / audit_log retention | **RVW-6 implemented** (never-synced prune + 50k audit cap; tombstone policy still owner's) |
 | 8 | zatca_docs absent from merge restore | Owner decision (financial-history-merge package with RVW-1 boundary) — unchanged |
+
+---
+
+## 6. Wave R4 (2026-10-18) — Completion Wave: the Remaining Owner Items, Executed or Finally Decided
+
+Directive: «أكمل التطوير» / "Complete the development". Each remaining item from §5's hold list was either implemented with minimal, tested code (contracts preserved byte-for-byte where they protect existing users) or closed as a **final documented design decision**. Finding IDs continue the RVW sequence.
+
+### RVW-8 — P2 · Argon2id globally fixed salt — **FIXED for all new pairings (`00c5208`), legacy pairings preserved byte-for-byte**
+
+**Evidence (risk 1 of §2):** `Argon2id.DOMAIN_SALT = "superbiz-sync-v1"` let one precomputation amortize across every SuperBiz installation if wrapped KEK blocks ever leaked.
+
+**Fix (protocol v2, additive — never breaking):** `domain/sync/PairingSalt.kt` (JVM-pure: SecureRandom 16 B, SyncCrypto codec, strict `decodeOrNull`). `SyncEnableStore` persists the pairing salt (plaintext — public by design; *uniqueness*, not secrecy, is the security property). `PassphraseDialog` resolution order (each arm preserves an existing contract literally):
+1. entered pairing code → strict decode (invalid → visible error, no derivation);
+2. stored salt (re-pairing) → reused — no silent breakage of an in-progress pairing;
+3. stored empty + wrapped KEK exists (legacy pre-3.2.3 pairing) → `DOMAIN_SALT` exactly as old versions derived — v1 contract byte-preserved, cross-version pairing still works;
+4. fresh pairing → random salt generated, persisted, displayed as a copyable pairing code next to the fingerprint.
+A mistyped code produces a different KEK → the face-to-face fingerprint check fails visibly (same detection mechanism as a mistyped passphrase). Corrupt stored salt falls back to v1 rather than deriving a broken key.
+
+**Regression tests:** `PairingSaltTest` (5): size/uniqueness, encode/decode identity + display stability, wrong-size `encode` throws, strict decode (blank/wrong-size/garbage → null, whitespace-trimmed valid), derivation determinism per salt + divergence across salts (downscaled parameters; production-parameter vectors remain in `Argon2idTest`).
+
+### RVW-9 — P3 · release.yml published signed artifacts without a green check — **FIXED (`ece27b5`)**
+
+`build` now `needs: verify`, and `verify` runs the 4 Python gates + `testReleaseUnitTest` on the tag ref itself before any build/sign/publish step. Closes the security-sweep hardening note; no repository code touched.
+
+### RVW-10 — P3 · plaintext SMTP sends left no per-execution record — **FIXED (`00ede4d`)**
+
+The scheduled statement path cannot carry a per-send dialog (risk 4/D-1 mitigation stays at configuration time, mandatory dialog since M-2). The achievable closure: every actual `NONE`-mode execution now writes `STATEMENT_SMTP_PLAINTEXT` (host:port, file) to `audit_log` before sending — a permanent trail the owner can audit. `sendViaSmtp` gained a `repo` parameter (private, two call sites updated).
+
+### RVW-11 — P3 · "no biometrics without PIN" was a free-floating UI condition — **FIXED as executable contract (`cc719f3`)**
+
+Discovery: the preventive gate this review recommended for risk 3 **already exists** (wave P5-H4, `SettingsHubScreen` — toggle blocked with a toast when no PIN; `UsersVM.setBiometricAllowed` requires an existing `pinWrapped`). The residual one-tap emergency unlock therefore serves only legacy pre-gate state that can no longer be newly created — removing it would permanently lock out broken-sensor/no-PIN users (documented owner trade-off, unchanged). The fix locks the existing gate as a domain contract: `domain/LockPolicy.canEnableBiometric(pinConfigured)` (JVM-pure, fail-closed) wired into the settings toggle, tested by `LockPolicyTest`. Risk 3 is hereby **closed at enrollment**: new biometric enrollments without a PIN are impossible, verified by test.
+
+### RVW-12 — P2 · RBAC had zero data-layer enforcement on the crown-jewel op — **defense-in-depth delivered (`cc719f3`); full closure finally decided**
+
+All five backup/restore entry points (`BackupRepo.exportTo/importFrom/exportLocal`, `BackupRestoreRepo.exportTo/importFrom`) now enforce `RoleGate.require(effective(), Op.BACKUP_RESTORE)` themselves — the matrix already makes it owner-only at the VM layer, so this adds the layer below: a non-owner explicit session is denied *visibly* (exception / `Result.failure`) even if a future call path bypasses the VMs. Both protected contracts pass byte-for-byte and are proven by test: implicit owner (design §4.3, single-user null session) and `SYSTEM` (role OWNER — the automation contract; the weekly auto-backup worker is unaffected). **Final decision on full enforcement closure (risk 2): not adopted.** Beyond backup/restore, generalizing data-layer gates would either duplicate the VM matrix (drift risk) or require demoting SYSTEM below OWNER, breaking the documented automation-while-locked contract; the honest attribution layer (RVW-5) plus this targeted crown-jewel gate is the closing design. Risk 2 is **closed as decided**.
+
+### Risk 8 (zatca_docs / financial-history merge) — **closed as a final decision, no code**
+
+The P13-b contract (merge = reference-data convergence, never duplicating financial history) is confirmed as the intended design. One-table patching `zatca_docs` into merge would orphan archives and disturb PIH/ICV continuity (RVW-1 analysis). Financial history (invoices + items + payments + journal + stock moves + currencies + rules + zatca_docs, as one package) moves via **Full replace only** — complete on the JSON path since AUD-1. Documented in `BackupKit.NON_MERGEABLE_TABLES` semantics and here; no code change.
+
+### Wave R4 verification summary
+
+4 Python gates PASS · full suite **1756 / 0 / 0** across **160** files (1746 + 10 new: PairingSalt 5, LockPolicy 1, BackupRbacGate 4) · `assembleDebug` BUILD SUCCESSFUL (26,645,626 bytes) · `lintRelease` BUILD SUCCESSFUL (5m 11s) — toolchain rebuilt from scratch this session; version 3.2.2 → 3.2.3 (versionCode 12). Full evidence: `INDEPENDENT_VERIFICATION_RESULTS.md` §10.
+
+### Risks §2/§5 — final status after Wave R4
+
+| # | Risk | Final status |
+|---|---|---|
+| 1 | Argon2id global fixed salt | **RVW-8 implemented** — new pairings randomized (v2); legacy pairings preserved byte-for-byte |
+| 2 | RBAC fail-open below VM | **RVW-12 delivered** (crown-jewel data-layer gate) + **final decision: no general closure** (automation contract + matrix-duplication drift); RVW-5 attribution stands |
+| 3 | Emergency unlock one-tap | **Closed at enrollment** (RVW-11: gate proven pre-existing + locked as executable contract); legacy-only escape hatch documented as deliberate |
+| 4 | SMTP NONE | **RVW-10 implemented** (per-send audit trail); configuration-time dialog (D-1) unchanged |
+| 5 | Statement IDs predictable | RVW-7 (wave R2) — new IDs randomized, legacy verifiable |
+| 6 | Widgets show amounts while locked | RVW-4 (wave R2) — lock-aware redaction, fail-closed |
+| 7 | sync_log / audit_log retention | RVW-6 (wave R2) — never-synced prune + 50k audit cap |
+| 8 | zatca_docs absent from merge restore | **Final decision: merge stays reference-data convergence**; financial history via Full replace only |

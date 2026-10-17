@@ -121,3 +121,25 @@ Environment: toolchain rebuilt again from scratch via the persisted `scripts/set
 **Wave R3 incident record (honest):** the two `assembleDebug` failures above were both daemon-death (environment), not compilation; no source or test change was made to achieve the passing run. Kotlin in-process execution strategy is an invocation flag, not a repository change.
 
 **Wave R3 conclusion:** the full verification matrix is green at the tip commit in a third independent toolchain. All §4 NOT-VERIFIED items remain NOT VERIFIED for the same reasons (owner signing, device E2E, live gateways, real relay, JDK-21 CI leg). The merge-readiness decision in `INDEPENDENT_PREMERGE_AUDIT.md` §6/§8 stands: **APPROVED WITH CONDITIONS**.
+
+---
+
+## 10. Wave R4 (2026-10-18) — Completion Wave Execution (this session's own runs)
+
+Same toolchain as §9 (rebuilt from scratch this session: Temurin JDK 17.0.13 + platform-36 + build-tools 35.0.0; 2 vCPU / 3.9 GB RAM). Code under test: `37d13ce` + RVW-8..12 commits (`00c5208`, `ece27b5`, `00ede4d`, `cc719f3`) + docs/version — i.e., the wave-R4 tip of `review/independent-premerge-2026-10`.
+
+| Check | Command | Result |
+|---|---|---|
+| Strings format gate | `python3 tools/check_strings_format.py` | **PASS** — exit 0 (0 mismatch; 133 legacy intentional-% warnings) |
+| Strings parity gate | `python3 tools/check_strings.py` | **PASS** — exit 0 (6 locales × **2441** keys — +4 `sync_pair_code_*`, same order) |
+| Locale coverage gate | `python3 tools/check_locale_coverage.py` | **PASS** — exit 0 |
+| Network boundary gate | `python3 tools/check_network_boundary.py` | **PASS** — exit 0 |
+| Wave test classes | `testReleaseUnitTest --tests` (PairingSaltTest + LockPolicyTest + BackupRbacGateTest) | **BUILD SUCCESSFUL in 3m 5s** — 10/10 green (5 + 1 + 4) |
+| Full unit-test suite | `./gradlew --no-daemon -Dkotlin.compiler.execution.strategy=in-process testReleaseUnitTest` | **BUILD SUCCESSFUL in 1m 33s** (warm) — fresh XMLs parsed: **160** suite files, **1756 tests / 0 failures / 0 errors / 0 skipped** (= R3's 1746 + 10 new wave-R4 tests) |
+| Debug package | `./gradlew --no-daemon -Dkotlin.compiler.execution.strategy=in-process assembleDebug` | **BUILD SUCCESSFUL in 2m 49s** — exit 0; `app-debug-unsigned.apk` **26,645,626 bytes** |
+| Lint | `./gradlew --no-daemon -Dkotlin.compiler.execution.strategy=in-process lintRelease` | **BUILD SUCCESSFUL in 5m 11s** — exit 0 |
+| Version bump | `app/build.gradle.kts` | versionCode 11→12, versionName "3.2.2"→"3.2.3" verified in file |
+
+**Wave R4 incidents (honest record):** one compile cycle — first wave-test run failed on a missing `PairingSalt` import in `SyncLinkCard.kt` (caught by compile, fixed, re-run green). No test was weakened; no production behavior was changed to make a test pass. The in-process Kotlin strategy is the session's daemon-survival invocation flag, not a repository change (except release.yml, which is RVW-9 itself).
+
+**Wave R4 conclusion:** the completion wave is verified green at its own tip. All §4 NOT-VERIFIED items remain NOT VERIFIED for the same structural reasons. All eight documented risks now carry final dispositions (FINDINGS §6); no P0/P1/P2 open. **Decision status: APPROVED FOR MERGE** — the conditions of §6/§8 (§6-1 RVW-1 landed, §6-2 priorities executed in R2+R4, §6-3 nothing pushed, §6-4 lintRelease verified locally and now CI-gated) are fully discharged; the act of merging/pushing remains the owner's alone.

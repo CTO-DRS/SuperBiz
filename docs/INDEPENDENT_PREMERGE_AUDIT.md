@@ -107,3 +107,13 @@ The owner directed continued development; the three priorities named in §6-2 (w
 ## 9. Wave R3 Update (2026-10-18) — Verification Chain Closed at the Tip
 
 The full verification matrix was re-executed at the tip `ebc8b4a` in a third independently rebuilt toolchain: 4 Python gates PASS · full suite **1746/0/0/0** (157 files) · `assembleDebug` SUCCESSFUL · `lintRelease` SUCCESSFUL — with the two transient daemon-death build attempts honestly recorded (environment, not code). Surviving wave-R2 artifacts re-parsed (19/0/0). Remote still untouched (`main` @ `672d995` only); nothing pushed. Full evidence: `INDEPENDENT_VERIFICATION_RESULTS.md` §9. **Decision unchanged: APPROVED WITH CONDITIONS.**
+
+---
+
+## 10. Wave R4 Update (2026-10-18) — Completion Wave: All Conditions Discharged
+
+Under the owner's closing directive ("Complete the development"), every remaining item of §6-2 and the §5 hold list was either implemented with tested, contract-preserving code (**RVW-8** per-pairing Argon2id salt for new pairings with byte-preserved v1 compatibility, **RVW-9** release.yml verify-gate before sign/publish, **RVW-10** permanent audit trail for every plaintext SMTP send, **RVW-11** the no-biometrics-without-PIN gate locked as an executable contract — the gate itself proven pre-existing since P5-H4, **RVW-12** data-layer `BACKUP_RESTORE` enforcement on all five backup/restore entry points with §4.3 and automation contracts proven by test) or closed as a final documented decision (**risk 2 general enforcement: not adopted** — automation contract and matrix-drift rationale; **risk 8 financial-history merge: stays out of merge by contract** — Full replace is the financial-history path). Full detail: FINDINGS §6; per-commit log: REMEDIATION_LOG (Wave R4).
+
+**Re-executed verification (wave R4):** 4 Python gates PASS · full suite **1756/0/0/0** (160 files) · `assembleDebug` SUCCESSFUL · `lintRelease` SUCCESSFUL — same session, same rebuilt toolchain as §9; version 3.2.3 (versionCode 12). Evidence: VERIFICATION_RESULTS §10.
+
+**Final merge-readiness decision: APPROVED FOR MERGE.** The four §6 conditions are discharged: (1) RVW-1 landed on this branch; (2) the eight risks all carry final dispositions — six implemented, two decided with rationale; (3) the branch remains local-only — pushing/merging is the owner's sole remaining action; (4) lintRelease is locally verified and now a required pre-publish gate (RVW-9). No P0/P1/P2 finding is open. Residual NOT-VERIFIED items (§4 of VERIFICATION_RESULTS — signing, device E2E, live gateways, real relay, JDK-21 CI leg) are structural to this environment and remain the owner's pre-release checklist. This review merges and pushes nothing.
