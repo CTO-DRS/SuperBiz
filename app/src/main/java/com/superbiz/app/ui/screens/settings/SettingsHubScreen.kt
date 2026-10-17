@@ -498,7 +498,12 @@ private fun PrivacySection(s: com.superbiz.app.data.repo.Settings, vm: SettingsV
         stringResource(R.string.set_row_biometric_hint)
     ) {
         GlassSwitch(s.biometric) { on ->
-            if (on && s.pinHash == null && s.pinBlob == null) vm.notifyToast(pinReqBioMsg)
+            // [RVW-11 V 3.2.3] العقد الآن دالة نقية مُختبرة (LockPolicy) لا شرط UI حر:
+            // لا بيومتريا بلا رمز — نفس بوابـة P5-H4 حرفياً، مثبّتة كعقد قابل للتنفيذ
+            if (on && !com.superbiz.app.domain.LockPolicy.canEnableBiometric(
+                    s.pinHash != null || s.pinBlob != null
+                )
+            ) vm.notifyToast(pinReqBioMsg)
             else vm.setBiometric(on)
         }
     }
