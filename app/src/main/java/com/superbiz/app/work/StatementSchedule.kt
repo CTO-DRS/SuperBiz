@@ -364,7 +364,7 @@ class StatementScheduleWorker(ctx: Context, params: WorkerParameters) : Coroutin
             .takeIf { it > 0 }
         if ((channel == "EMAIL" || channel == "SMTP") && to.isNotBlank()) {
             val subject = "${data.party.name} - ${stmt.statementNumber}"
-            when (val r = sendViaSmtp(graph.context, to, File(stmt.filePath), subject)) {
+            when (val r = sendViaSmtp(graph.context, repo, to, File(stmt.filePath), subject)) {
                 SmtpSendResult.NotWired ->
                     repo.recordDelivery(stmt.id, channel, "PENDING", 0, null, scheduledFor)
                 SmtpSendResult.Sent ->
@@ -386,12 +386,22 @@ class StatementScheduleWorker(ctx: Context, params: WorkerParameters) : Coroutin
      */
     private suspend fun sendViaSmtp(
         context: Context,
+        repo: com.superbiz.app.data.repo.StatementRepo,
         to: String,
         attachment: File,
         subject: String
     ): SmtpSendResult = withContext(Dispatchers.IO) {
         val config = com.superbiz.app.domain.statement.StatementPrefs.smtpConfig(context)
             ?: return@withContext SmtpSendResult.NotWired
+        // [RVW-10 V 3.2.3] أثر دائم لكل إرسال نص مكشوف (خطر 4 — D-1): حوار التفعيل
+        // الإلزامي موافقة الإعداد، وهذا السطر يجعل كل تنفيذ فعلي موثقاً في audit_log
+        // (المسار مجدول خلفي لا يحتمل حواراً لكل إرسال — الأثر الدائم هو الإغلاق الممكن).
+        if (config.security == com.superbiz.app.domain.statement.SmtpSecurity.NONE) {
+            repo.audit(
+                "STATEMENT_SMTP_PLAINTEXT",
+                "security=NONE host=${config.host}:${config.port} file=${attachment.name}"
+            )
+        }
         val bytes = runCatching { attachment.readBytes() }.getOrNull()
             ?: return@withContext SmtpSendResult.Failed("cannot read statement pdf: ${attachment.name}")
         runCatching {
@@ -459,7 +469,7 @@ class StatementScheduleWorker(ctx: Context, params: WorkerParameters) : Coroutin
                     repo.markDelivery(d.id, "RETRYING")
                     continue
                 }
-                when (val r = sendViaSmtp(graph.context, to, file, stmt.statementNumber)) {
+                when (val r = sendViaSmtp(graph.context, repo, to, file, stmt.statementNumber)) {
                     SmtpSendResult.NotWired -> repo.markDelivery(d.id, "RETRYING")
                     SmtpSendResult.Sent -> repo.markDelivery(d.id, "SENT")
                     is SmtpSendResult.Failed -> repo.markDelivery(d.id, "FAILED", r.error)
