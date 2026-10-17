@@ -156,6 +156,41 @@ class AppGraph(val context: android.content.Context) {
             db.rules().upsert(com.superbiz.app.data.db.Rule(kind = "INSTALLMENT_REMIND", enabled = true, daysBefore = 3))
         }
         if (!s.seeded) settings.setSeeded()
+        // [RVW-5 V 3.2.2] علم وضع التعدد يُضبط عند الإقلاع/ما بعد الاستعادة كي يصنّف
+        // إسناد التدقيق للعمليات الخلفية (نظام لا مالك ضمني) قبل أول فتح قفل أيضاً
+        com.superbiz.app.domain.rbac.SessionState.multiUserMode =
+            db.users().activeUsers().size > 1
+    }
+
+    /**
+     * [RVW-6 V 3.2.2] صيانة النمو الدورية — تُستدعى مرة عند إقلاع العملية:
+     *
+     * 1) sync_log: خلف بوابة Retention.pruneSyncLedger حصراً — جهاز بلا مزامنة
+     *    مفعّلة ولم يكمل دفعة كاملة قط يُقلم دفتره المعلّق (imported=0) فهو عبء
+     *    ميت بلا مستهلك (عند تفعيل المزامنة لاحقاً يبدأ الدفع بمسح كامل). جهاز
+     *    مزامنته مفعّلة أو سبق الدفع الكامل يُترك للعقد القائم حرفياً (markPushed
+     *    يقلم بعد كل دفعة، والشواهد قرار مالك موثق لا يُمس آلياً).
+     *
+     * 2) audit_log: سقف تخزين كريم يحفظ الأحدث Retention.AUDIT_KEEP_ROWS ويحذف
+     *    الأقدم فحسب — إلحاق فقط بمعناه التشغيلي (لا تعديل ولا إعادة ترتيب).
+     *
+     * كل فرع معزول بـtry خاصته: فشل صيانة لا يعطل الإقلاع ولا الفرع الآخر.
+     */
+    suspend fun maintenance() {
+        try {
+            if (com.superbiz.app.domain.Retention.pruneSyncLedger(
+                    syncEnabled = sync.enabledOnce(), fullPushed = sync.fullPushedOnce()
+                )
+            ) db.syncLog().pruneUnsyncedLedger()
+        } catch (_: Exception) {
+        }
+        try {
+            val auditRows = db.auditLog().count()
+            if (auditRows > com.superbiz.app.domain.Retention.AUDIT_KEEP_ROWS) {
+                db.auditLog().keepNewest(com.superbiz.app.domain.Retention.AUDIT_KEEP_ROWS)
+            }
+        } catch (_: Exception) {
+        }
     }
 
     companion object {
@@ -996,6 +1031,16 @@ class SuperBizApp : Application() {
         try {
             com.superbiz.app.work.StatementScheduleWorker.ensure(this)
         } catch (_: Exception) {
+        }
+
+        // [RVW-6 V 3.2.2] صيانة النمو الدورية — مستقلة عن البذر بمعزل كامل عن الفشل
+        // (حصر sync_log على أجهزة بلا مزامنة + سقف audit_log — انظر AppGraph.maintenance)
+        graph.appScope.launch {
+            try {
+                graph.maintenance()
+            } catch (e: Exception) {
+                android.util.Log.e("SuperBizApp", "maintenance failed", e)
+            }
         }
     }
 

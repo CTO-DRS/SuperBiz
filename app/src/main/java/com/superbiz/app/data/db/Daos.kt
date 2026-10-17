@@ -979,6 +979,14 @@ interface AuditLogDao {
     /** [P34-M1] تصدير النسخة الكاملة 23/23 — السجل كاملاً بترتيب الإلحاق (سجل للقراءة فقط يُنقل كما هو) */
     @Query("SELECT * FROM audit_log ORDER BY id")
     suspend fun allLogs(): List<AuditLogEntity>
+
+    /**
+     * [RVW-6 V 3.2.2] سقف تخزين السجل — يحفظ الأحدث :keep صفًا ويحذف الأقدم فحسب
+     * (إلحاق فقط بمعناه التشغيلي: لا تعديل ولا إعادة ترتيب — حذف سياسة تخزين موثقة).
+     * LIMIT -1 OFFSET :keep في SQLite: بلا حد مع إزاحة = كل ما بعد الأحدث keep.
+     */
+    @Query("DELETE FROM audit_log WHERE id IN (SELECT id FROM audit_log ORDER BY id DESC LIMIT -1 OFFSET :keep)")
+    suspend fun keepNewest(keep: Int): Int
 }
 
 @Dao
@@ -1390,6 +1398,14 @@ interface SyncLogDao {
     /** بعد دفعة ناجحة — ما دُفع محلياً لم يعد ضرورياً (الشواهد المستوردة تبقى). */
     @Query("DELETE FROM sync_log WHERE imported = 0")
     suspend fun prunePushed()
+
+    /**
+     * [RVW-6 V 3.2.2] تقليم صيانة الإقلاع — نفس SQL قلم الدفع لكن بدلالة موثقة:
+     * يُستدعى حصراً خلف بوابة Retention.pruneSyncLedger (جهاز بلا مزامنة قط)
+     * حيث كل المعلّق (imported=0) عبء ميت بلا مستهلك. الشواهد لا تُمس.
+     */
+    @Query("DELETE FROM sync_log WHERE imported = 0")
+    suspend fun pruneUnsyncedLedger(): Int
 
     @Query("DELETE FROM sync_log")
     suspend fun clearAll()
