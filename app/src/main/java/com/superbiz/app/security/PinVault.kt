@@ -42,7 +42,22 @@ object PinVault {
     internal var keyProvider: () -> SecretKey = { masterKey() }
 
     /** يشفّر بصمة الهاش ويعيد النص الجاهز للتخزين في DataStore */
-    fun encrypt(hashHex: String): String = encryptWith(keyProvider(), hashHex)
+    fun encrypt(hashHex: String): String {
+        // [AUD-5 إصلاح] النواة بمفتاح صريح — ولا يزال تقييم keyProvider() نفسه
+        // داخل الحماية: فشل Keystore يُلف PinVaultException (فشل مغلق) لا استثناء خاماً
+        return try {
+            encryptWith(keyProvider(), hashHex)
+        } catch (e: PinVaultException) {
+            throw e
+        } catch (e: Exception) {
+            // [P6-M6-14 إصلاح] فشل مغلق: لا يُكتب "v1:<hashHex>" عاري جديد مطلقاً — الكتابة
+            // الصامتة كانت تُبعد المادة عن حماية العتاد فتصبح الرموز قابلة للكسر دون اتصال.
+            throw PinVaultException(
+                "تعذر تغليف بصمة الرمز بمفتاح Keystore — الرفض مغلق ولا يُخزَّن أي بديل قابل للكسر دون اتصال",
+                e
+            )
+        }
+    }
 
     /**
      * [AUD-5 إصلاح] نواة التغليف بمفتاح صريح — كانت encryptFor/decryptFor تستبدلان
@@ -76,7 +91,13 @@ object PinVault {
      * المستدعي يبقي الشاشة مقفلة ولا يفتح أبداً على null.
      * قراءة "v1:" القديمة مدعومة للتوافق (ترحيل مخزون الإصدارات السابقة).
      */
-    fun decrypt(blob: String): String? = decryptWith(keyProvider(), blob)
+    fun decrypt(blob: String): String? {
+        // [AUD-5 إصلاح] مسار v1 لا يحتاج مفتاحاً إطلاقاً — يُقصّر قبل أي لمسة للمزوّد
+        // (فشل Keystore لا يجوز أن يفسد قراءة المخزون القديم — عقد الاختبار الموثق)
+        if (blob.startsWith(V1_PREFIX)) return blob.removePrefix(V1_PREFIX).ifEmpty { null }
+        // تقييم keyProvider() داخل الحماية نفسها — فشل المفتاح الرئيسي = null صادق
+        return try { decryptWith(keyProvider(), blob) } catch (_: Exception) { null }
+    }
 
     /** نواة الفك بمفتاح صريح — نفس العقد البايتي حرفياً (انظر encryptWith) */
     private fun decryptWith(key: SecretKey, blob: String): String? {
@@ -172,7 +193,8 @@ object PinVault {
      * يفتح أبداً على null.
      */
     fun decryptFor(userId: Long, blob: String): String? {
-        // بذرة المالك المُرحّلة + اختبارات المفتاح المحقون أولاً، ثم مفتاح المستخدم صراحةً
+        // مسار v1 بلا مفتاح (انظر decrypt) — ثم بذرة المالك، ثم مفتاح المستخدم صراحةً
+        if (blob.startsWith(V1_PREFIX)) return blob.removePrefix(V1_PREFIX).ifEmpty { null }
         decryptWith(keyProvider(), blob)?.let { return it }
         return decryptWith(userKeyProvider(userId), blob)
     }
