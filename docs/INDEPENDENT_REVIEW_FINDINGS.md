@@ -190,3 +190,35 @@ The P13-b contract (merge = reference-data convergence, never duplicating financ
 | 6 | Widgets show amounts while locked | RVW-4 (wave R2) — lock-aware redaction, fail-closed |
 | 7 | sync_log / audit_log retention | RVW-6 (wave R2) — never-synced prune + 50k audit cap |
 | 8 | zatca_docs absent from merge restore | **Final decision: merge stays reference-data convergence**; financial history via Full replace only |
+
+---
+
+## 7. Wave R5 (2026-10-18) — Continuation Master Prompt: RBAC Surface Below the ViewModel, Executed
+
+Fresh master-prompt directive ("continue through the highest-priority actionable findings") triggered a targeted re-survey of every data-touching execution path reachable by an authenticated session outside the gated screens. Method: enumerate all `RoleGate.require` call sites, all worker/repo entry points, all settings-mutation setters, and all Composable-level direct writes; for each, ask "does the direct path for the same key carry a gate that this path skips?"
+
+### 7-أ. New findings and their fixes (RVW-13, V 3.2.4)
+
+| ID | Sev | Finding | Evidence (pre-fix) | Fix |
+|---|---|---|---|---|
+| RVW-13-أ | **P1** | Settings JSON import bypassed per-key gates — a CASHIER session could change taxRate, baseCurrency, taxJurisdiction, flagSecure, lockTimeoutMin, redactWidgets, reportRecipient, autoBackupDays via an import file | `FeatureVMs.kt` `importSettingsFrom` had no `RoleGate` while the direct setters for the same keys were gated `GENERAL_SETTINGS`; the Settings-hub import row is reachable by any role (hub is not RbacGated) | `RoleGate.require(…, GENERAL_SETTINGS)` at the top of `importSettingsFrom` — the strongest gate of the keys it writes |
+| RVW-13-ب | **P1** | Webhook retarget/silent-redirect — enable toggle was UI-guarded (`BACKUP_RESTORE`), but `setUrl`/`setSecret` were completely ungated at any layer; a lower-privilege session could point an enabled webhook at an attacker HTTPS endpoint and signed payloads (HMAC with the owner's secret) would follow | `WebhookStore.setEnabled/setUrl/setSecret` — only the switch had a `can(BACKUP_RESTORE)` guard inline in `SettingsHubScreen` | Data-layer gates on all three setters (`BACKUP_RESTORE`, owner-only) inside `WebhookStore` — enforcement survives any future UI path |
+| RVW-13-ج | **P1** | Statement SMTP configuration (outgoing financial channel + credentials + sender identity) writable by any session | `StatementPrefs.save` — the single choke point behind all four save paths of `StatementSettingsScreen` — had no gate; the settings route is not RbacGated | `GENERAL_SETTINGS` gate inside `StatementPrefs.save`; reads deliberately ungated (scheduled sender runs as SYSTEM and never writes) |
+| RVW-13-د | P2 | Financial-report delivery configuration (recipient, channel, schedule, monthly goal, auto-backup days) ungated at the VM although the Automation screen is nav-gated `GENERAL_SETTINGS` | `SettingsVM.setReportRecipient/setReportScheduleDays/Hour/Channel/setMonthlyGoal/setAutoBackupDays` | `GENERAL_SETTINGS` on all six — nav gate duplicated at the execution boundary per the master prompt's "negative tests for out-of-UI-path initiation" |
+| RVW-13-هـ | P2 | Backup-folder destination writable by any session (both overloads) | `SettingsVM.setBackupDir(Uri?)` and `setBackupDir(String?)` ungated | `BACKUP_RESTORE` (owner-only) on both overloads |
+| RVW-13-و | **P1** | Owner tax identity (address + tax number) writable by any session through Profile | `SettingsVM.setAddress/setTaxNumber` ungated; matrix §3 line 8 says `TAX_OWNER_DATA` = owner alone; Profile is reachable by all roles | `TAX_OWNER_DATA` on both; the restore path remains covered by its own `BACKUP_RESTORE` entry gate (repo-level, writes tax fields only under that already-gated operation) |
+
+**Regression tests:** `app/src/test/java/com/superbiz/app/rbac/ConfigRbacGateTest.kt` (6 tests, Robolectric + real DataStore): cashier denied on all six paths with zero state change (before/after capture, order-independent), manager passes GENERAL_SETTINGS gates but is denied owner-only channels, explicit owner passes everything, implicit-owner single-user contract §4.3 preserved, SYSTEM automation contract preserved, and data-layer denial provably precedes any write (legitimate values survive a denial attempt untouched).
+
+**Contracts preserved literally:** implicit owner (single-user, no session) passes every new gate; SYSTEM (multi-user, no session) passes every new gate (automation contract); denial at the data layer throws `RoleDeniedException` before any write; VM-level denial is swallowed by `launchSafe` into a localized user message. No setter's direct-path semantics changed; no merge/financial semantics changed.
+
+### 7-ب. Coupon distributed consumption — evaluated, still an owner decision (design attached)
+
+The master prompt asked for an evaluation of the append-only consumption-event ledger. Verdict after re-inspection: the AUD-3 max-merge fix (LWW can no longer erase consumption) plus the RVW-2 adversarial ceiling test remain accurate; simultaneous offline consumption on two devices still converges to max and under-counts by one. An additive implementation is protocol-feasible (sync dispatch is name-keyed and `adapterFor` returns null for unknown tables, so an extra table is tolerated by older peers), but it changes POS-adjacent financial semantics and requires schema v18 — the exact class of change the master prompt reserves for "an explicit business rule". **Decision: not implemented unilaterally; attached design for owner approval:** entity `coupon_redemptions(id TEXT PK = deviceId|invoiceId|couponCode hash, code, qty, at, origin)` recorded at consume time; synced as an add-only table (union by id, idempotent); effective uses = `COUNT(DISTINCT id)` per code, consulted as an additional fail-closed rejection when ≥ maxUses; `usedCount` kept and merged as today for display/back-compat. Residual honestly stated: this reconciles at convergence and bounds overshoot, but offline exactly-once across devices is impossible without a reservation/consensus protocol — the explicit business rule to adopt is "convergent reconciliation with bounded per-device overshoot". Requires schema v18, migration + adversarial multi-device tests, and a merge-package decision.
+
+### Risks table — unchanged from §6 except
+
+| # | Risk | Delta |
+|---|---|---|
+| 2 | RBAC fail-open below VM | RVW-13 **reduces the surface further**: the six alternate config paths now enforce at the boundary; the general no-general-closure decision (automation contract) stands |
+| New | Coupon ledger | Design attached (§7-ب) — requires explicit owner decision + schema v18 |

@@ -162,3 +162,19 @@ The wave-R2 hold list is hereby fully resolved:
 ## Wave R4 final diff review
 
 `git diff 37d13ce..HEAD` after wave R4: 25 files, +689/−7 (7 modified main sources, 2 new domain files, 3 new test files, 6 strings.xml, release.yml, build.gradle.kts, CHANGELOG.md, 4 docs) — every hunk tagged `[RVW-8..12 V 3.2.3]`, no secrets, no unrelated modifications, `local.properties` local-only and gitignored, working tree clean after commits. No force-push, no history rewrite, no branch deletion, nothing pushed. Full re-verification green at the new tip: 1756/0/0/0 (160 files), assembleDebug + lintRelease successful (VERIFICATION_RESULTS §10).
+
+---
+
+## Wave R5 (2026-10-18) — RVW-13: authorization at the execution boundary for alternate config paths
+
+Continuation master prompt triggered a full RBAC-surface survey below the ViewModel. Six ungated alternate paths found and closed in one focused change (no merge semantics touched, no financial semantics touched):
+
+- `FeatureVMs.kt` — `importSettingsFrom` gated `GENERAL_SETTINGS` (was bypassing the per-key gates of every key it writes); `setReportRecipient` / `setReportScheduleDays` / `setReportScheduleHour` / `setReportScheduleChannel` / `setMonthlyGoal` / `setAutoBackupDays` gated `GENERAL_SETTINGS`; `setBackupDir(Uri?)` / `setBackupDir(String?)` gated `BACKUP_RESTORE`; `setAddress` / `setTaxNumber` gated `TAX_OWNER_DATA`. All tagged `[RVW-13 V 3.2.4]` in-code.
+- `WebhookStore.kt` — `setEnabled` / `setUrl` / `setSecret` gated `BACKUP_RESTORE` at the data layer (the UI switch guard alone was defense-optional; the URL retarget was the real exfiltration vector for HMAC-signed events).
+- `StatementPrefs.kt` — `save` gated `GENERAL_SETTINGS` (single choke point behind all four statement-settings save paths; reads stay ungated by design for the SYSTEM scheduled sender).
+
+Regression protection: `ConfigRbacGateTest` (6 tests) — role matrix (cashier/manager/owner), implicit-owner §4.3 contract, SYSTEM automation contract, before/after no-write-on-denial proof, all against real DataStore with injected PinVault test key (no mocks of the security path).
+
+Contracts preserved literally: IMPLICIT_OWNER and SYSTEM identities pass every new gate; `RoleDeniedException` at the data layer fires before any write; launchSafe converts VM-level denial into a localized message. No previously green behavior changes for legitimate roles in either single-user or multi-user mode.
+
+Verification at this wave's tip: 4 Python gates PASS; full suite 1762/0/0/0 across 161 files (+6); assembleDebug + lintRelease green (VERIFICATION_RESULTS §11). Version 3.2.4 (versionCode 13).
