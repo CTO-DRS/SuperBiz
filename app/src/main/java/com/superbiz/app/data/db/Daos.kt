@@ -1096,6 +1096,9 @@ interface MaintenanceDao {
     // [P46-W1] نقاط الولاء والكوبونات — المسح الكامل لا يترك الجداول الجديدة حية
     @Query("DELETE FROM loyalty_entries") suspend fun wipeLoyaltyEntries()
     @Query("DELETE FROM coupons") suspend fun wipeCoupons()
+    // [AUD-1 إصلاح] أرشيف ZATCA كان غائبًا عن المسح الكامل: استبدال القاعدة كان يترك
+    // أرشيفًا يتيمًا لفواتير لم تعد موجودة ثم يفشل إدراج النسخة الجديدة بنفس invoiceId
+    @Query("DELETE FROM zatca_docs") suspend fun wipeZatcaDocs()
 
     @androidx.room.Transaction
     suspend fun wipeAll() {
@@ -1112,6 +1115,8 @@ interface MaintenanceDao {
         wipeStatementRules(); wipeAuditLog()
         // [P46-W1] الولاء يُمسح قبل أبوينه (parties/invoices) — والكوبونات مستقلة
         wipeLoyaltyEntries(); wipeCoupons()
+        // [AUD-1 إصلاح] أرشيف ZATCA يُمسح بعد الفواتير (لا FK صريح لكنه تابع منطقي لها)
+        wipeZatcaDocs()
         wipeParties(); wipeRules(); wipeCurrencies()
     }
 }
@@ -1341,6 +1346,10 @@ interface ZatcaDocDao {
     @Query("SELECT COUNT(*) FROM zatca_docs")
     suspend fun count(): Int
 
+    /** [AUD-1] لقطة كاملة مرتبة بالفاتورة — تصدير النسخ الاحتياطي */
+    @Query("SELECT * FROM zatca_docs ORDER BY invoiceId")
+    suspend fun allOnce(): List<ZatcaDocEntity>
+
     /** قبول إبلاغ/تخليص — يغلق المحاولة ويمحوا سبب الرفض */
     @Query(
         """UPDATE zatca_docs SET reportedAt = :at, attemptCount = 0,
@@ -1424,7 +1433,10 @@ interface SyncLogDao {
     // (ترحيل 14→15 في SuperBizApp — ALTER ADD COLUMN ببذور محايدة: "" = بالأساس نفسه)
     // [H4-3 V 3.0.0] مزامنة E2E — sync_log + أعمدة هوية وساعة على الجداول التسعة
     // (ترحيل 15→16 في SuperBizApp — إلحاقي خالص + مشغّلات SQLite لعقد LWW)
-    version = 16,
+    // [AUD-8 V 3.2.1] فهارس الهوية على الجداول الثمانية — كانت byOrigin(originDeviceId, originId)
+    // التي تُستدعى لكل صف وارد في دفعة مزامنة مسحًا كاملاً O(N) بلا فهرس
+    // (ترحيل 16→17 في SuperBizApp — إنشاء فهارس فقط، لا أعمدة ولا جداول)
+    version = 17,
     exportSchema = true
 )
 

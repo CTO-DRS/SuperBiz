@@ -432,6 +432,19 @@ private fun invoiceToJson(i: Invoice): String {
     sb.str("currency", i.currency); sb.append(',')
     sb.dbl("fxRate", i.fxRate); sb.append(',')
     sb.str("note", i.note)
+    // [AUD-1 إصلاح] هوية ZATCA (v13) — كانت تُفقد على مسار الدمج أيضًا فيخس الربط
+    // سلسلة ICV/PIH وحالة الإبلاغ بعد أي استعادة دمجية. القارئ متسامح (غياب المفاتيح
+    // في ملفات ما قبل v13 ⇒ البذور المحايدة ""/0) — نفس عقد orig* حرفيًا
+    sb.append(',')
+    sb.str("uuid", i.uuid); sb.append(',')
+    sb.lng("icv", i.icv); sb.append(',')
+    sb.str("pih", i.pih); sb.append(',')
+    sb.str("zatcaSubtype", i.zatcaSubtype); sb.append(',')
+    sb.lng("deliveryDate", i.deliveryDate); sb.append(',')
+    sb.str("buyerName", i.buyerName); sb.append(',')
+    sb.str("buyerVat", i.buyerVat); sb.append(',')
+    sb.str("buyerAddress", i.buyerAddress); sb.append(',')
+    sb.int("zatcaStatus", i.zatcaStatus)
     // [H4-1 V 2.5.0] ختم الفئة الأصلية — يُكتب دائماً (عقد العقد الحرفي: كل الحقول)
     // والقارئ متسامح (غيابه في ملفات ما قبل v15 ⇒ البذور المحايدة ""/0/0)
     sb.append(',')
@@ -1035,6 +1048,16 @@ private fun invoiceFromJson(m: Map<*, *>, legacy: Boolean) = Invoice(
     currency = m.strF("currency", "SAR"),
     fxRate = m.dblF("fxRate", 1.0),
     note = m.strF("note", ""),
+    // [AUD-1 إصلاح] هوية ZATCA (v13) — متسامحة: غياب المفاتيح (ملفات ≤v12) ⇒ البذور المحايدة
+    uuid = m.strF("uuid", ""),
+    icv = m.lngF("icv", 0L),
+    pih = m.strF("pih", ""),
+    zatcaSubtype = m.strF("zatcaSubtype", ""),
+    deliveryDate = m.lngF("deliveryDate", 0L),
+    buyerName = m.strF("buyerName", ""),
+    buyerVat = m.strF("buyerVat", ""),
+    buyerAddress = m.strF("buyerAddress", ""),
+    zatcaStatus = m.intF("zatcaStatus", 0),
     // [H4-1 V 2.5.0] ختم الفئة الأصلية — متسامح: غياب المفاتيح (ملفات ≤v14) ⇒ البذور المحايدة
     origCurrency = m.strF("origCurrency", ""),
     origTotal = m.moneyF("origTotal", legacy),
