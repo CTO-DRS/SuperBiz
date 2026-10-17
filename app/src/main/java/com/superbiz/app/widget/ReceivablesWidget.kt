@@ -162,13 +162,25 @@ object WidgetSync {
     }
 
     /**
- * : خصوصية الويدجت — حين يفعّل المالك «إخفاء الأرقام في الويدجت»
- * تُعرض نقاط بدل المبالغ على الشاشة الرئيسية (الويدجت متاح للناظرين بلا قفل).
+ * : خصوصية الويدجت — [RVW-4 V 3.2.2] القرار موحّد عبر AppLockSignal:
+ * 1) تفضيل المالك «إخفاء الأرقام في الويدجت» يحسم الإخفاء دائماً (كما كان).
+ * 2) الإضافة الجديدة: وسيلة حماية مهيأة (رمز/بصمة) مع تطبيق غير مفتوح الآن
+ *    (خلفية، مقفل، أو عملية باردة) تخفي المبالغ حتى بلا تفضيل صريح — الويدجت
+ *    مرئية للناظرين على الشاشة الرئيسية بلا أي قفل، والقفل كان يحمي فتح
+ *    التطبيق لا قراءة أرقامه من الويدجت.
+ * 3) بلا وسيلة حماية: السلوك التاريخي حرفياً.
+ * الفشل في قراءة الإعدادات يخفي (فشل مغلق) — كان يعرض (فشل مفتوح).
 */
     private suspend fun redactOn(ctx: Context): Boolean = try {
-        com.superbiz.app.AppGraph.from(ctx).settings.snapshot().redactWidgets
+        val s = com.superbiz.app.AppGraph.from(ctx).settings.snapshot()
+        com.superbiz.app.domain.AppLockSignal.shouldRedactWidgets(
+            prefRedact = s.redactWidgets,
+            lockConfigured = com.superbiz.app.domain.AppLockSignal.lockConfigured(
+                s.pinHash, s.pinBlob, s.biometric
+            )
+        )
     } catch (_: Exception) {
-        false
+        true
     }
 
     /** قناع الإخفاء الموحد */
