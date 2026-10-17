@@ -104,3 +104,61 @@ Remaining owner-decision holds (unchanged): Argon2id pairing salt (risk 1), RBAC
 ## Wave R2 final diff review
 
 `git diff 31752e7..HEAD` after wave R2: 16 files changed (8 modified main sources, 2 new domain files, 3 new test files, build.gradle.kts, CHANGELOG.md, 4 docs) — +~700/−10, every hunk traceable to an RVW tag, no secrets (grep: none), no unrelated modifications, `local.properties` local-only and gitignored, working tree clean after commits. No force-push, no history rewrite, no branch deletion, nothing pushed.
+
+---
+
+# Wave R3 (2026-10-18) — Verification Chain Closed at the Tip (no code)
+
+Full re-verification at `ebc8b4a` in a third independently rebuilt toolchain: 4 gates PASS · 1746/0/0/0 (157 files) · assembleDebug + lintRelease successful (two transient daemon-death attempts honestly recorded). Docs-only commit `37d13ce`. Evidence: `INDEPENDENT_VERIFICATION_RESULTS.md` §9.
+
+---
+
+# Wave R4 (2026-10-18) — Completion Wave: Remaining Owner Items Executed or Finally Decided
+
+Directive: "Complete the development" — the owner's closing instruction for the items left as decisions after wave R2. Same discipline: smallest safe fixes, Arabic inline-audit tags (`[RVW-n V 3.2.3]`), additive-only, no refactoring, no new dependencies, offline-first / no-AI / accounting contracts untouched, nothing pushed.
+
+## Commit `00c5208` — feat(sync): per-pairing random salt [RVW-8]
+
+- NEW `domain/sync/PairingSalt.kt` — SecureRandom 16 B, SyncCrypto codec, strict `decodeOrNull` (any doubt → null → visible error, never a wrong KEK).
+- `data/repo/SyncEnableStore.kt` — `sync_pairing_salt` key + once/set/clear (plaintext: public by design, uniqueness is the property).
+- `ui/screens/settings/SyncLinkCard.kt` — optional pairing-code field + code display beside the fingerprint; `resolvePairingSalt` order: entered code → stored salt (re-pair) → DOMAIN_SALT for legacy wrapped-KEK pairings (v1 byte-preserved, cross-version pairing intact) → fresh random for new pairings.
+- `domain/sync/Argon2id.kt` — doc-comment only: v2 mode documented, DOMAIN_SALT remains the literal default.
+- 6 locales: `sync_pair_code_label/hint/invalid/show` (after `sync_fingerprint_hint`; parity + format gates green; 2441 keys).
+- TEST `PairingSaltTest` (5, JVM-pure).
+
+## Commit `ece27b5` — ci(release): verify-gate before sign/publish [RVW-9]
+
+`.github/workflows/release.yml` — new `verify` job (4 gates + `testReleaseUnitTest`, JDK 17, tag ref); `build` gains `needs: verify`. No app code touched.
+
+## Commit `00ede4d` — audit(statement): plaintext-send trail [RVW-10]
+
+`work/StatementSchedule.kt` — `sendViaSmtp` gains `repo` param; `security == NONE` writes `STATEMENT_SMTP_PLAINTEXT` (host:port, file) to audit_log before every actual send. Configuration-time consent (mandatory dialog) unchanged.
+
+## Commit `cc719f3` — fix(rbac,lock): data-layer backup gate + LockPolicy contract [RVW-11/RVW-12]
+
+- NEW `domain/LockPolicy.kt` (JVM-pure) + `SettingsHubScreen` wiring — the P5-H4 gate (verified pre-existing during this wave) locked as an executable contract. Emergency unlock unchanged, deliberate, legacy-only.
+- `data/repo/BackupRepo.kt` — `BACKUP_RESTORE` gate on `exportTo`/`importFrom` (before `try`, denial throws — no silent `false`) and `exportLocal`.
+- `data/repo/BackupRestoreRepo.kt` — same gate on `exportTo`/`importFrom` (inside `try`, denial surfaces as `Result.failure` with cause).
+- TEST `BackupRbacGateTest` (4, real in-memory Room, Robolectric): non-owner denial on both repos both ops, owner pass, §4.3 implicit contract, SYSTEM automation contract (incl. `exportLocal`).
+- TEST `LockPolicyTest` (1).
+
+## Commit `<docs+version>` — V 3.2.3 bookkeeping
+
+- `app/build.gradle.kts` — versionCode 11→12, versionName 3.2.2→3.2.3.
+- `CHANGELOG.md` — V 3.2.3 entry prepended in the house format.
+- The four `INDEPENDENT_*` documents updated with wave R4 sections.
+
+## Final decisions closing the remaining holds (no code — documented authority)
+
+The wave-R2 hold list is hereby fully resolved:
+
+- ~~Argon2id pairing salt (risk 1)~~ → **RVW-8** (above).
+- ~~RBAC full enforcement closure (risk 2)~~ → **RVW-12** delivered the crown-jewel data-layer gate; **general closure: not adopted, finally decided** — it would duplicate the VM matrix (drift) or demote SYSTEM (break the automation-while-locked contract). RVW-5 attribution + RVW-12 gate = the closing design.
+- ~~Emergency-unlock preventive PIN (risk 3)~~ → gate proven already present since P5-H4 and locked by **RVW-11**; escape hatch deliberately retained for legacy state that can no longer be created.
+- ~~SMTP NONE removal (risk 4)~~ → mode retained (legitimate for LAN relays), **RVW-10** adds the per-send audit trail on top of the mandatory configuration dialog.
+- ~~zatca_docs financial-history merge package (risk 8)~~ → **final decision: merge stays reference-data convergence (P13-b)**; financial history moves via Full replace only (complete since AUD-1). No one-table patch.
+- ~~release.yml CI-green gate~~ → **RVW-9** (above).
+
+## Wave R4 final diff review
+
+`git diff 37d13ce..HEAD` after wave R4: 21 files (10 modified main sources, 2 new domain files, 3 new test files, 6 strings.xml, release.yml, build.gradle.kts, CHANGELOG.md, 4 docs) — every hunk tagged `[RVW-8..12 V 3.2.3]`, no secrets, no unrelated modifications, `local.properties` local-only and gitignored, working tree clean after commits. No force-push, no history rewrite, no branch deletion, nothing pushed. Full re-verification green at the new tip: 1756/0/0/0 (160 files), assembleDebug + lintRelease successful (VERIFICATION_RESULTS §10).
