@@ -2397,6 +2397,10 @@
     <string name="sync_pass_confirm_fp">پرنٹ کی تصدیق کریں</string>
     <string name="sync_fingerprint">پرنٹ — اسے فعال کرنے سے پہلے دوسری ڈیوائس پر جھکا جاۓ:</string>
     <string name="sync_fingerprint_hint">دونوں مختلف پرنٹ والی ڈیوائزز کبھی بھی ڈیٹا شیئر نہیں کریں گی</string>
+    <string name="sync_pair_code_label">جوڑنے کا کوڈ (اختیاری — دوسرے ڈیوائس کے لیے)</string>
+    <string name="sync_pair_code_hint">پرانے ورژنز کے ساتھ مطابقت کے لیے خالی چھوڑیں؛ نئی جوڑی کے لیے پہلے ڈیوائس کا کوڈ جیسا ہے ویسے درج کریں</string>
+    <string name="sync_pair_code_invalid">غلط کوڈ — دوسرے ڈیوائس کی اسکرین سے جیسا ہے ویسے کاپی کریں</string>
+    <string name="sync_pair_code_show">جوڑنے کا کوڈ (دوسرے ڈیوائس پر کاپی کریں):</string>
     <string name="sync_save">محفوظ کریں</string>
     <string name="sync_cancel">منسوخ کریں</string>
     <string name="pulse_title">کاروبار کا پلس</string>

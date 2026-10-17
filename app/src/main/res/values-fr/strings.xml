@@ -2396,6 +2396,10 @@
     <string name="sync_pass_confirm_fp">Confirmer l\'empreinte</string>
     <string name="sync_fingerprint">Empreinte d\'appairage — vérifiez-la en face à face sur l\'autre appareil avant de l\'activer :</string>
     <string name="sync_fingerprint_hint">Deux appareils avec des empreintes différentes ne partageront jamais rien</string>
+    <string name="sync_pair_code_label">Code d\'appairage (facultatif — pour le second appareil)</string>
+    <string name="sync_pair_code_hint">Laissez vide pour la compatibilité avec les anciennes versions ; pour un nouvel appairage, saisissez le code du premier appareil tel quel</string>
+    <string name="sync_pair_code_invalid">Code invalide — copiez-le exactement depuis l\'écran de l\'autre appareil</string>
+    <string name="sync_pair_code_show">Code d\'appairage (copiez-le sur l\'autre appareil) :</string>
     <string name="sync_save">Enregistrer</string>
     <string name="sync_cancel">Annuler</string>
     <string name="pulse_title">Pouls complet de l\'activité</string>
