@@ -1,6 +1,7 @@
 package com.superbiz.app.work
 
 import android.content.Context
+import androidx.room.withTransaction
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
@@ -80,13 +81,21 @@ class ZatcaReportWorker(
                 loadDue = { queued },
                 loadDocument = { id -> db.zatcaDocs().byInvoice(id)?.let { it.xml to it.xmlHash } },
                 onAccepted = { id, clearedXml, _ ->
-                    db.invoices().updateZatcaStatus(id, 2)
-                    db.zatcaDocs().markReported(id, System.currentTimeMillis())
-                    clearedXml?.let { db.zatcaDocs().markClearedXml(id, it) }
+                    // [AUD-4 إصلاح] الكتابة داخل معاملة واحدة — كانت 2-3 كتابات مستقلة
+                    // auto-commit: موت العملية بينها يترك zatcaStatus=2 مع reportedAt=0
+                    // (أو العكس) فيعلق الفاتورة في حالة متناقضة يحسبها العامل خطأً
+                    db.withTransaction {
+                        db.invoices().updateZatcaStatus(id, 2)
+                        db.zatcaDocs().markReported(id, System.currentTimeMillis())
+                        clearedXml?.let { db.zatcaDocs().markClearedXml(id, it) }
+                    }
                 },
                 onRejected = { id, errors ->
-                    db.invoices().updateZatcaStatus(id, 3)
-                    db.zatcaDocs().markRejected(id, errors.firstOrNull()?.let { "${it.code}: ${it.message}" } ?: "rejected")
+                    // [AUD-4 إصلاح] نفس المعاملة الواحدة لزوج الحالة+سبب الرفض
+                    db.withTransaction {
+                        db.invoices().updateZatcaStatus(id, 3)
+                        db.zatcaDocs().markRejected(id, errors.firstOrNull()?.let { "${it.code}: ${it.message}" } ?: "rejected")
+                    }
                 },
                 onDeferred = { id, newAttempts, _ ->
                     db.zatcaDocs().markDeferred(id, newAttempts)
