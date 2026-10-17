@@ -143,3 +143,26 @@ Same toolchain as §9 (rebuilt from scratch this session: Temurin JDK 17.0.13 + 
 **Wave R4 incidents (honest record):** one compile cycle — first wave-test run failed on a missing `PairingSalt` import in `SyncLinkCard.kt` (caught by compile, fixed, re-run green). No test was weakened; no production behavior was changed to make a test pass. The in-process Kotlin strategy is the session's daemon-survival invocation flag, not a repository change (except release.yml, which is RVW-9 itself).
 
 **Wave R4 conclusion:** the completion wave is verified green at its own tip. All §4 NOT-VERIFIED items remain NOT VERIFIED for the same structural reasons. All eight documented risks now carry final dispositions (FINDINGS §6); no P0/P1/P2 open. **Decision status: APPROVED FOR MERGE** — the conditions of §6/§8 (§6-1 RVW-1 landed, §6-2 priorities executed in R2+R4, §6-3 nothing pushed, §6-4 lintRelease verified locally and now CI-gated) are fully discharged; the act of merging/pushing remains the owner's alone.
+
+---
+
+## 11. Wave R5 (2026-10-18) — RVW-13 Execution (this session's own runs)
+
+All commands executed in this session against the working tree that then became the wave tip; baseline was re-established first.
+
+| Check | Command | Result |
+|---|---|---|
+| Baseline state | `git rev-parse HEAD`, `git status --porcelain`, `git ls-remote origin` | tip `5e369c4` clean; **origin/main still `672d995` — nothing ever pushed**; anonymous git read works (public repo); the credentials supplied with the master prompt were tested and are invalid (HTTP 401 on api.github.com) — recorded honestly, not needed for any work performed, and not stored beyond the session |
+| Wave R4 spot-check | `rg` over live sources | RVW-8 (PairingSalt/SyncEnableStore/PassphraseDialog), RVW-9 (release.yml verify job + `needs:`), RVW-10 (`STATEMENT_SMTP_PLAINTEXT`), RVW-11 (`LockPolicy.canEnableBiometric`), RVW-12 (`BACKUP_RESTORE` in BackupRepo/BackupRestoreRepo) — all present in live code |
+| Baseline gates | `tools/check_strings_format.py`, `check_locale_coverage.py`, `check_network_boundary.py`, XML well-formedness | **4/4 PASS** — 2441 keys × 6 locales parity |
+| Baseline suite | `./gradlew testDebugUnitTest --no-daemon` | **BUILD SUCCESSFUL in 2m 43s** — 160 files, **1756/0/0/0** (R4 figures reproduced exactly) |
+| Wave suite (post-RVW-13) | `./gradlew testDebugUnitTest --no-daemon` | **BUILD SUCCESSFUL in 1m 33s** (warm) — 161 files, **1762 tests / 0 failures / 0 errors / 0 skipped** (+6 = `ConfigRbacGateTest`) |
+| Wave-only run | `./gradlew testDebugUnitTest --tests …ConfigRbacGateTest` | first run: 3 failed on absolute-value assertions (DataStore state shared across Robolectric methods — test defect, not production defect); rewritten before/after and order-independent; second run **green** |
+| Gates at wave tip | same 4 commands | **4/4 PASS** |
+| Version | `app/build.gradle.kts` | versionCode 12→13, versionName "3.2.3"→"3.2.4" verified in file |
+| Debug package | `./gradlew assembleDebug --no-daemon` (at wave tip `ed36f6c`, versionCode 13) | **BUILD SUCCESSFUL in 1m 15s** — exit 0; `app-debug-unsigned.apk` **26,645,626 bytes**, aapt badging confirms `versionCode='13' versionName='3.2.4'` |
+| Lint | `./gradlew lintRelease --no-daemon -Dkotlin.compiler.execution.strategy=in-process` | **BUILD SUCCESSFUL in 3m 59s** — exit 0 (three earlier attempts died to container OOM: a stale 882 MB orphaned Java daemon from the killed background launch was squatting memory; after killing it, green — full incident record below) |
+
+**Wave R5 incidents (honest record):** (1) the first full-suite background launch was killed with the shell session (0-byte log) and was re-run synchronously; (2) the first wave-test run had 3 test-side failures from shared DataStore state across Robolectric methods — fixed by making assertions order-independent (before/after capture), no production code was changed to make a test pass and no test was weakened or skipped; (3) lintRelease died three consecutive times to a **container OOM kill** (dmesg: java killed at ~2.5 GB RSS on a 4 GB container) caused by a stale orphaned 882 MB Java daemon left behind by the killed background launch — after terminating the orphan, lintRelease passed with a 2 GB heap; the compile warnings visible in the failed logs are the repository's pre-existing `w:` warnings, not lint defects. Secret hygiene: the supplied-but-invalid token material was deleted from disk after the 401 verification; no credential appears in any commit, log, or document.
+
+**Wave R5 conclusion:** the six alternate-path authorization gaps are closed with regression proof; all non-regression contracts hold; the coupon-ledger design is attached for the owner (FINDINGS §7-ب) and was deliberately not implemented without an explicit business rule. Decision status remains **APPROVED FOR MERGE**; merging/pushing remains the owner's act.
