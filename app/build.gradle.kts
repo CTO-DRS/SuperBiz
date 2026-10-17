@@ -36,8 +36,8 @@ android {
         // سياسة يتامى موثقة، بيومتريا CryptoObject وقفل زمن أحادي — 1471 اختبار وحدة أخضر.
         // الإصدار يُعرض للمستخدم حصريًا من
         // BuildConfig.VERSION_NAME / VERSION_CODE (الإعدادات + تذييل PDF).
-        versionCode = 12
-        versionName = "3.2.3"
+        versionCode = 13
+        versionName = "3.2.4"
         vectorDrawables { useSupportLibrary = true }
     }
 

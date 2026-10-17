@@ -2097,8 +2097,24 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
     fun setOwnerName(v: String) = launchSafe { g.settings.setOwnerName(v) }
     fun setPhone(v: String) = launchSafe { g.settings.setPhone(v) }
     fun setEmail(v: String) = launchSafe { g.settings.setEmail(v) }
-    fun setAddress(v: String) = launchSafe { g.settings.setAddress(v) }
-    fun setTaxNumber(v: String) = launchSafe { g.settings.setTaxNumber(v) }
+    // [RVW-13 V 3.2.4] الهوية الضريبية للمالك = Op.TAX_OWNER_DATA (المالك وحده — مصفوفة §3 سطر 8).
+    // كان المُحدّثان مكشوفين على مستوى الـVM رغم بوابة البطاقة الجزئية في الواجهة —
+    // مسار بديل (Profile) يتيح لجلسة أدنى كتابة الرقم الضريبي للمنشأة. التنفيذ عند الحدّ,
+    // لا في Composable — وضع المالك الأحادي يمر حرفياً (IMPLICIT_OWNER، عقد §4.3).
+    fun setAddress(v: String) = launchSafe {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.TAX_OWNER_DATA
+        )
+        g.settings.setAddress(v)
+    }
+    fun setTaxNumber(v: String) = launchSafe {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.TAX_OWNER_DATA
+        )
+        g.settings.setTaxNumber(v)
+    }
 
     fun setBiometric(v: Boolean) = launchSafe { g.settings.setBiometric(v) }
 
@@ -2107,31 +2123,64 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
     fun markWelcomeSeen() = launchSafe { g.settings.setWelcomeSeen() }
     fun markPermissionsSeen() = launchSafe { g.settings.setPermissionsSeen() }
     // وظيفة 34: كل تغيير لعدد أيام النسخ التلقائي يعيد جدولة الـWorker الدوري فوراً
+    // [RVW-13 V 3.2.4] إعدادات الأتمتة = Op.GENERAL_SETTINGS (مصفوفة §3 سطر 10 — ضريبة/عملة/طابعات/أتمتة)
     fun setAutoBackupDays(v: Int) = launchSafe {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
         g.settings.setAutoBackupDays(v)
         com.superbiz.app.work.BackupWorker.schedule(getApplication(), v)
     }
 
     // جدولة إرسال التقرير A4 — كل تغيير يعيد الجدولة فوراً في WorkManager
+    // [RVW-13 V 3.2.4] تهيئة توصيل التقارير المالية (المستلم/القناة/التوقيت) = Op.GENERAL_SETTINGS
+    // (نفس بوابة شاشة الأتمتة في الخارطة) — جلسة أدنى لا توجّه تقارير مالية إلى عنوان خارجي.
     fun setReportScheduleDays(v: Int) = launchSafe {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
         g.settings.setReportScheduleDays(v)
         com.superbiz.app.work.ReportScheduleWorker.schedule(
             getApplication(), v, g.settings.snapshot().reportScheduleHour
         )
     }
     fun setReportScheduleHour(v: Int) = launchSafe {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
         g.settings.setReportScheduleHour(v)
         com.superbiz.app.work.ReportScheduleWorker.schedule(
             getApplication(), g.settings.snapshot().reportScheduleDays, v
         )
     }
-    fun setReportScheduleChannel(v: String) = launchSafe { g.settings.setReportScheduleChannel(v) }
+    fun setReportScheduleChannel(v: String) = launchSafe {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
+        g.settings.setReportScheduleChannel(v)
+    }
 
     // المستلم الافتراضي (بريد العميل/المالك المحفوظ) في جدولة التقرير
-    fun setReportRecipient(v: String) = launchSafe { g.settings.setReportRecipient(v) }
+    fun setReportRecipient(v: String) = launchSafe {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
+        g.settings.setReportRecipient(v)
+    }
 
-    // هدف المبيعات الشهري
-    fun setMonthlyGoal(v: Double) = launchSafe { g.settings.setMonthlyGoal(v) }
+    // هدف المبيعات الشهري — إعداد منشأة لا تفضيل شخصي [RVW-13 V 3.2.4]
+    fun setMonthlyGoal(v: Double) = launchSafe {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
+        g.settings.setMonthlyGoal(v)
+    }
 
     // ─── النسخ الاحتياطي ───
     fun exportTo(uri: Uri) = launchSafe {
@@ -2156,7 +2205,13 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
         else getApplication<Application>().getString(com.superbiz.app.R.string.backup_fail)
     }
 
+    // [RVW-13 V 3.2.4] مجلد النسخ الاحتياطي = Op.BACKUP_RESTORE (المالك وحده — مصفوفة §3 سطر 12):
+    // وجهة كتابة أرشيف الأعمال كاملها لا تُغيَّر بجلسة أدنى.
     fun setBackupDir(uri: Uri?) = launchSafe {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
         g.settings.setBackupDir(uri?.toString())
         uri?.let {
             try {
@@ -2178,7 +2233,13 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
     // OpenDocumentTree في مركز الإعدادات: إذن المجلد takePersistableUriPermission يُثبَّت في طبقة
     // العرض قبل الاستدعاء، وتمرير null (المسح) يزيل المفتاح فيعود النسخ التلقائي للمسار الداخلي.
     // يستمر استهلاك backupDirUri من الـWorker الجديد SafBackupMirror (نسخ مرآة SAF بعد كل exportLocal).
-    fun setBackupDir(uri: String?) = launchSafe { g.settings.setBackupDir(uri) }
+    fun setBackupDir(uri: String?) = launchSafe {
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
+        g.settings.setBackupDir(uri)
+    }
 
     fun wipeAll() = launchSafe {
         // مسح ذرّي آمن داخل معاملة ثم إعادة بذر العملات والقواعد فوراً
@@ -2247,6 +2308,14 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
 
     /** استيراد بتحقق صارم: قائمة بيضاء + نوع + نطاق — الرفض كلي عند أي مفتاح/قيمة غير صالحة */
     fun importSettingsFrom(uri: Uri, onResult: (Int, String?) -> Unit) = launchSafe {
+        // [RVW-13 V 3.2.4] الاستيراد مُغيّر مجمّع لمفاتيح حسّاسة (الضريبة/العملة/الولاية/القفل/
+        // علم الخصوصية/مستلم التقارير/جدولة النسخ) — يتطلب أقوى بوابة لمفاتيح يكتبها:
+        // Op.GENERAL_SETTINGS (المالك والمدير — مصفوفة §3 سطر 10). المسار المباشر لكل مفتاح
+        // مُسوّر أصلًا؛ الاستيراد كان الثغرة الجانبية التي تلتف على تلك البوابات.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
         val text = try {
             withContext(Dispatchers.IO) {
                 getApplication<Application>().contentResolver.openInputStream(uri)?.use { inp ->
