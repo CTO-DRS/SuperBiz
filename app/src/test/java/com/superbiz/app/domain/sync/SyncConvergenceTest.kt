@@ -259,4 +259,40 @@ class SyncConvergenceTest {
         val partyOnB = importedVisit?.partyId?.let { dbB.parties().byId(it) }
         assertEquals("عميل الزيارات", partyOnB?.name)
     }
+
+    // ═══════════ [AUD-3] عدّاد استهلاك الكوبون لا يجوز LWW — إصلاح الإنفاق المزدوج ═══════════
+    //
+    // السيناريو الحتمي للعلة القديمة: جهاز A يستهدِم الكوبون (usedCount 0→1) دون اتصال،
+    // وجهاز B يعدّل بيانات الكوبون (لا استهلاك) بساعة أحدث — مزامنة LWW كانت تُنزل صفّ B
+    // فوق صفّ A فتمحو الاستهلاك ويتاح الكوبون للاستهلاك من جديد (إنفاق مزدوج عبر الأجهزة).
+    // العقد المصلَح: usedCount يُدمج بـmax فلا ينقص تحت أعلى عدد حقيقي مرصود.
+    @Test
+    fun `coupon usedCount survives LWW edit from a peer that never consumed`() = runBlocking {
+        val relay = Loopback()
+        val now = System.currentTimeMillis()
+
+        // 1) A ينشئ كوبون maxUses=2 ويزامن (B يستورده — usedCount=0)
+        val cid = dbA.coupons().upsert(
+            com.superbiz.app.data.db.CouponEntity(code = "SYNC-1", maxUses = 2, active = true)
+        )
+        round(engineA, relay); round(engineB, relay)
+        assertEquals(0, dbB.coupons().byOrigin("aaaa-device", cid)?.usedCount)
+
+        // 2) دون اتصال: A يستهلك (0→1 ذرياً) وB يعدّل الملاحظة بساعة أحدث بلا استهلاك
+        assertEquals(1, dbA.coupons().consume(cid, now))
+        val bRow = dbB.coupons().byOrigin("aaaa-device", cid)!!
+        dbB.coupons().upsert(bRow.copy(note = "تعديل من B"))
+        forceClock(dbA, "coupons", cid, 5_000L)
+        forceClock(dbB, "coupons", bRow.id, 6_000L)
+
+        // 3) جولتا دفع وسحب حتى التقارب الكامل
+        round(engineA, relay); round(engineB, relay)
+        round(engineA, relay); round(engineB, relay)
+
+        // 4) الحكم: استهلاك A محفوظ على الجهازين (القديم كان يصفّره على A)
+        assertEquals("استهلاك A باقٍ على A", 1, dbA.coupons().byId(cid)?.usedCount)
+        assertEquals("استهلاك A انتقل إلى B", 1, dbB.coupons().byOrigin("aaaa-device", cid)?.usedCount)
+        // وتحرير B (الملاحظة) وصل أيضاً — الدمج حفظ القيمتين لا صراع خاسر
+        assertEquals("تعديل B باقٍ", "تعديل من B", dbA.coupons().byId(cid)?.note)
+    }
 }

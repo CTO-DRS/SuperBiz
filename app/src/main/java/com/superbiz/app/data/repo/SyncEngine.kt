@@ -95,6 +95,15 @@ class SyncEngine(
         abstract suspend fun deleteByKey(key: String, my: String): Boolean
         abstract fun bodyOf(row: T, my: String): String
         abstract fun fromBody(m: Map<*, *>, key: String): T
+
+        /**
+         * [AUD-3 إصلاح] دمج عدّاد أحادي الاتجاه من صف خسر قرار LWW — يُستدعى حين
+         * يفوز الصف المحلي بالساعة رغم أن الوارد يحمل عدّاداً أعلى (استهلاك حقيقي
+         * حدث على الجهاز الآخر). يُدمج العدّاد حصراً دون مساس ببقية الحقول أو الساعة،
+         * والكتابة تحت كابح المشغّلات فلا تعود الدفتر ولا تُعيد فتح النزاع.
+         * يعيد true إن كان دمجاً كُتب. الافتراضي false (لا عدّادات لدى بقية الجداول).
+         */
+        open suspend fun counterMerge(local: T, incoming: T): Boolean = false
     }
 
     private fun adapterFor(table: String): Adapter<*>? = when (table) {
@@ -280,11 +289,20 @@ class SyncEngine(
         override suspend fun applyIncoming(incoming: CouponEntity, key: String, at: Long, my: String): Boolean {
             val local = findByKey(key, my)
             val (pod, poid) = originPair(key, my, local?.id ?: 0L)
+            // [AUD-3 إصلاح] usedCount لا يجوز LWW — كان العدّاد المحلي يُداس بآخر كاتب:
+            // استهلاك على جهازين للكوبون نفسه (0→1 على كل منهما) يُبطل أحد الاستهلاكين
+            // عند المزامنة فينفق كوبون maxUses=1 مرتين. الدمج بـmax يحفظ أعلى عدّاد
+            // حقيقي — الاستهلاك اليوم أحادي الاتجاه (لا مسار إنقاص في CouponDao كله)
+            // فmax دقيق دائمًا؛ إن أُضيف مستقبلًا مسار إفراج عن استهلاك (ربط الإلغاء)
+            // وجب الانتقال إلى دفتر استهلاك append-only يُجمع لا إلى عدّاد. القيد الذري
+            // consume (WHERE usedCount < maxUses) يبقى حارس الاستهلاك الفردي،
+            // وهذا الدمج حارس التقارب بين الأجهزة.
+            val mergedUsed = maxOf(local?.usedCount ?: 0, incoming.usedCount)
             db.coupons().upsert((local ?: incoming).copy(
                 id = local?.id ?: 0,
                 code = incoming.code, kind = incoming.kind, amountPiasters = incoming.amountPiasters,
                 percent = incoming.percent, expiresAt = incoming.expiresAt, maxUses = incoming.maxUses,
-                usedCount = incoming.usedCount, active = incoming.active, note = incoming.note,
+                usedCount = mergedUsed, active = incoming.active, note = incoming.note,
                 createdAt = incoming.createdAt,
                 syncUpdatedAt = at, originDeviceId = pod, originId = poid
             )); return true
@@ -292,6 +310,14 @@ class SyncEngine(
         override suspend fun deleteByKey(key: String, my: String): Boolean {
             val local = findByKey(key, my) ?: return false
             db.coupons().delete(local.id); return true
+        }
+        // [AUD-3 إصلاح] استهلاك الكوبون عدّاد أحادي الاتجاه — الوارد الأقدم ساعة
+        // (خسر LWW) قد يحمل عدّاداً أعلى من الحقيقة المحلية: يُمتص بـmax دون مساس
+        // ببقية الحقول (تحرير B المحلي يبقى مالكها) ولا الساعة (لا إعادة فتح نزاع)
+        override suspend fun counterMerge(local: CouponEntity, incoming: CouponEntity): Boolean {
+            if (incoming.usedCount <= local.usedCount) return false
+            db.coupons().upsert(local.copy(usedCount = incoming.usedCount))
+            return true
         }
         override fun bodyOf(row: CouponEntity, my: String) = "{\"code\":" + w(row.code) + ",\"kind\":" + w(row.kind) +
             ",\"amountPiasters\":" + w(row.amountPiasters) + ",\"percent\":" + w(row.percent) +
@@ -473,7 +499,20 @@ class SyncEngine(
                     // تحرير B لصف أصله A ليس صداً على A
                     if (!SyncMerge.remoteWins(at, localClock, fromDevice, my)) {
                         if (deleted) recordTombstone(table, key, at)
-                        skipped++; continue
+                        // [AUD-3 إصلاح] خسارة LWW لا تلغي حقيقة عدّاد أعلى: استهلاك حقيقي
+                        // على الجهاز الآخر يجب أن يُمتص محلياً وإن كان صفّه أقدم ساعة —
+                        // وإلا عاد الكوبون قابلاً للاستهلاك من جديد (إنفاق مزدوج عبر الأجهزة)
+                        if (!deleted && local != null) {
+                            val incomingRow = (m["r"] as? Map<*, *>)
+                                ?.let { runCatching { adapter.fromBody(it, key) }.getOrNull() }
+                            if (incomingRow != null && runCatching {
+                                    @Suppress("UNCHECKED_CAST")
+                                    (a as Adapter<Any>).counterMerge(local, incomingRow)
+                                }.getOrDefault(false)) applied++ else skipped++
+                        } else {
+                            skipped++
+                        }
+                        continue
                     }
                     if (deleted) {
                         val ok = runCatching { adapter.deleteByKey(key, my) }.getOrDefault(false)
