@@ -66,7 +66,8 @@ class ReportsRepo(private val db: AppDatabase) {
             series[d]?.let { it[0] += inv.total }
         }
         val dailyExpense = db.journal()
-            .accountRowsBetween(Accounts.EXPENSE, from, today + 86_399_999L)
+            // [AUD-6 إصلاح] نهاية اليوم عبر التقويم (DST-safe) بدل +86,399,999 الثابتة
+            .accountRowsBetween(Accounts.EXPENSE, from, com.superbiz.app.domain.algo.TimeMath.endOfDay(today))
         for (r in dailyExpense) {
             val d = Dates.startOfDay(r.date)
             series[d]?.let { it[1] += r.debit }
@@ -105,7 +106,8 @@ class ReportsRepo(private val db: AppDatabase) {
         // الصرف النقدي (EXPENSE/CASH) يُحسب كاملاً، وعجز الجرد والخصم المبكر
         // يُستثنيان صفراً، وأي قيد مختلط مستقبلي يُحسب منه النقدي min(debit, cashCredit).
         val expenseRows = db.journal().accountRowsBetweenCashSettled(
-            Accounts.EXPENSE, Accounts.CASH, from, today + 86_399_999L
+            // [AUD-6 إصلاح] نهاية اليوم عبر التقويم (DST-safe) بدل +86,399,999 الثابتة
+            Accounts.EXPENSE, Accounts.CASH, from, com.superbiz.app.domain.algo.TimeMath.endOfDay(today)
         )
         for (r in expenseRows) {
             val d = Dates.startOfDay(r.date)

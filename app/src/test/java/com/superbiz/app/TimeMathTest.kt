@@ -158,4 +158,47 @@ class TimeMathTest {
         assertNotEquals(t1, t2)
         assertEquals(15, d1)
     }
+
+    // ═══════════ [AUD-6] نهاية اليوم DST-safe عبر التقويم ═══════════
+    // في يوم 25 ساعة (رجوع التوقيت) endOfDay القديم (startOfDay + 86,399,999)
+    // كان يُسقط الساعة 23:00–24:00، وفي يوم 23 ساعة (تقدّم التوقيت) كان يسرّب
+    // الساعة الأولى من اليوم التالي. New York: 2026-11-01 = 25 ساعة، 2026-03-08 = 23 ساعة.
+
+    private fun withTimeZone(tz: String, block: () -> Unit) {
+        val saved = java.util.TimeZone.getDefault()
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(tz))
+        try { block() } finally { java.util.TimeZone.setDefault(saved) }
+    }
+
+    @Test
+    fun `endOfDay covers the full 25h DST fall-back day`() = withTimeZone("America/New_York") {
+        val fallBackDay = at(2026, 11, 1, 12)   // يوم رجوع التوقيت في أمريكا
+        val c = Calendar.getInstance().apply { timeInMillis = endOfDay(fallBackDay) + 1 }
+        // أول ملّي ثانية بعد نهاية اليوم = منتصف ليلة 2 نوفمبر
+        assertEquals(2, c.get(Calendar.DAY_OF_MONTH))
+        assertEquals(Calendar.NOVEMBER, c.get(Calendar.MONTH))
+        // طول اليوم الفعلي 25 ساعة ناقص 1ms — وليس 24h-1ms الثابتة القديمة
+        assertEquals(25 * 3_600_000L - 1, endOfDay(fallBackDay) - startOfDay(fallBackDay))
+        // ساعة 23:30 المحلية (بعد التراجع) داخل اليوم لا خارجه
+        val lateEvening = Calendar.getInstance().apply {
+            clear(); set(2026, 10, 1, 23, 30, 0)
+        }.timeInMillis
+        assertTrue(endOfDay(fallBackDay) >= lateEvening)
+        assertTrue(isSameLocalDay(lateEvening, fallBackDay))
+    }
+
+    @Test
+    fun `endOfDay covers exactly the 23h DST spring-forward day`() = withTimeZone("America/New_York") {
+        val springForwardDay = at(2026, 3, 8, 12)   // يوم تقدّم التوقيت في أمريكا
+        // نهاية اليوم = أول ملّي ثانية قبل منتصف ليلة 9 مارس — لا تسرب للغد
+        val nextMidnight = Calendar.getInstance().apply { clear(); set(2026, 2, 9, 0, 0, 0) }.timeInMillis
+        assertEquals(nextMidnight - 1, endOfDay(springForwardDay))
+        // طول اليوم الفعلي 23 ساعة ناقص 1ms
+        assertEquals(23 * 3_600_000L - 1, endOfDay(springForwardDay) - startOfDay(springForwardDay))
+        // وفي المناطق بلا توقيت صيفي (Riyadh) السلوك القديم بايتاً ببايت
+        withTimeZone("Asia/Riyadh") {
+            val normal = at(2026, 2, 10, 12)
+            assertEquals(startOfDay(normal) + 86_399_999L, endOfDay(normal))
+        }
+    }
 }
