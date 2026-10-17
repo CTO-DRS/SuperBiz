@@ -2520,6 +2520,10 @@
     <string name="sync_pass_confirm_fp">تأكيد البصمة</string>
     <string name="sync_fingerprint">بصمة الإقران — طابِقها وجهاً لوجه على الجهاز الآخر قبل تفعيله:</string>
     <string name="sync_fingerprint_hint">جهازان ببصمتين مختلفتين لن يشاركا أي شيء أبداً</string>
+    <string name="sync_pair_code_label">رمز الإقران (اختياري — للجهاز الثاني)</string>
+    <string name="sync_pair_code_hint">اتركه فارغاً للتوافق مع النسخ القديمة؛ للإقران الجديد أدخل رمز الجهاز الأول كما هو</string>
+    <string name="sync_pair_code_invalid">رمز غير صالح — انسخه من شاشة الجهاز الآخر حرفياً</string>
+    <string name="sync_pair_code_show">رمز الإقران (انسخه إلى الجهاز الآخر):</string>
     <string name="sync_save">حفظ</string>
     <string name="sync_cancel">إلغاء</string>
     <string name="pulse_title">نبض العمل الكامل</string>

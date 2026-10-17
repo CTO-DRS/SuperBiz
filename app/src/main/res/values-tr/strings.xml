@@ -2397,6 +2397,10 @@
     <string name="sync_pass_confirm_fp">Parmak İzi Onayı</string>
     <string name="sync_fingerprint">Eşleştirme Parmak İzi — Etkinleştirmeden önce diğer cihazda yüz yüze karşılaştırın:</string>
     <string name="sync_fingerprint_hint">Farklı parmak izlerine sahip iki cihaz asla hiçbir şeyi paylaşmaz</string>
+    <string name="sync_pair_code_label">Eşleştirme kodu (isteğe bağlı — ikinci cihaz için)</string>
+    <string name="sync_pair_code_hint">Eski sürümlerle uyumluluk için boş bırakın; yeni eşleştirme için ilk cihazın kodunu olduğu gibi girin</string>
+    <string name="sync_pair_code_invalid">Geçersiz kod — diğer cihazın ekranından olduğu gibi kopyalayın</string>
+    <string name="sync_pair_code_show">Eşleştirme kodu (diğer cihaza kopyalayın):</string>
     <string name="sync_save">Kaydet</string>
     <string name="sync_cancel">İptal</string>
     <string name="pulse_title">İşlem Nabzı</string>

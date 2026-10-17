@@ -80,6 +80,9 @@ class SyncEnableStore(private val context: Context) : SyncClock {
     private val kNoncePrefix = stringPreferencesKey("sync_nonce_prefix")
     private val kPullCursors = stringPreferencesKey("sync_pull_cursors")
     private val kWrappedKek = stringPreferencesKey("sync_wrapped_kek")
+    // [RVW-8 V 3.2.3] ملح الإقران لكل زوج — نص Base64 عام بالتصميم (ليس سراً)،
+    // شرط الأمان تفرّده لا سرّيته — راجع PairingSalt.kt للعقد الكامل.
+    private val kPairingSalt = stringPreferencesKey("sync_pairing_salt")
 
     override suspend fun deviceId(): String = deviceIdOnce()
 
@@ -127,4 +130,13 @@ class SyncEnableStore(private val context: Context) : SyncClock {
     suspend fun setWrappedKek(b64: String) { context.syncDataStore.edit { it[kWrappedKek] = b64 } }
 
     suspend fun clearWrappedKek() { context.syncDataStore.edit { it.remove(kWrappedKek) } }
+
+    /** [RVW-8 V 3.2.3] ملح الإقران المُخزَّن (Base64) — فارغ = إقران legacy بلا ملح خاص. */
+    suspend fun pairingSaltOnce(): String = runCatching {
+        context.syncDataStore.data.map { it[kPairingSalt] ?: "" }.first()
+    }.getOrDefault("")
+
+    suspend fun setPairingSalt(b64: String) { context.syncDataStore.edit { it[kPairingSalt] = b64.trim() } }
+
+    suspend fun clearPairingSalt() { context.syncDataStore.edit { it.remove(kPairingSalt) } }
 }

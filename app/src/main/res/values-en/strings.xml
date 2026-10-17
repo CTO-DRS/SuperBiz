@@ -2520,6 +2520,10 @@
     <string name="sync_pass_confirm_fp">Confirm fingerprint</string>
     <string name="sync_fingerprint">Pairing fingerprint — verify it face-to-face on the other device before enabling:</string>
     <string name="sync_fingerprint_hint">Two devices with different fingerprints will never share anything</string>
+    <string name="sync_pair_code_label">Pairing code (optional — for the second device)</string>
+    <string name="sync_pair_code_hint">Leave empty for compatibility with older versions; for a new pairing enter the first device\'s code exactly</string>
+    <string name="sync_pair_code_invalid">Invalid code — copy it exactly from the other device\'s screen</string>
+    <string name="sync_pair_code_show">Pairing code (copy it to the other device):</string>
     <string name="sync_save">Save</string>
     <string name="sync_cancel">Cancel</string>
     <string name="pulse_title">Full business pulse</string>

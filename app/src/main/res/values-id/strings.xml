@@ -2397,6 +2397,10 @@
     <string name="sync_pass_confirm_fp">Konfirmasi sidik jari</string>
     <string name="sync_fingerprint">Sidik jari pemasangan — cocokkan secara tatap muka di perangkat lain sebelum mengaktifkannya:</string>
     <string name="sync_fingerprint_hint">Dua perangkat dengan sidik jari berbeda tidak akan pernah berbagi apa pun</string>
+    <string name="sync_pair_code_label">Kode pemasangan (opsional — untuk perangkat kedua)</string>
+    <string name="sync_pair_code_hint">Biarkan kosong untuk kompatibilitas dengan versi lama; untuk pemasangan baru masukkan kode perangkat pertama apa adanya</string>
+    <string name="sync_pair_code_invalid">Kode tidak valid — salin persis dari layar perangkat lain</string>
+    <string name="sync_pair_code_show">Kode pemasangan (salin ke perangkat lain):</string>
     <string name="sync_save">Simpan</string>
     <string name="sync_cancel">Batal</string>
     <string name="pulse_title">Denyut usaha lengkap</string>
