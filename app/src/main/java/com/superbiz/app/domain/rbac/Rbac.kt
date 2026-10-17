@@ -160,12 +160,36 @@ object SessionState {
     /** هوية المالك الضمنية لوضع الجهاز الأحادي قبل إنشاء جلسة صريحة */
     val IMPLICIT_OWNER = SessionIdentity(0L, "owner", Role.OWNER)
 
+    /**
+     * [RVW-5 V 3.2.2] هوية العمليات النظامية الخلفية (عمّال WorkManager:
+     * مزامنة، كشوف مجدولة، أتمتة) حين يعمل الجهاز بوضع تعدد المستخدمين بلا
+     * جلسة حية. الدور OWNER كي تبقى الكتابات الخلفية المشروعة تعمل أثناء
+     * القفل (عقد الأتمتة الموثق — إغلاق ذلك إنفاذياً كلياً قرار تصميم
+     * منفصل)، والاسم "system" يجعل أسطر audit_log تميز عمل النظام عن عمل
+     * مالك بشري — بدل «owner» المزيف الذي يطمس الفرق بينهما.
+     */
+    val SYSTEM = SessionIdentity(0L, "system", Role.OWNER)
+
+    /**
+     * [RVW-5 V 3.2.2] وضع تعدد المستخدمين — يُضبط من UsersVM/AppGraph حسب
+     * عدد المستخدمين النشطين (>1) عند كل إقلاع عملية وعند كل قراءة مستخدمين.
+     * في هذا الوضع لا يجوز إسناد «المالك الضمني» لمن لا جلسة صريحة له؛
+     * الهوية الفعالة بلا جلسة تصبح SYSTEM (إسناد نظام صادق في التدقيق).
+     * الوضع الأحادي يبقى على عقد IMPLICIT_OWNER الحرفي (تصميم §4.3).
+     */
+    @Volatile
+    var multiUserMode: Boolean = false
+
     @Volatile
     var current: SessionIdentity? = null
         private set
 
-    /** الهوية الفعالة — الجلسة الصريحة أو المالك الضمني (عقد RoleGate أعلاه) */
-    fun effective(): SessionIdentity = current ?: IMPLICIT_OWNER
+    /**
+     * الهوية الفعالة — الجلسة الصريحة أولاً، وإلا هوية الوضع:
+     * مالك ضمني (جهاز أحادي المالك) أو نظام (تعدد مستخدمين، إسناد صادق).
+     */
+    fun effective(): SessionIdentity =
+        current ?: if (multiUserMode) SYSTEM else IMPLICIT_OWNER
 
     /** هل توجد جلسة مستخدم صريحة (وضع متعدد المستخدمين نشط)؟ */
     val hasExplicitSession: Boolean get() = current != null
