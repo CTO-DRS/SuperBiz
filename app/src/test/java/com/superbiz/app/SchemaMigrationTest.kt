@@ -884,7 +884,7 @@ class SchemaMigrationTest {
             assertEquals(10, migration.startVersion)
             assertEquals(11, migration.endVersion)
             migration.migrate(db)
-            assertEquals("القائمة صارت 15 ترحيلات — الأخير المزامنة المشفرة 15→16", 15, com.superbiz.app.AppGraph.MIGRATIONS.size)
+            assertEquals("القائمة صارت 16 ترحيلات — الأخير فهارس الهوية 16→17", 16, com.superbiz.app.AppGraph.MIGRATIONS.size)
 
             // 1) العمودان بألفة Room المتوقعة
             assertEquals("taxKind INTEGER", "INTEGER", columnType(db, "invoice_items", "taxKind"))
@@ -962,7 +962,7 @@ class SchemaMigrationTest {
             assertEquals(11, migration.startVersion)
             assertEquals(12, migration.endVersion)
             migration.migrate(db)
-            assertEquals("القائمة صارت 15 ترحيلات — الأخير المزامنة المشفرة 15→16", 15, com.superbiz.app.AppGraph.MIGRATIONS.size)
+            assertEquals("القائمة صارت 16 ترحيلات — الأخير فهارس الهوية 16→17", 16, com.superbiz.app.AppGraph.MIGRATIONS.size)
 
             // 1) الجدولان وُجدا بألفة Room المتوقعة
             assertEquals("partyId INTEGER", "INTEGER", columnType(db, "loyalty_entries", "partyId"))
@@ -1002,6 +1002,72 @@ class SchemaMigrationTest {
 
             // 6) foreign_key_check نظيف على كامل القاعدة
             assertEquals("foreign_key_check: لا صفوف يتيمة", 0L, countRows(db, "PRAGMA foreign_key_check"))
+        } finally {
+            db.close()
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // [AUD-8] ترحيل 16→17: فهارس الهوية على الجداول الثمانية
+    // إنشاء فهارس حصراً — لا أعمدة ولا جداول ولا بيانات تُمس. المعيار:
+    // الفهارس الثمانية بأسماء Room القياسية موجودة، البيانات القائمة حية،
+    // والتكرار آمن (IF NOT EXISTS) وbyOrigin يعمل بعدها.
+    // ═══════════════════════════════════════════════════════════════════
+    @Test
+    fun migration16to17_createsIdentityIndexesOnly() {
+        val ctx = ApplicationProvider.getApplicationContext<Context>()
+        val identityTables = listOf("parties", "products", "visits", "coupons", "statement_templates", "signatures", "stamps", "note_templates")
+        val config = SupportSQLiteOpenHelper.Configuration.builder(ctx)
+            .name(null)
+            .callback(object : SupportSQLiteOpenHelper.Callback(16) {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    // بنية v16 مصغّرة تكفي الترحيل: الجداول الثمانية بهوية الأصل
+                    // (الترحيل إنشاء فهارس حصراً فلا يلمس غيرها)
+                    for (t in identityTables) {
+                        db.execSQL("CREATE TABLE IF NOT EXISTS `$t` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `originDeviceId` TEXT NOT NULL DEFAULT '', `originId` INTEGER NOT NULL DEFAULT 0)")
+                    }
+                }
+                override fun onUpgrade(db: SupportSQLiteDatabase, old: Int, new: Int) = Unit
+            })
+            .build()
+        val helper = FrameworkSQLiteOpenHelperFactory().create(config)
+        val db = helper.writableDatabase
+        try {
+            // بذور: صفوف قائمة بهوية أصل — يجب أن تبقى حية
+            for (t in identityTables) {
+                db.execSQL("INSERT INTO `$t` (`originDeviceId`, `originId`) VALUES ('DEV-A', 7)")
+            }
+
+            val migration = com.superbiz.app.AppGraph.MIGRATIONS[15]
+            assertEquals(16, migration.startVersion)
+            assertEquals(17, migration.endVersion)
+            migration.migrate(db)
+            assertEquals("القائمة صارت 16 ترحيلات — الأخير فهارس الهوية 16→17", 16, com.superbiz.app.AppGraph.MIGRATIONS.size)
+
+            // 1) الفهارس الثمانية موجودة بأسماء Room القياسية وعمودَيها الصحيحان
+            for (t in identityTables) {
+                val expected = "index_${t}_originDeviceId_originId"
+                db.query("SELECT name, sql FROM sqlite_master WHERE type = 'index' AND name = '$expected'").use { c ->
+                    assertTrue("فهرس $expected مفقود", c.moveToFirst())
+                    val sql = c.getString(1) ?: ""
+                    assertTrue("فهرس $expected بعمودَي الهوية", sql.contains("originDeviceId") && sql.contains("originId"))
+                }
+            }
+
+            // 2) البيانات القائمة كلها حية بلا مساس (CREATE INDEX لا يلمس الصفوف)
+            for (t in identityTables) {
+                assertEquals("صف $t حي", 1L, scalar(db, "SELECT COUNT(*) FROM `$t` WHERE originDeviceId = 'DEV-A'"))
+            }
+
+            // 3) byOrigin بعد الترحيل يجد الصف عبر الفهرس (EXPLAIN يكشف مسح الفهرس)
+            db.query("SELECT * FROM parties WHERE originDeviceId = 'DEV-A' AND originId = 7").use { c ->
+                assertTrue("byOrigin يعيد الصف المستورَد", c.moveToFirst())
+            }
+
+            // 4) التكرار آمن — IF NOT EXISTS لا يرمي على إعادة التشغيل
+            migration.migrate(db)
+            assertEquals("التكرار بلا أثر", 8L, scalar(db,
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name LIKE 'index_%_originDeviceId_originId'"))
         } finally {
             db.close()
         }

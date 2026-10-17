@@ -44,7 +44,7 @@ class AppGraph(val context: android.content.Context) {
             // [H1-3][v13]: أُضيف MIGRATION_12_13 — نسيانه هنا يعني فشل فتح قاعدة v12 القائمة
             // [Z2-أ][v14]: أُضيف MIGRATION_13_14 — نسيانه هنا يعني فشل فتح قاعدة v13 القائمة
             // [H4-1][v15]: أُضيف MIGRATION_14_15 — نسيانه هنا يعني فشل فتح قاعدة v14 القائمة
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17)
             .build()
     }
     val settings by lazy { SettingsRepo(context) }
@@ -898,6 +898,20 @@ class AppGraph(val context: android.content.Context) {
             }
         }
 
+        // [AUD-8 V 3.2.1] فهارس الهوية على الجداول الثمانية — byOrigin(originDeviceId, originId)
+        // تُستدعى لكل صف وارد في دفعة مزامنة (applyIncoming → findByKey) وكانت مسحًا كاملاً
+        // O(N) بلا فهرس فتجعل دفعة من M صفًا على جدول كبير O(M×N) داخل معاملة واحدة.
+        // ترحيل إنشاء فهارس حصراً — لا أعمدة ولا جداول ولا بيانات تُمس (إلحاقي خالص وفق عقد
+        // الترحيلات الموثق). أسماء الفهارس صيغة Room القياسية index_<جدول>_<عمود>_<عمود>
+        private val MIGRATION_16_17 = object : androidx.room.migration.Migration(16, 17) {
+            override fun migrate(d: androidx.sqlite.db.SupportSQLiteDatabase) {
+                val identityTables = listOf("parties", "products", "visits", "coupons", "statement_templates", "signatures", "stamps", "note_templates")
+                for (t in identityTables) {
+                    d.execSQL("CREATE INDEX IF NOT EXISTS `index_${t}_originDeviceId_originId` ON `$t` (`originDeviceId`, `originId`)")
+                }
+            }
+        }
+
         // قائمة الترقيات مكشوفة للاختبارات (SchemaMigrationTest يشغّل كل ترحيل فعلياً) —
         // تُعرّف بعد الترحيلات لأن تهيئة خصائص Kotlin تتم بترتيب الإعلان
         // [P11-a]: MIGRATION_6_7 أُلحقت بالنهاية — الفهرسة بالموضع في الاختبارات تبقى صحيحة
@@ -908,7 +922,8 @@ class AppGraph(val context: android.content.Context) {
         // [H1-3]: MIGRATION_12_13 أُلحقت بالنهاية — الفهرس 11 هو RBAC + ZATCA-2 المشترك
         // [Z2-أ]: MIGRATION_13_14 أُلحقت بالنهاية — الفهرس 12 هو أرشيف zatca_docs
         // [H4-1]: MIGRATION_14_15 أُلحقت بالنهاية — الفهرس 13 هو ختم الفئة الأصلية
-        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
+        // [AUD-8]: MIGRATION_16_17 أُلحقت بالنهاية — الفهرس 15 هو فهارس الهوية
+        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17)
 
         /**
          * [H1-3] مزوّد بذرة رمز المالك — يُربط في AppGraph.db قبل بناء القاعدة بقراءة
