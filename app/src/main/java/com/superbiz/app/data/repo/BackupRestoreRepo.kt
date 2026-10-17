@@ -83,6 +83,14 @@ class BackupRestoreRepo(
      */
     suspend fun exportTo(uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
         try {
+            // [RVW-12 V 3.2.3] بوابة RBAC طبقة البيانات — الگمّة الجوهرية (مصفوفة الأدوار:
+            // BACKUP_RESTORE للمالك وحده). الجلسة الصريحة للكاشير/المحاسب/المدير تُرفض
+            // هنا حتى لو وصلت من مسار VM مستقبلي غير مؤمّن — دفاع عميق لا تغيير سلوك:
+            // المالك/الضمني (عقد §4.3) وSYSTEM (عقد الأتمتة) يمروان حرفياً.
+            com.superbiz.app.domain.rbac.RoleGate.require(
+                com.superbiz.app.domain.rbac.SessionState.effective(),
+                com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+            )
             // [تدقيق H-3] بناء BackupData داخل معاملة Room واحدة — عزل اللقطة يجعل
             // النسخة متسقة (فاتورة بلا بنودها لا تولد)، مطابقة لإصلاح المسار الأول في BackupRepo.
             val data = db.withTransaction {
@@ -147,6 +155,11 @@ class BackupRestoreRepo(
 */
     suspend fun importFrom(uri: Uri): Result<ImportStats> = withContext(Dispatchers.IO) {
         try {
+            // [RVW-12 V 3.2.3] نفس بوابة التصدير — الاستعادة أعلى مخاطر الاغتراب على الإطلاق.
+            com.superbiz.app.domain.rbac.RoleGate.require(
+                com.superbiz.app.domain.rbac.SessionState.effective(),
+                com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+            )
             val text = readTextCapped(uri)
             val parsed = parseBackup(text)
             val data = parsed.data

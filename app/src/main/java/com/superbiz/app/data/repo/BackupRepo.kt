@@ -415,6 +415,13 @@ class BackupRepo(
 
     /** كتابة الملف إلى Uri عبر SAF */
     suspend fun exportTo(uri: Uri): Boolean = withContext(Dispatchers.IO) {
+        // [RVW-12 V 3.2.3] بوابة RBAC (BACKUP_RESTORE — المالك وحده) قبل try كي يُرمى
+        // الرفض استثناءً ظاهراً لا يتحول إلى false صامت. الضمني/SYSTEM يمران حرفياً
+        // (عقد §4.3 وعقد الأتمتة) — دفاع عميق فقط.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
         // كل تسلسل JSON + إدخال/إخراج الملف انتقل إلى Dispatcher.IO بدل خيط الاستدعاء (H-06)
         try {
             val json = exportJson()
@@ -429,6 +436,11 @@ class BackupRepo(
 
     /** نسخة تلقائية داخل مسار التطبيق (يستخدمها العامل الأسبوعي) */
     suspend fun exportLocal(): File {
+        // [RVW-12 V 3.2.3] نفس البوابة — العامل الأسبوعي (SYSTEM/ضمني = OWNER) يمر حرفياً.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
         val dir = File(context.filesDir, "backups").apply { mkdirs() }
         val name = "superbiz-auto-${System.currentTimeMillis()}.json"
         val f = File(dir, name)
@@ -481,6 +493,11 @@ class BackupRepo(
      * الدوران الكامل (BackupRoundtrip/BackupCrossRoundtrip) معاً.
      */
     suspend fun importFrom(uri: Uri): Boolean = withContext(Dispatchers.IO) {
+        // [RVW-12 V 3.2.3] نفس بوابة التصدير — الاستعادة أعلى مخاطر الاغتراب على الإطلاق.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
         // كل قراءة الملف + فك JSON + عمليات القاعدة انتقلت إلى Dispatcher.IO بدل خيط الاستدعاء (H-06)
         try {
             val text = context.contentResolver.openInputStream(uri)?.use { input ->
