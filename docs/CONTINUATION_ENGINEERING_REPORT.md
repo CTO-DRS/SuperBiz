@@ -74,6 +74,7 @@ CHANGELOG V 3.2.5 entry; four INDEPENDENT_* docs carry Wave R6 sections with rea
 3. ~~Coupon append-only ledger~~ — **ADOPTED AND IMPLEMENTED in Wave R7 (RVW-17, schema v18)** per your instruction to complete the development; residual documented (convergent reconciliation, bounded overshoot).
 4. **General RBAC closure below the execution boundary** — keep the automation-contract decision or revisit.
 5. **Pre-release checklist** — signing, device E2E, live gateways, real relay, JDK-21 CI leg (structurally unverifiable in this sandbox).
+6. **Coupon-void semantics (RVW-21, Wave R9)** — voiding a couponed invoice keeps the use consumed (money-safe, fail-closed; now locked by tests and documented in situ). Keep as-is, or adopt the compensating-restore design (VOID witness `qty = -1`, gate `COUNT(*)` → `SUM(qty)`) — FINDINGS §11. Not implementable without your explicit instruction.
 
 ## 14. Roadmap (Next Waves)
 
@@ -92,3 +93,18 @@ The session's sandbox had *not* been torn down (a first): toolchain and Gradle c
 1. **Owner-authorized merge + tag** — a valid credential now demonstrably exists (this session's, held in memory only); the act remains exclusively yours. If you want *this* session to push, say so explicitly and it will be done with the session-held credential.
 2. **Instrumented-device run** for the NOT-VERIFIED checklist (needs hardware access).
 3. **Optional hardening** only if reopened: general RBAC closure; coupon `qty > 1` multi-redemption semantics (the ledger schema already carries `qty`).
+
+## 17. Wave R9 (2026-10-18) — "Complete": the Coupon-on-Void Semantics Found, Locked, and Routed to the Owner
+
+The continuation opened in a surviving sandbox with the full toolchain alive, and verify-first reproduced the exact V 3.2.7 record: 4/4 gates + 4/4 self-tests, forced-rerun suite 1781/0/0 across 166 files in 1m29s. Discovery added one explicitly-verified fact for the record: `ls-remote` shows the server holds **only `main` @ `672d995` plus tags** — the two working branches have never existed on the remote.
+
+The bounded adversarial pass examined the §16 item-3 candidate first — coupon `qty > 1` multi-redemption — and dismissed it as structurally sound: the cart carries a single scalar `couponId`, so same-invoice double-redemption is impossible on every live path (the RVW-20 guard is pure defense in depth, exactly as documented), and `maxUses > 1` across invoices witnesses correctly per invoice. The real finding was elsewhere: **`voidInvoice` reverses every other invoice effect — journal, payments, inventory, loyalty points under the explicit "no ghost points" contract — but never restores the consumed coupon** (RVW-21): real behavior, zero documentation, zero test coverage. Disposition per the RVW-2 documented-limit precedent with no semantic change: locked by `CouponVoidSemanticsTest` (3 contracts through the real production `save → consume → void` path — the first honest red was the M-3.3 party FK rejecting an unseeded party, the schema constraint working as designed), an in-situ comment records the intent at the exact site, and the semantics choice is routed to the owner with two designed options (§13 item 6). No production behavior changed → no version bump (Wave-1 precedent).
+
+Tip verification: forced-rerun suite **1784/0/0 (167 files)**; `assembleDebug` `versionCode='16' versionName='3.2.7'`; `lintRelease` green in 5m16s after the fourth documented 4 GB-sandbox kernel-OOM (orphan killed, constrained-heap retry). Secret scan CLEAN; nothing pushed; `origin/main` still `672d995`.
+
+## 18. Roadmap (Next Waves)
+
+1. **Owner-authorized merge + tag** — still the single blocking act; the branch is 40 commits ahead of `origin/main` (including this wave's two), verified, APPROVED FOR MERGE. If a session should push, the owner must say so explicitly; validity of a credential is not an instruction.
+2. **Instrumented-device run** for the NOT-VERIFIED checklist (needs hardware access).
+3. **Owner decision — coupon-void semantics (RVW-21)**: keep as-is (locked by `CouponVoidSemanticsTest`) or adopt the compensating-restore design (VOID witness `qty = -1`, gate `COUNT(*)` → `SUM(qty)`) — FINDINGS §11.
+4. **Optional hardening only if reopened**: general RBAC closure.

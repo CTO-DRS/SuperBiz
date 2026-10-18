@@ -232,3 +232,21 @@ Environment: this sandbox *survived* — `/home/z/jdk17` (Temurin 17.0.13) and `
 | Lint | `lintRelease` | First attempt: **kernel OOM kill** (dmesg: java anon-rss 2.64 GB) with an orphaned 3 GB-heap KotlinCompileDaemon found squatting — orphans killed, constrained-heap retry (`-Xmx2g`) **green in 5m23s**; the R5/R6/R7 4 GB-sandbox pattern, third documented occurrence |
 | Secret scan | wave diff | CLEAN — no tokens/keys/credentials in any added line |
 | Push state | — | **Nothing pushed**; `origin/main` still `672d995`; merge/push remains the owner's sole act — a valid credential existing is not an instruction to use it for writes |
+
+## 15. Wave R9 (2026-10-18) — "Complete": Coupon-on-Void Semantics Locked (RVW-21), Full Re-Verification (this session's own runs)
+
+Environment: sandbox survived again — `/home/z/jdk17` (Temurin 17.0.13), `/home/z/android-sdk` (platform-36, build-tools 35.0.0) and the Gradle cache all present; no toolchain rebuild. Discovery added one explicitly-verified fact for the record: `ls-remote` shows the server holds **only `main` @ `672d995` plus tags** — the `audit/remediation-2026-10` and `review/independent-premerge-2026-10` branches have never existed on the remote (local-only working branches, consistent with the never-push discipline). No credentials were present or needed: the repo is publicly readable and this session's git operations were all read-only/anonymous.
+
+| Check | Command | Result |
+|---|---|---|
+| Discovery | `ls-remote` + `fetch --prune` + status | `origin/main` `672d995` unchanged; HEAD `0af0f2d` (V 3.2.7) clean; remote branch list: `main` only |
+| Baseline gates | 4 × `tools/check_*.py` | 4/4 PASS (2441-key × 6-locale parity; 3 real network sites) |
+| Gate self-tests | 4 × `--self-test` | 4/4 PASS |
+| Baseline suite | `testDebugUnitTest --rerun` | **1781 / 0 / 0 across 166 files in 1m29s** — the V 3.2.7 record reproduced exactly (no UP-TO-DATE trap this time: the task executed for real) |
+| RVW-21 tests, first run | `--tests …CouponVoidSemanticsTest` | 3/3 **FAILED** — `SQLiteConstraintException: FOREIGN KEY constraint failed`: the test had used `partyId = 0` with no seeded party, and the M-3.3 RESTRICT FK on `invoices.partyId` rejected it. Honest red: the schema constraint doing its job. Fixed by seeding a party in `setUp` |
+| RVW-21 tests, green | same | **3 / 3 green in 14s** — contracts: void keeps counter + witness (invoice voided), post-void reuse refused fail-closed with no partial invoice, multi-use burns the first use with both witnesses live |
+| Full suite at tip | `testDebugUnitTest --rerun` | **1784 / 0 / 0 across 167 files** (+3 tests, +1 file) — forced rerun, exit 0 |
+| Build | `assembleDebug` | BUILD SUCCESSFUL in 11s — `app-debug-unsigned.apk`, `aapt dump badging`: `versionCode='16' versionName='3.2.7'` (no version bump: zero production behavior change this wave — comment + tests only, Wave-1 precedent) |
+| Lint | `lintRelease` | First attempt: **kernel OOM kill** (dmesg: java anon-rss 2.39 GB, total-vm 4.67 GB) plus an orphaned 1.07 GB java found after — orphans killed, constrained-heap retry (`-Xmx2g`) **green in 5m16s**; the R5/R6/R7/R8 4 GB-sandbox pattern, **fourth documented occurrence** |
+| Secret scan | wave diff | CLEAN — the wave adds one comment block, one test file, and docs; no tokens/keys/credentials in any added line |
+| Push state | — | **Nothing pushed**; `origin/main` still `672d995`; the working branches remain local-only |
