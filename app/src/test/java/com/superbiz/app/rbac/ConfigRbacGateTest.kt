@@ -13,6 +13,7 @@ import com.superbiz.app.domain.rbac.SessionState
 import com.superbiz.app.domain.statement.SmtpPrefsUi
 import com.superbiz.app.domain.statement.StatementPrefs
 import com.superbiz.app.vm.SettingsVM
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -181,19 +182,26 @@ class ConfigRbacGateTest {
         SessionState.multiUserMode = true
         SessionState.start(1L, "manager", Role.MANAGER)
 
-        // الاستيراد يمر (المدير داخل GENERAL_SETTINGS) — الضريبة تُطبق فعلًا
-        var applied = -1
-        vm.importSettingsFrom(settingsImportFile()) { n, _ -> applied = n }
+        // الاستيراد يمر (المدير داخل GENERAL_SETTINGS) — الضريبة تُطبق فعلًا.
+        // [RVW-14] النتيجة تصل عبر callback داخل launchSafe (إطلاق غير متزامن) —
+        // الانتظار الحتمي بديل السباق: كانت القيمة الأولية ‎-1 تُقرأ قبل وصول callback
+        // على بيئات أبطأ (فشل زائف لا علاقة له بالبوابة). فشل حقيقي = مهلة واضحة
+        // لا قيمة مُلتبسة، والعقد نفسه كما هو: مدير يُدخِل، ولا كتابة صامتة للرفض.
+        val applied = withTimeout(15_000) {
+            CompletableDeferred<Int>().also { d ->
+                vm.importSettingsFrom(settingsImportFile()) { n, _ -> d.complete(n) }
+            }.await()
+        }
         assertEquals(1, applied)
-        assertEquals(17.5, withTimeout(5_000) { g.settings.settings.first { it.taxRate == 17.5 } }.taxRate, 0.0001)
+        assertEquals(17.5, withTimeout(15_000) { g.settings.settings.first { it.taxRate == 17.5 } }.taxRate, 0.0001)
 
         // تهيئة التوصيل تمر — قراءة بالانتظار الحتمي (كتابة DataStore غير متزامنة)
         vm.setReportRecipient("owner@example.com")
-        assertEquals("owner@example.com", withTimeout(5_000) { g.settings.settings.first { it.reportRecipient == "owner@example.com" } }.reportRecipient)
+        assertEquals("owner@example.com", withTimeout(15_000) { g.settings.settings.first { it.reportRecipient == "owner@example.com" } }.reportRecipient)
         vm.setMonthlyGoal(12_000.0)
-        assertEquals(12_000.0, withTimeout(5_000) { g.settings.settings.first { it.monthlyGoal == 12_000.0 } }.monthlyGoal, 0.0001)
+        assertEquals(12_000.0, withTimeout(15_000) { g.settings.settings.first { it.monthlyGoal == 12_000.0 } }.monthlyGoal, 0.0001)
         vm.setReportScheduleChannel("email")
-        assertEquals("email", withTimeout(5_000) { g.settings.settings.first { it.reportScheduleChannel == "email" } }.reportScheduleChannel)
+        assertEquals("email", withTimeout(15_000) { g.settings.settings.first { it.reportScheduleChannel == "email" } }.reportScheduleChannel)
 
         // قنوات المالك وحده: الويب هوك ومجلد النسخ والهوية الضريبية — رفض بلا كتابة
         assertWebhookWriteDenied()
@@ -223,11 +231,11 @@ class ConfigRbacGateTest {
         assertEquals("smtp.owner.example", StatementPrefs.load(app).host)
 
         vm.setBackupDir("/sdcard/owner-bk" as String?)
-        assertEquals("/sdcard/owner-bk", withTimeout(5_000) { g.settings.settings.first { it.backupDirUri == "/sdcard/owner-bk" } }.backupDirUri)
+        assertEquals("/sdcard/owner-bk", withTimeout(15_000) { g.settings.settings.first { it.backupDirUri == "/sdcard/owner-bk" } }.backupDirUri)
         vm.setTaxNumber("OWN-77")
-        assertEquals("OWN-77", withTimeout(5_000) { g.settings.settings.first { it.taxNumber == "OWN-77" } }.taxNumber)
+        assertEquals("OWN-77", withTimeout(15_000) { g.settings.settings.first { it.taxNumber == "OWN-77" } }.taxNumber)
         vm.setReportRecipient("reports@owner.example")
-        assertEquals("reports@owner.example", withTimeout(5_000) { g.settings.settings.first { it.reportRecipient == "reports@owner.example" } }.reportRecipient)
+        assertEquals("reports@owner.example", withTimeout(15_000) { g.settings.settings.first { it.reportRecipient == "reports@owner.example" } }.reportRecipient)
     }
 
     // ─────────────────── ④ عقد الوضع الأحادي §4.3 حرفياً ───────────────────
@@ -237,13 +245,18 @@ class ConfigRbacGateTest {
         SessionState.clear()
         SessionState.multiUserMode = false
         vm.setTaxNumber("LEGACY-1")
-        assertEquals("LEGACY-1", withTimeout(5_000) { g.settings.settings.first { it.taxNumber == "LEGACY-1" } }.taxNumber)
+        assertEquals("LEGACY-1", withTimeout(15_000) { g.settings.settings.first { it.taxNumber == "LEGACY-1" } }.taxNumber)
         webhook.setUrl("https://legacy.example/h")
         assertEquals("https://legacy.example/h", webhook.urlOnce())
         StatementPrefs.save(app, SmtpPrefsUi(host = "legacy.smtp"))
         assertEquals("legacy.smtp", StatementPrefs.load(app).host)
-        vm.importSettingsFrom(settingsImportFile()) { n, _ -> }
-        assertEquals(17.5, withTimeout(5_000) { g.settings.settings.first { it.taxRate == 17.5 } }.taxRate, 0.0001)
+        // [RVW-14] انتظار اكتمال الاستيراد نفسه قبل قراءة الضريبة — لا افتراض سباق
+        withTimeout(15_000) {
+            CompletableDeferred<Unit>().also { d ->
+                vm.importSettingsFrom(settingsImportFile()) { _, _ -> d.complete(Unit) }
+            }.await()
+        }
+        assertEquals(17.5, withTimeout(15_000) { g.settings.settings.first { it.taxRate == 17.5 } }.taxRate, 0.0001)
     }
 
     // ─────────────────── ⑤ عقد الأتمتة: SYSTEM يمر ───────────────────
@@ -257,7 +270,7 @@ class ConfigRbacGateTest {
         StatementPrefs.save(app, SmtpPrefsUi(host = "auto.smtp"))
         assertEquals("auto.smtp", StatementPrefs.load(app).host)
         vm.setBackupDir("/sdcard/auto" as String?)
-        assertEquals("/sdcard/auto", withTimeout(5_000) { g.settings.settings.first { it.backupDirUri == "/sdcard/auto" } }.backupDirUri)
+        assertEquals("/sdcard/auto", withTimeout(15_000) { g.settings.settings.first { it.backupDirUri == "/sdcard/auto" } }.backupDirUri)
     }
 
     // ─────────────────── ⑥ رفض طبقة البيانات يسبق أي كتابة (فشل ظاهر) ───────────────────
