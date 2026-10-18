@@ -5,6 +5,7 @@ import androidx.room.withTransaction
 import com.superbiz.app.data.db.AppDatabase
 import com.superbiz.app.data.db.Currency
 import com.superbiz.app.data.db.CouponEntity
+import com.superbiz.app.data.db.CouponRedemptionEntity
 import com.superbiz.app.data.db.NoteTemplateEntity
 import com.superbiz.app.data.db.Party
 import com.superbiz.app.data.db.Product
@@ -112,6 +113,7 @@ class SyncEngine(
         "currencies" -> CurrencyAdapter()
         "visits" -> VisitAdapter()
         "coupons" -> CouponAdapter()
+        "coupon_redemptions" -> CouponRedemptionAdapter()
         "statement_templates" -> StatementTemplateAdapter()
         "note_templates" -> NoteTemplateAdapter()
         else -> null
@@ -119,7 +121,7 @@ class SyncEngine(
 
     private fun allAdapters(): List<Adapter<*>> = listOf(
         PartyAdapter(), ProductAdapter(), CurrencyAdapter(), VisitAdapter(),
-        CouponAdapter(), StatementTemplateAdapter(), NoteTemplateAdapter()
+        CouponAdapter(), CouponRedemptionAdapter(), StatementTemplateAdapter(), NoteTemplateAdapter()
     )
 
     private fun originPair(key: String, my: String, localId: Long): Pair<String, Long> {
@@ -329,6 +331,57 @@ class SyncEngine(
             percent = m.d("percent"), expiresAt = m.lg("expiresAt"), maxUses = m.lg("maxUses").toInt(),
             usedCount = m.lg("usedCount").toInt(), active = m.b("active", true),
             note = m.s("note"), createdAt = m.lg("createdAt")
+        )
+    }
+
+    /**
+     * [RVW-17 V 3.2.6] مهايئ دفتر استهلاك الكوبونات — الاتحاد الإلحاقي (تصميم §7-ب).
+     * عقد المهايئ مختلف جوهرياً عن كل المهايئات السابقة:
+     *  • applyIncoming: يُدرج الصف الوارد حصراً إن لم يوجد — والصف الموجود لا يُمسّ
+     *    أبداً (الصف غير قابل للتعديل؛ لا LWW ولا نزاع — الشاهد الأول هو الحقيقة).
+     *  • deleteByKey: لا حذف أبداً — الدفتر إلحاقي، والحذف من دفتر شواهد مالي يفقد
+     *    الحقيقة؛ الوارد المحمل بلا صف محلي يدرج، وما عدا ذلك لا شيء.
+     *  • counterMerge: لا عدّاد — العدّ محسوم بـCOUNT عند القراءة لا بالدمج.
+     * إدراج الوارد بساعة الوارد (at) يبطل مشغّل اللمس (WHEN syncUpdatedAt = 0)
+     * فلا صدى في الدفتر الدلتا — نمط باقي المهايئات حرفياً.
+     * الأقران الأقدمون: adapterFor يعيد null لجدول غير معروف فيُتخطى صفه (skipped++)
+     * — التفاوت بروتوكولي مقصود وموثق في §7-ب.
+     */
+    private inner class CouponRedemptionAdapter : Adapter<CouponRedemptionEntity>("coupon_redemptions") {
+        override suspend fun allOnce() = db.couponRedemptions().allOnce()
+        override fun clockOf(row: CouponRedemptionEntity) = row.syncUpdatedAt
+        override fun identityOf(row: CouponRedemptionEntity, my: String) =
+            if (row.originDeviceId.isEmpty()) Triple("", row.id, "$my|${row.id}")
+            else Triple(row.originDeviceId, row.originId, "${row.originDeviceId}|${row.originId}")
+        override suspend fun findByKey(key: String, my: String): CouponRedemptionEntity? {
+            val (od, oid) = splitKey(key)
+            return if (od == my) db.couponRedemptions().byId(oid) else db.couponRedemptions().byOrigin(od, oid)
+        }
+        override suspend fun applyIncoming(incoming: CouponRedemptionEntity, key: String, at: Long, my: String): Boolean {
+            val local = findByKey(key, my)
+            // الصف موجود — الشاهد غير قابل للتعديل ولا للحذف: لا شيء يُكتب
+            if (local != null) return false
+            val (pod, poid) = originPair(key, my, 0L)
+            // الاتحاد بمعرّف الحدث الحتمي — إدراج مكرر (نفس eventId بهوية مزامنة مختلفة،
+            // دورة استعادة ثم إعادة دفع مثلاً) يُتجاهل بالفهرس الفريد دالّاً
+            db.couponRedemptions().insertOrIgnore(
+                incoming.copy(id = 0, syncUpdatedAt = at, originDeviceId = pod, originId = poid)
+            )
+            return true
+        }
+        override suspend fun deleteByKey(key: String, my: String): Boolean {
+            // لا حذف في دفتر الشواهد — الحذف الوارد يُسجل تابوتاً في sync_log كالعادة
+            // لكن الجدول لا يُمسّ؛ صفوفه شواهد استهلاك حقيقية لا ملك قابل للإلغاء
+            return false
+        }
+        override fun bodyOf(row: CouponRedemptionEntity, my: String) =
+            "{\"eventId\":" + w(row.eventId) + ",\"code\":" + w(row.code) +
+                ",\"invoiceId\":" + w(row.invoiceId) + ",\"qty\":" + w(row.qty) +
+                ",\"at\":" + w(row.at) + ",\"origin\":" + w(row.origin) + "}"
+        override fun fromBody(m: Map<*, *>, key: String) = CouponRedemptionEntity(
+            eventId = m.s("eventId"), code = m.s("code", " "),
+            invoiceId = m.lg("invoiceId"), qty = m.lg("qty").toInt(),
+            at = m.lg("at"), origin = m.s("origin")
         )
     }
 

@@ -651,13 +651,16 @@ class BackupKitTest {
     // سطر «الجداول المكتشفة» في الواجهة لإيهام المستخدم بدمج لم يحدث.
     @Test
     fun nonMergeableTables_contractAndFiltering() {
-        // العقد البنيوي: ثمانية جداول، فريدة، كلها ضمن جداول الصيغة المعروفة
-        assertEquals(8, NON_MERGEABLE_TABLES.size)
+        // العقد البنيوي: تسعة جداول (المالية الثمانية + دفتر استهلاك الكوبونات [RVW-17])،
+        // فريدة، كلها ضمن جداول الصيغة المعروفة
+        assertEquals(9, NON_MERGEABLE_TABLES.size)
         assertEquals(NON_MERGEABLE_TABLES.size, NON_MERGEABLE_TABLES.toSet().size)
         assertTrue(NON_MERGEABLE_TABLES.all { it in BackupTables.ALL })
         // القائمة حصراً على الجداول المالية — لا الجداول المرجعية التي يدخلها الدمج
         assertTrue(BackupTables.PARTIES !in NON_MERGEABLE_TABLES)
         assertTrue(BackupTables.COUPONS !in NON_MERGEABLE_TABLES)
+        // [RVW-17] دفتر الشواهد مالي كفواتيره — دمجه يحسب استهلاكاً بلا فاتورته
+        assertTrue(BackupTables.COUPON_REDEMPTIONS in NON_MERGEABLE_TABLES)
         // التصفية من خريطة counts الفعلية: غير الصفري فقط، والغائب يعامل صفراً
         val counts = mapOf(
             BackupTables.INVOICES to 3,

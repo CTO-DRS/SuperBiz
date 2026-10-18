@@ -110,6 +110,9 @@ class BackupRepo(
         // [P46-W1] جولة 7 — جدولا الولاء والكوبونات (اكتمال 25/25)
         root.put("loyalty_entries", JSONArray(db.loyalty().allOnce().map { loyaltyEntryJson(it) }))
         root.put("coupons", JSONArray(db.coupons().allOnce().map { couponJson(it) }))
+        // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات (27 جداول مصدّرة) — شواهد الاستهلاك
+        // تنتقل مع تاريخها المالي عبر النسخ الكامل، والمزامنة الحية مسارها بين الأجهزة
+        root.put("coupon_redemptions", JSONArray(db.couponRedemptions().allOnce().map { couponRedemptionJson(it) }))
         // [AUD-1 إصلاح] أرشيف ZATCA (v14) — الجدول السادس والعشرون: كان غائبًا عن النسخ
         // والاستعادة تمامًا فكانت سلسلة PIH (latestHash) وأرشيف الست سنوات يفقدان صمتًا
         // بعد أي استعادة، ويُعاد إصدار ICV مكرر ضد فواتير مبلَّغة أصلًا. الإضافة تراكمية
@@ -278,6 +281,12 @@ class BackupRepo(
         .put("expiresAt", c.expiresAt).put("maxUses", c.maxUses)
         .put("usedCount", c.usedCount).put("active", c.active)
         .put("note", c.note).put("createdAt", c.createdAt)
+
+    /** [RVW-17 V 3.2.6] شاهد استهلاك الكوبون — أعمدة المزامنة لا تُصدّر (نمط الكوبون حرفياً) */
+    private fun couponRedemptionJson(e: com.superbiz.app.data.db.CouponRedemptionEntity) = JSONObject()
+        .put("id", e.id).put("eventId", e.eventId).put("code", e.code)
+        .put("invoiceId", e.invoiceId).put("qty", e.qty)
+        .put("at", e.at).put("origin", e.origin)
 
     private fun productJson(p: Product) = JSONObject()
         .put("id", p.id).put("name", p.name).put("sku", p.sku).put("barcode", p.barcode)
@@ -824,6 +833,16 @@ class BackupRepo(
                     active = j.optBoolean("active", true),
                     note = j.optString("note", ""), createdAt = j.optLong("createdAt"))
             }
+            // [RVW-17 V 3.2.6] قراءة دفتر استهلاك الكوبونات — متسامحة: غياب المفتاح
+            // (ملفات ما قبل v3.2.6) = قائمة فارغة بلا مساس
+            val stCouponRedemptions = ArrayList<com.superbiz.app.data.db.CouponRedemptionEntity>()
+            root.optJSONArray("coupon_redemptions")?.each { j ->
+                stCouponRedemptions += com.superbiz.app.data.db.CouponRedemptionEntity(
+                    id = j.getLong("id"), eventId = j.getString("eventId"),
+                    code = j.getString("code"), invoiceId = j.optLong("invoiceId", 0L),
+                    qty = j.optInt("qty", 1), at = j.optLong("at", 0L),
+                    origin = j.optString("origin", ""))
+            }
             // قاعدة اليتيم البنيوية (P34 نفسها دفاعياً): كشف بطرف غائب عن الملف يتخطى،
             // وتسليم بكشف غائب يتخطى بالتسلسل — ملف سليم لا تُمسّ صفوفه إطلاقاً
             val validStStatements = stStatements.filter { it.partyId in partyIds }
@@ -910,6 +929,9 @@ class BackupRepo(
                 // الكوبونات مستقلة، ودفتر الولاء بعد الأطراف والفواتير (المُدخلة أعلاه)
                 // — قاعدة اليتيم الدفاعية نفسها: صف بطرف/فاتورة غائب عن الملف يتخطى
                 stCoupons.forEach { db.coupons().upsert(it) }
+                // [RVW-17 V 3.2.6] دفتر الشواهد بعد الكوبونات — الإدراج IGNORE بمعرّف الحدث
+                // الفريد فلا يضاعف شاهداً موجوداً (استعادة فوق قاعدة حية = اتحاد لا ازدواج)
+                stCouponRedemptions.forEach { db.couponRedemptions().insertOrIgnore(it) }
                 val fileInvoiceIds = invoices.map { it.id }.toSet()
                 val validStLoyalty = stLoyalty.filter {
                     it.partyId in partyIds && (it.invoiceId == null || it.invoiceId in fileInvoiceIds)

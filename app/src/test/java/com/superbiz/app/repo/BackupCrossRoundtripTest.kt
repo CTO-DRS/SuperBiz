@@ -723,12 +723,12 @@ class BackupCrossRoundtripTest {
         seedAll()
         val exported = backupA.exportJson()
 
-        // الثابت المعلن
-        assertEquals(25, BACKUP_TABLE_COUNT)
-        assertEquals(25, BackupTables.ALL.size)
+        // الثابت المعلن — [RVW-17 V 3.2.6] 25 + دفتر استهلاك الكوبونات = 26
+        assertEquals(26, BACKUP_TABLE_COUNT)
+        assertEquals(26, BackupTables.ALL.size)
         // كل جدول من العقد المرجعي مكتوب فعلاً في الملف (لا اسم غائب)
         for (table in BackupTables.ALL) {
-            assertTrue("الجدول \"$table\" غائب عن exportJson رغم العقد 25/25", exported.has(table))
+            assertTrue("الجدول \"$table\" غائب عن exportJson رغم العقد 26/26", exported.has(table))
         }
         // الربط بالانعكاس: حقول BackupData الناقلة للجداول (عدا version/exportedAt والساكنات) = الثابت
         val tableFields = BackupData::class.java.declaredFields

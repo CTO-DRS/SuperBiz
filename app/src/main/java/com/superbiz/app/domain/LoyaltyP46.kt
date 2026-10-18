@@ -106,16 +106,23 @@ object LoyaltyP46 {
         return checkSpec(c, now, basePiasters)
     }
 
-    /** فحص مواصفة كوبون جالبة من القاعدة — نفس البوابة للكوبون المُحمَّل بمعرّفه. */
+    /** فحص مواصفة كوبون جالبة من القاعدة — نفس البوابة للكوبون المُحمَّل بمعرّفه.
+     *  [RVW-17 V 3.2.6] بوابة الدفتر fail-closed: مع usedCount يُستشار ledgerUses
+     *  (عدّ شواهد دفتر coupon_redemptions للكود) — أي من البوابتين بلغ الحد رفض،
+     *  فلا استهلاك موزّع يمرّ مرتين رغم تحت-عدّ العدّاد المجمع بين الأجهزة
+     *  (حدّ AUD-3 الموثق). maxUses = 0 لا يستشير الدفتر إطلاقاً — العقد يبقى حرفياً. */
     fun checkSpec(c: CouponSpec, now: Long, basePiasters: Long): CouponCheck {
         if (!c.active) return CouponCheck.Rejected(CouponReject.INACTIVE)
         if (c.expiresAt > 0L && now > c.expiresAt) return CouponCheck.Rejected(CouponReject.EXPIRED)
-        if (c.maxUses > 0 && c.usedCount >= c.maxUses) return CouponCheck.Rejected(CouponReject.EXHAUSTED)
+        if (c.maxUses > 0 && (c.usedCount >= c.maxUses || c.ledgerUses >= c.maxUses))
+            return CouponCheck.Rejected(CouponReject.EXHAUSTED)
         val d = couponDiscount(c.kind, c.amountPiasters, c.percent, basePiasters)
         return CouponCheck.Ok(c.couponId, d)
     }
 
-    /** مواصفة الكوبون المجرّدة — تفصل الرياضيات عن كيان Room (نمط المحركات النقية). */
+    /** مواصفة الكوبون المجرّدة — تفصل الرياضيات عن كيان Room (نمط المحركات النقية).
+     *  [RVW-17] ledgerUses = عدّ شواهد الدفتر — 0 الافتراضي: مستهلك لا يستشير الدفتر
+     *  يحصل على حكم ما قبل v18 حرفياً؛ البوابة إضافية لا بديلة، والاتجاه الوحيد رفض أكثر. */
     data class CouponSpec(
         val couponId: Long,
         val kind: Int,
@@ -124,7 +131,8 @@ object LoyaltyP46 {
         val expiresAt: Long,
         val maxUses: Int,
         val usedCount: Int,
-        val active: Boolean
+        val active: Boolean,
+        val ledgerUses: Int = 0
     )
 
     // ── التركيب ────────────────────────────────────────────────────────

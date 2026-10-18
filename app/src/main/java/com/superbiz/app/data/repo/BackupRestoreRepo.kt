@@ -127,7 +127,10 @@ class BackupRestoreRepo(
                 auditLog = db.auditLog().allLogs(),
                 // [P46-W1] نطاق v5 — جدولا الولاء والكوبونات (اكتمال 25/25)
                 loyaltyEntries = db.loyalty().allOnce(),
-                coupons = db.coupons().allOnce()
+                coupons = db.coupons().allOnce(),
+                // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات (26/26) — يُصدّر للتشتيف الكامل،
+                // والتنفيذ الدمجي أدناه لا يدرجه حصراً (NON_MERGEABLE — عقد P13-b المالي)
+                couponRedemptions = db.couponRedemptions().allOnce()
                 )
             }
             val json = buildBackupJson(data)
@@ -272,6 +275,13 @@ class BackupRestoreRepo(
                         (it.invoiceId == null || it.invoiceId in existingInvoiceIds)
                 }
                 for (e in newLoyalty) db.loyalty().insert(e)
+                // ═══ [RVW-17 V 3.2.6] coupon_redemptions لا يدخل الدمج حصراً (NON_MERGEABLE) ═══
+                // دفتر شواهد استهلاك الكوبونات تاريخ مالي مرتبط بالفواتير — والفواتير لا تُستعاد
+                // في المسار الدمجي، فإدخال الشواهد وحدها يحسب استهلاكاً بلا فاتورته فيرفض
+                // بوابة الدفتر fail-closed كوبوناً صالحاً (فشل بالاتجاه الخاطئ). الشواهد تنتقل
+                // عبر «استبدال كامل» حصراً (BackupRepo) وعبر المزامنة الحية بين الأجهزة المزدوجة.
+                // الملف يحمل الجدول كاملاً (counts/tables) وتنبيه الاكتشاف (nonMergeableTablesFound)
+                // يُظهره للمستخدم — فلا إيهام بدمج لم يحدث (عقد RVW-1 حرفياً).
                 // ═══ [P34-M1] نطاق v4 — الترتيب إلزامي: المستقل ثم الكشوف (يتيم الأطراف) ثم ═══
                 // التسليمات (يتيمة الكشوف) ثم القواعد ثم سجل التدقيق — قواعد اليتيم نفسها
                 // التي احتسبها planImport حرفياً: الخطة = التنفيذ بلا انحراف.

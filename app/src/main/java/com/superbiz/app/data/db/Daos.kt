@@ -1269,6 +1269,45 @@ interface CouponDao {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — أحداث إلحاقية موزّعة (تصميم §7-ب)
+// ═══════════════════════════════════════════════════════════════════════════
+
+@androidx.room.Dao
+interface CouponRedemptionDao {
+
+    /**
+     * إدراج بتجاهل التعارض — العقد الدالّ للاتحاد: إعادة الحدث نفسه (نفس
+     * eventId الفريد، من دورة استعادة أو إعادة دفع) لا تُدرج صفّاً ثانياً
+     * وتعيد ‎-1. لا مسار تعديل ولا حذف في هذا DAO كله — الدفتر إلحاقي أبدًا.
+     */
+    @androidx.room.Insert(onConflict = androidx.room.OnConflictStrategy.IGNORE)
+    suspend fun insertOrIgnore(e: CouponRedemptionEntity): Long
+
+    /** الاستخدام الفعلي للكوبون = عدد شواهد الدفتر لكوده — بوابة fail-closed في checkSpec */
+    @Query("SELECT COUNT(*) FROM coupon_redemptions WHERE code = :code")
+    suspend fun countByCode(code: String): Int
+
+    /** لقطة المسح الكامل للمزامنة والنسخ */
+    @Query("SELECT * FROM coupon_redemptions")
+    suspend fun allOnce(): List<CouponRedemptionEntity>
+
+    /** بحث مزامنة — صف مستورد بهوية أصلية (نمط الجداول المزامنة حرفياً) */
+    @Query("SELECT * FROM coupon_redemptions WHERE originDeviceId = :od AND originId = :oid LIMIT 1")
+    suspend fun byOrigin(od: String, oid: Long): CouponRedemptionEntity?
+
+    /** بحث مزامنة — صف أصلي محلي بمعرّفه (صدى دفعة تحتوي صفوفنا نفسها) */
+    @Query("SELECT * FROM coupon_redemptions WHERE id = :id LIMIT 1")
+    suspend fun byId(id: Long): CouponRedemptionEntity?
+
+    @Query("SELECT COUNT(*) FROM coupon_redemptions")
+    suspend fun count(): Int
+
+    /** حصراً للاستعادة «استبدال كامل» — المسار الدمجي لا يلمس هذا الجدول مطلقاً (NON_MERGEABLE) */
+    @Query("DELETE FROM coupon_redemptions")
+    suspend fun wipe()
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // [H1-3][H1-4][v13] DAOs هوية المستخدمين — RBAC على الجهاز الواحد
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1423,6 +1462,9 @@ interface SyncLogDao {
         StatementRuleEntity::class, AuditLogEntity::class,
         // [P46-W1] نقاط الولاء والكوبونات — جدولان بإنشاء فقط (ترحيل 11→12 في SuperBizApp)
         LoyaltyEntryEntity::class, CouponEntity::class,
+        // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — جدول إلحاقي بإنشاء فقط
+        // (ترحيل 17→18 في SuperBizApp — CREATE TABLE/INDEX فقط، لا جدول قائم يُلمس)
+        CouponRedemptionEntity::class,
         // [H4-3][v16] دفتر المزامنة
         SyncLogEntity::class,
         // [H1-3][H1-4] هوية المستخدمين والأدوار — جدولان بإنشاء فقط + عمودا إسناد التدقيق
@@ -1452,7 +1494,9 @@ interface SyncLogDao {
     // [AUD-8 V 3.2.1] فهارس الهوية على الجداول الثمانية — كانت byOrigin(originDeviceId, originId)
     // التي تُستدعى لكل صف وارد في دفعة مزامنة مسحًا كاملاً O(N) بلا فهرس
     // (ترحيل 16→17 في SuperBizApp — إنشاء فهارس فقط، لا أعمدة ولا جداول)
-    version = 17,
+    // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — جدول بإنشاء فقط
+    // (ترحيل 17→18 في SuperBizApp — CREATE TABLE/INDEX/مشغّلات مزامنة فقط، إلحاقي خالص)
+    version = 18,
     exportSchema = true
 )
 
@@ -1484,6 +1528,8 @@ abstract class AppDatabase : androidx.room.RoomDatabase() {
     // [P46-W1] نقاط الولاء والكوبونات
     abstract fun loyalty(): LoyaltyDao
     abstract fun coupons(): CouponDao
+    // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — أحداث إلحاقية موزّعة
+    abstract fun couponRedemptions(): CouponRedemptionDao
     // [H1-3][H1-4] هوية المستخدمين والأدوار
     abstract fun users(): UserDao
     abstract fun userSecrets(): UserSecretDao
