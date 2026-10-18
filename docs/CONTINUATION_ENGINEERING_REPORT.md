@@ -108,3 +108,28 @@ Tip verification: forced-rerun suite **1784/0/0 (167 files)**; `assembleDebug` `
 2. **Instrumented-device run** for the NOT-VERIFIED checklist (needs hardware access).
 3. **Owner decision — coupon-void semantics (RVW-21)**: keep as-is (locked by `CouponVoidSemanticsTest`) or adopt the compensating-restore design (VOID witness `qty = -1`, gate `COUNT(*)` → `SUM(qty)`) — FINDINGS §11.
 4. **Optional hardening only if reopened**: general RBAC closure.
+
+---
+
+## 19. Wave R10 (2026-10-18) — "Complete": the Webhook Chain Reviewed End-to-End — Leak Fixed (RVW-22), Public Contract Locked (RVW-23), Suspect Dismissed with Evidence (RVW-24)
+
+> **Execution note:** executed twice — the first execution was lost to a workspace rollback to the R9 snapshot (`c261170`) before any push, and the wave was re-executed in full from the session transcript on a rebuilt toolchain with every verification genuinely re-run; the results were identical in both executions. The environment-rollback forensics (reflog, fsck, object checks) are recorded in VERIFICATION §16.
+
+The wave opened on a **reset sandbox** and rebuilt the toolchain from scratch to the documented baseline (Temurin 17.0.13, platform-36, build-tools 35.0.0) before touching anything. Discovery reconciled the records first: the incoming session summary described a stale R3-era state, while worklog + git evidence fixed the true tip at V 3.2.7 @ `c261170` (nothing ever pushed, remote carrying only `main` + tags) — and the live tree then proved the first R10 execution rolled away entirely. Verify-first reproduced the baseline and the wave with every accepted result genuinely executed.
+
+The adversarial target was the **webhook delivery chain** — payload builder (`WebhookKit`), transport (`WebhookClient`), store/secret gate (`WebhookStore`) — the one externally-facing path no wave had reviewed end-to-end. The store side held (AUD-7 encrypted secret, RVW-13 data-layer RBAC, honest degradation). Findings:
+
+1. **RVW-22 — fixed:** every failed delivery leaked its connection (on 4xx/5xx the closed stream was the one call that throws; `errorStream` was never touched). Fixed in place by stream-follows-response-code; resource handling only, no semantics change — the reason this was auto-fixed where RVW-21 was routed: the fix cannot alter what is sent or recorded.
+2. **RVW-23 — locked:** the documented public payload contract ("fields added only, never removed or renamed") had zero tests. `WebhookKitTest` (8 contracts) pins the golden payload literally, proves hostile-string escape→parse round-trips through MiniJson byte-identically, locks the optional orig-currency block and its `?: 0L` fallback, the empty-secret honest `""`, the signature against the **independent RFC 4231 case-2 vector**, and pure-ASCII hex under an ar-SA locale. 8/8 green first run in both executions — pure contract lock.
+3. **RVW-24 — dismissed with evidence:** the default-locale hex suspect was probed empirically (six hostile locales, all ASCII; Formatter localizes only `'d'`) and a permanent tripwire test added regardless.
+4. **Routed to the owner:** when a configured secret becomes undecryptable, delivery silently continues unsigned — the "no secret" vs "secret unreadable" conflation at the send site. Fail-closed no-send is the honest alternative but changes delivery semantics: owner ruling required (report §13 item 7).
+
+**V 3.2.8 (versionCode 17)** — a real production fix takes a bump (R8 precedent), unlike test/docs-only R9. Tip verification (re-execution): gates 4/4 + self-tests 4/4; forced-rerun suite **1792/0/0 across 168 files** (+8, +1) in 1m38s; `assembleDebug` successful (`aapt`: `versionCode='17' versionName='3.2.8'`); `lintRelease` green in 4m7s after one documented 4 GB-sandbox kernel-OOM (orphan killed, constrained-heap retry). Secret scan CLEAN. Nothing pushed.
+
+## 20. Roadmap (Next Waves)
+
+1. **Owner-authorized merge + tag** — still the single blocking act; the branch is now 42 commits ahead of `origin/main` (including this wave's two), verified, APPROVED FOR MERGE. If a session should push, the owner must say so explicitly; validity of a credential is not an instruction.
+2. **Instrumented-device run** for the NOT-VERIFIED checklist (needs hardware access) — now also the honest place to empirically confirm the RVW-22 failure-path fix and the RVW-24 locale dismissal on ART.
+3. **Owner decision — coupon-void semantics (RVW-21)**: keep as-is (locked by `CouponVoidSemanticsTest`) or adopt the compensating-restore design (VOID witness `qty = -1`, gate `COUNT(*)` → `SUM(qty)`) — FINDINGS §11.
+4. **Owner decision — webhook unsigned-fallback (report §19 item 4)**: when a configured secret is configured but unreadable, keep unsigned delivery (current) or fail closed (no-send, honest `lastResult=false`).
+5. **Optional hardening only if reopened**: general RBAC closure.

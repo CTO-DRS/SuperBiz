@@ -250,3 +250,29 @@ Environment: sandbox survived again — `/home/z/jdk17` (Temurin 17.0.13), `/hom
 | Lint | `lintRelease` | First attempt: **kernel OOM kill** (dmesg: java anon-rss 2.39 GB, total-vm 4.67 GB) plus an orphaned 1.07 GB java found after — orphans killed, constrained-heap retry (`-Xmx2g`) **green in 5m16s**; the R5/R6/R7/R8 4 GB-sandbox pattern, **fourth documented occurrence** |
 | Secret scan | wave diff | CLEAN — the wave adds one comment block, one test file, and docs; no tokens/keys/credentials in any added line |
 | Push state | — | **Nothing pushed**; `origin/main` still `672d995`; the working branches remain local-only |
+
+---
+
+## 16. Wave R10 (2026-10-18) — Webhook Chain Adversarial Pass: RVW-22 Fixed, RVW-23 Locked, Full Re-Verification (this session's own runs — re-executed after an environment rollback)
+
+> **Execution note:** the first execution of this wave was lost to a workspace rollback to the R9 snapshot (tip `c261170`) before any push — its commits, docs, and worklog entry ceased to exist in the environment. This section describes the **re-execution**: the wave was rebuilt from the session transcript on a freshly provisioned toolchain, every check below was genuinely run in the re-execution, and the results matched the first execution record for record (suite 1792/0/0/0, aapt 17/3.2.8, lint green). The rollback itself is the honest first row of the table.
+
+Environment: the sandbox was reset **and rolled back** — no JDK 17, no Android SDK, no Gradle cache, and the repo snapped back to `c261170`. The toolchain was rebuilt from scratch to the documented baseline (Temurin JDK 17.0.13+11 via the Adoptium pinned URL, cmdline-tools 11076708, platform-36 + build-tools 35.0.0 at `/home/z/android-sdk` matching `local.properties`, Gradle 8.11.1 wrapper + full dependency re-fetch). No credentials were present or needed: `ls-remote` works anonymously on the public repo and every git operation this session was read-only; disk/env sweeps found no token files and no credential-bearing environment variables.
+
+Discovery reconciled the records before any action: the incoming session summary described a **stale R3-era state** (V 3.2.2 / suite 1746), while the worklog + git evidence fixed the true tip at V 3.2.7 (R9, HEAD `c261170`) — the stale-summary trap the R9 wave itself documented — and the live tree then proved the R10 commits missing entirely (reflog ending at `c261170`, `git cat-file` rejecting the lost hashes, no dangling objects, worklog entry absent). Verified live: `origin/main` still `672d995`, remote carries only `main` + tags.
+
+| Check | Command | Result |
+|---|---|---|
+| Rollback forensics | `reflog` + `fsck --dangling` + `cat-file` + worklog grep | R10 commits absent everywhere (not even dangling); environment provably at R9 snapshot; nothing to recover — redo from transcript |
+| Toolchain rebuild | Adoptium pinned 17.0.13+11 + cmdline-tools + sdkmanager | `java -version` = 17.0.13 exact baseline; platform-36 + build-tools 35.0.0 installed, licenses accepted |
+| Gates | 4 × `tools/check_*.py` | 4/4 PASS |
+| Gate self-tests | 4 × `--self-test` | 4/4 PASS |
+| RVW-23 contract lock (filtered) | `--tests …WebhookKitTest` | **8/8 green on the first run** (3m23s cold build) — golden payload, hostile-string round-trip, null party, optional orig block + zero fallback, RFC 4231 vector, empty secret, ASCII hex under ar-SA |
+| Full suite at tip | `testDebugUnitTest --rerun` (test task forced, Kotlin in-process — the R10-learned mitigation applied from the start) | **1792 / 0 / 0 across 168 files** (+8 tests, +1 file) in 1m38s, exit 0 — no OOM, no flake this execution |
+| Build at tip | `assembleDebug` | BUILD SUCCESSFUL — `aapt dump badging`: `versionCode='17' versionName='3.2.8'` (V 3.2.8 bump: RVW-22 is a real production fix) |
+| Lint at tip, attempt 1 | `lintRelease` (constrained heap, Kotlin in-process) | **Kernel OOM kill** (dmesg: java anon-rss 2.63 GB, cold release-compile+analyze) plus an orphaned 797 MB java found after — the documented 4 GB-sandbox pattern |
+| Lint at tip, attempt 2 | orphan killed, same command | **Green in 4m7s** with `lintAnalyzeRelease` executing genuinely (everything cold this session — no UP-TO-DATE trap existed to fall into) |
+| Secret scan | wave diff (code + tests + docs) | CLEAN — no tokens/keys/credentials in any added line |
+| Push state | — | **Nothing pushed**; `origin/main` still `672d995`; working branches local-only; no credential ever touched this session's git operations (all anonymous) |
+
+**Honesty ledger for this wave:** one environment rollback (the first execution lost wholesale — documented, not hidden), one kernel-OOM kill (dmesg-documented, retried green). No flakes, no traps, no cached-result acceptance: every accepted number above comes from a task that genuinely executed in the re-execution session.
