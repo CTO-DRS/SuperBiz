@@ -178,3 +178,14 @@ Regression protection: `ConfigRbacGateTest` (6 tests) — role matrix (cashier/m
 Contracts preserved literally: IMPLICIT_OWNER and SYSTEM identities pass every new gate; `RoleDeniedException` at the data layer fires before any write; launchSafe converts VM-level denial into a localized message. No previously green behavior changes for legitimate roles in either single-user or multi-user mode.
 
 Verification at this wave's tip: 4 Python gates PASS; full suite 1762/0/0/0 across 161 files (+6); assembleDebug + lintRelease green (VERIFICATION_RESULTS §11). Version 3.2.4 (versionCode 13).
+
+## Wave R6 (2026-10-18) — Verify-First Re-Run: Three Integrity Fixes, No Production Change
+
+Discovery: re-verification of every prior claim at tip `e01c23a` per the continuation master prompt (remote untouched at `672d995`; HEAD clean; toolchain rebuilt). The re-run exposed an environment-sensitive suite flake and two latent integrity gaps:
+
+- **RVW-14** (`349ec3a`) — `app/src/test/java/com/superbiz/app/rbac/ConfigRbacGateTest.kt`: the manager/owner import assertions read a fire-and-forget callback synchronously and raced the IO dispatch (initial `-1` read as a false denial on slower hosts; production `FeatureVMs.kt` cannot emit `-1` — proven by reading every `onResult` path). Fix: `CompletableDeferred` + `withTimeout(15_000)` deterministic await; class flow-wait walls 5s→15s. Empirical confirmation: manager case 4.4–5.1s red → 0.25s green, production RBAC untouched.
+- **RVW-15** (`0ef8d1f`) — `app/src/test/java/com/superbiz/app/SchemaMigrationTest.kt`: added `migration1to2_…` and `migration2to3_…` on a hand-built minimal v1 base (the 9 founding tables), asserted column-by-column against Room's exported `5.json` (the three tables are unchanged since creation), plus index names, row survival, writability, and rerun safety. The 16-step migration chain now has zero untested steps.
+- **RVW-16** (`929afa8`) — `tools/check_network_boundary.py`: the ADR-001 D1 gate matched `import` statements only while the codebase wires the network package via fully-qualified names — it had reported `scanned import sites: 0` since day one. Now matches both shapes with comments stripped, prints the honest real-site count (3; `expected >= 1` — zero sites = FAIL), and carries a `--self-test` synthetic-tree mode proving it can fail on both violation shapes.
+- Version bump — `app/build.gradle.kts`: 3.2.5 / versionCode 14 (this commit, with the CHANGELOG entry and the four docs' Wave R6 sections).
+
+Verification at this wave's tip: 4 Python gates PASS (network gate now with self-test); full suite **1764/0/0/0 across 161 files** (+2); `assembleDebug` SUCCESSFUL (26,645,626 bytes, aapt confirms versionCode 14); `lintRelease` SUCCESSFUL in 3m45s (VERIFICATION_RESULTS §12). Nothing pushed; decision unchanged: APPROVED FOR MERGE.

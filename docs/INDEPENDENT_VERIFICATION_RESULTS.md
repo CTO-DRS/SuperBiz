@@ -166,3 +166,30 @@ All commands executed in this session against the working tree that then became 
 **Wave R5 incidents (honest record):** (1) the first full-suite background launch was killed with the shell session (0-byte log) and was re-run synchronously; (2) the first wave-test run had 3 test-side failures from shared DataStore state across Robolectric methods — fixed by making assertions order-independent (before/after capture), no production code was changed to make a test pass and no test was weakened or skipped; (3) lintRelease died three consecutive times to a **container OOM kill** (dmesg: java killed at ~2.5 GB RSS on a 4 GB container) caused by a stale orphaned 882 MB Java daemon left behind by the killed background launch — after terminating the orphan, lintRelease passed with a 2 GB heap; the compile warnings visible in the failed logs are the repository's pre-existing `w:` warnings, not lint defects. Secret hygiene: the supplied-but-invalid token material was deleted from disk after the 401 verification; no credential appears in any commit, log, or document.
 
 **Wave R5 conclusion:** the six alternate-path authorization gaps are closed with regression proof; all non-regression contracts hold; the coupon-ledger design is attached for the owner (FINDINGS §7-ب) and was deliberately not implemented without an explicit business rule. Decision status remains **APPROVED FOR MERGE**; merging/pushing remains the owner's act.
+
+## 12. Wave R6 (2026-10-18) — Verify-First Re-Run at e01c23a, Race Discovery, and Full Re-Verification at V 3.2.5 (this session's own runs)
+
+Repository discovery first (no work trusted from logs): HEAD `e01c23a` clean on `review/independent-premerge-2026-10`; `origin/main` still `672d995` after `fetch --prune` (remote never touched; 29 local commits ahead); toolchain rebuilt = Temurin JDK 17.0.13 + platform-36 + build-tools 35.0.0 (survived in `/home/z/jdk17` + `/home/z/android-sdk`, only env re-exported).
+
+### The suite was not as reproducible as claimed — and that was the wave's finding
+
+The full suite at `e01c23a` — the exact commit the prior session reported as 1762/0/0/0 — failed **2/6 in `ConfigRbacGateTest`** on this host: a synchronous assert reading a fire-and-forget callback's not-yet-set initial value (`-1`). Same tree, different host timing. This is precisely the environment-sensitive flake class the master prompt warns about; it is now fixed and empirically explained (FINDINGS §8 RVW-14; the diagnosis is proven by the manager case turning 0.25s-green under deterministic await with the identical production code).
+
+### Verification at the new tip (V 3.2.5 / versionCode 14, commits 349ec3a + 0ef8d1f + 929afa8 + version bump)
+
+| Check | Command | Result |
+|---|---|---|
+| Gates | `python3 tools/check_{locale_coverage,network_boundary,strings,strings_format}.py` | **4/4 PASS** — string parity 2441 keys × all locales; network boundary now reports honest counts: **3 real wire sites** (FQN in whitelist file), `--self-test` PASS |
+| Baseline suite (pre-fix, at e01c23a) | `./gradlew testDebugUnitTest --no-daemon` | **161 files, 1762 tests, 2 failures** (both in `ConfigRbacGateTest`: 1 deterministic manager-case race + 1 owner-case 5s timeout under cold start) — the wave's discovery: same tree that the prior host measured green; root-caused and fixed as RVW-14, then re-verified (row below) |
+| Wave suite (post RVW-14/15/16) | `./gradlew testDebugUnitTest --no-daemon` | **BUILD SUCCESSFUL in 2m 28s** — **161 files, 1764 tests / 0 failures / 0 errors / 0 skipped** (+2 = `SchemaMigrationTest` gains 1→2 and 2→3; ConfigRbacGateTest stable green) |
+| Debug package | `./gradlew assembleDebug --no-daemon` | **BUILD SUCCESSFUL in 29s** — `app-debug-unsigned.apk` **26,645,626 bytes**; aapt: `versionCode='14' versionName='3.2.5'` |
+| Lint | `./gradlew lintRelease --no-daemon -Dkotlin.compiler.execution.strategy=in-process` | **BUILD SUCCESSFUL in 3m 45s** |
+
+### Wave R6 incidents (honest record — more instructive than the prior waves')
+
+1. **Background processes do not survive between shell tool calls in this sandbox** (control experiment: a detached `sleep` was reaped within seconds; `setsid` made no difference). Earlier "daemon disappeared" mid-suite failures were this, not OOM. All subsequent verification ran foreground in single calls.
+2. **Two genuine kernel OOM kills** (dmesg): Gradle JVM at ~2.5 GB RSS during unit-test compilation with in-process Kotlin, and ~2.66 GB during the first lintRelease attempts. Root cause of the lint case: an orphaned **Kotlin compile daemon squatting 803 MB** (spawned by an earlier attempt) plus container baseline; after `pkill` and re-run, lintRelease passed in 3m45s with default heap + in-process Kotlin.
+3. **Stale test-result XML hazard re-encountered and re-confirmed:** `test-results/` from a killed run must never be counted; results were parsed only from fresh per-class XMLs after a clean `rm -rf` of the results dir (the repo's own `verify_stale_results.py` habit).
+4. **Credential reality:** the session's PAT returns 401 (invalid) on `api.github.com`; the repo is public — `git ls-remote`/`fetch` work anonymously. No push was attempted or performed. Token material never persisted to disk (askpass reads it from a session-only env var).
+
+**Wave R6 conclusion:** the suite's reproducibility is now defended by construction (deterministic waits, no sync-assert-on-async), the migration chain has zero untested steps, and the network-boundary gate can actually fail. All checks green at V 3.2.5 with 1764/0/0/0. Decision remains **APPROVED FOR MERGE**; merging/pushing remains the owner's sole act.
