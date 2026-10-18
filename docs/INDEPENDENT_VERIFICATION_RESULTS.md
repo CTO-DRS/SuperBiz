@@ -193,3 +193,22 @@ The full suite at `e01c23a` — the exact commit the prior session reported as 1
 4. **Credential reality:** the session's PAT returns 401 (invalid) on `api.github.com`; the repo is public — `git ls-remote`/`fetch` work anonymously. No push was attempted or performed. Token material never persisted to disk (askpass reads it from a session-only env var).
 
 **Wave R6 conclusion:** the suite's reproducibility is now defended by construction (deterministic waits, no sync-assert-on-async), the migration chain has zero untested steps, and the network-boundary gate can actually fail. All checks green at V 3.2.5 with 1764/0/0/0. Decision remains **APPROVED FOR MERGE**; merging/pushing remains the owner's sole act.
+
+## 13. Wave R7 (2026-10-18) — V 3.2.6: Coupon Ledger Implemented, Chain Composed, Gates Falsifiable (this session's own runs)
+
+Environment: toolchain rebuilt from the persisted script this session (the sandbox from R6 had been torn down — `/home/z/jdk17` and `/home/z/android-sdk` no longer existed; `setup_toolchain.sh` re-created Temurin 17.0.13 + platform-36 + build-tools 35.0.0). Repository state verified before any work: branch `review/independent-premerge-2026-10` @ `9956f22` (R6 docs tip), tree clean, `origin/main` still `672d995` (nothing pushed, ever).
+
+| Check | Command | Result |
+|---|---|---|
+| Baseline gates (before any change) | 4 × `tools/check_*.py` | 4/4 PASS |
+| Baseline suite (before any change) | `testDebugUnitTest` | BUILD SUCCESSFUL in 2m24s (1764/0/0, 161 files — the R6 state reproduced) |
+| Gates after wave | 4 × `tools/check_*.py` | 4/4 PASS (2441 keys × 6 locales parity preserved — no UI strings added: the ledger reuses the existing localized `EXHAUSTED` reason) |
+| Gate self-tests | 4 × `tools/check_*.py --self-test` | 4/4 PASS — every gate in `tools/` is now proven able to fail (RVW-16 precedent completed) |
+| Wave tests | `testDebugUnitTest --tests` (5 classes) | 21 tests green: `CouponLedgerP48Test` 6/6, `CouponLedgerRepoTest` 5/5, `Migration17to18Test` 1/1, `MigrationChainCompositionTest` 1/1, `SyncConvergenceTest` 8/8 (7 prior + 1 new) |
+| Full suite at wave tip | `testDebugUnitTest` | **1778 / 0 / 0 across 165 files** (BUILD SUCCESSFUL; first run surfaced 5 failures — all legacy size-pins on intentionally-changed constants: 16→17 migrations ×4, 25→26 tables ×1 — contracts updated with the change documented, second-order run green, then one last-migration pin found and updated in `RbacMigration13Test`, final run green) |
+| Build | `assembleDebug` | BUILD SUCCESSFUL in 2m49s — `app-debug-unsigned.apk` **26,662,010 bytes**, `aapt dump badging`: `versionCode='15' versionName='3.2.6'` |
+| Lint | `lintRelease` | BUILD SUCCESSFUL in 5m13s (first attempt: daemon disappeared mid-build — the documented 4 GB-sandbox pattern; killed orphans, constrained heaps, retry green, same as R5/R6) |
+| Secret scan | wave diff | CLEAN — no tokens/keys/credentials in any added line |
+| Push state | — | **Nothing pushed**; `origin/main` still `672d995`; merge/push remains the owner's sole act |
+
+Notes kept honest: (1) the raw-SQL seed in the migration test must supply the NOT-NULL sync columns explicitly (Room's `createSql` has no DEFAULT; production inserts go through Room which always binds every column — the test now mirrors that); (2) `PRAGMA user_version` is not advanced by manually-invoked `Migration.migrate()` — the composition test sets `db.version = 18` before the byte-identity reopen, exactly as the R6-era `Migration15Test` pattern does; (3) the CHANGELOG's verification paragraph was corrected from an expected count to the measured one (1778, not 1794) before committing — numbers in this repo are always the measured ones.
