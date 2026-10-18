@@ -200,3 +200,13 @@ Owner instruction activated the R7 roadmap items; execution order was tests-firs
 - **Version:** 3.2.6 (versionCode 15); CHANGELOG entry with the measured verification numbers; verification details in `INDEPENDENT_VERIFICATION_RESULTS.md` §13; findings and residuals in `INDEPENDENT_REVIEW_FINDINGS.md` §9.
 
 Commits: (code + tests + schema) and (docs + version) — nothing pushed; remote untouched.
+
+## Wave R8 (2026-10-18) — RVW-20: the Coupon Ledger's Witness Made Mandatory
+
+Fresh-eyes adversarial re-review of the wave-R7 coupon ledger (the newest financial code, targeted by the "fix bugs" mandate) surfaced one real defect; tests-first throughout.
+
+- **RVW-20 (mandatory ledger witness):** `LoyaltyRepo.consumeCouponInTransaction` performed the atomic `consume` (counter +1) and then wrote its `coupon_redemptions` witness via `insertOrIgnore` while discarding the return value — on a deterministic `eventId` collision the witness is silently dropped *after* the counter moved: a real consumption the ledger does not see, i.e. the fail-open direction (discount without ledger evidence) that the RVW-17 contract explicitly forbids. Fix: the insert's return value is asserted inside the transaction (`require(witness != -1L)`) so a collision aborts the whole invoice save — the atomic consume rolls back with it. The `-1` tolerance stays only in the sync/restore union paths where the dedupe is the documented contract. No live caller can collide (POS mints a new invoice id per checkout; the invoice editor passes no coupon; restore preserves ids), so the change is pure defense in depth — zero behavior change on the happy path, fail-closed locked at the database boundary.
+- **Tests:** `LoyaltyLedgerWitnessTest` (3, real in-memory Room): collision aborts atomically (red before the fix — no exception, counter drifted to 1 while the witness count stayed 1), fresh consumption leaves exactly one witness with both counters agreeing and the local-birth identity pinned, ledger gate rejects before the atomic consume with full rollback.
+- **Version:** 3.2.7 (versionCode 16); CHANGELOG entry with measured numbers; verification in `INDEPENDENT_VERIFICATION_RESULTS.md` §14; finding record in `INDEPENDENT_REVIEW_FINDINGS.md` §10.
+
+Commits: (code + tests + version) and (docs + CHANGELOG) — nothing pushed; remote untouched.

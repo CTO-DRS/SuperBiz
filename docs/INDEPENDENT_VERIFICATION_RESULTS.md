@@ -212,3 +212,23 @@ Environment: toolchain rebuilt from the persisted script this session (the sandb
 | Push state | — | **Nothing pushed**; `origin/main` still `672d995`; merge/push remains the owner's sole act |
 
 Notes kept honest: (1) the raw-SQL seed in the migration test must supply the NOT-NULL sync columns explicitly (Room's `createSql` has no DEFAULT; production inserts go through Room which always binds every column — the test now mirrors that); (2) `PRAGMA user_version` is not advanced by manually-invoked `Migration.migrate()` — the composition test sets `db.version = 18` before the byte-identity reopen, exactly as the R6-era `Migration15Test` pattern does; (3) the CHANGELOG's verification paragraph was corrected from an expected count to the measured one (1778, not 1794) before committing — numbers in this repo are always the measured ones.
+
+## 14. Wave R8 (2026-10-18) — V 3.2.7: the Ledger Witness Made Mandatory (this session's own runs)
+
+Environment: this sandbox *survived* — `/home/z/jdk17` (Temurin 17.0.13) and `/home/z/android-sdk` (platform-36, build-tools 35.0.0) plus the 1.9 GB Gradle cache were all present at session start; no toolchain rebuild was needed. Repository state verified before any work: branch `review/independent-premerge-2026-10` @ `03990b6` (R7 docs tip), tree clean, `origin/main` still `672d995` (36 commits ahead; nothing pushed, ever). Credential status recorded as an environment fact only: the token supplied this session tests **valid (HTTP 200)** with administrative scopes — it was used for no write operation, kept in session memory only, never on disk and never in any commit; validity is explicitly *not* a push authorization, and the rotation reminder stands.
+
+| Check | Command | Result |
+|---|---|---|
+| Discovery | `fetch --prune` + status | `origin/main` `672d995` unchanged; HEAD `03990b6` clean |
+| Baseline gates | 4 × `tools/check_*.py` | 4/4 PASS (3 real network sites, 2441-key × 6-locale parity) |
+| Gate self-tests | 4 × `--self-test` | 4/4 PASS |
+| Baseline suite | `testDebugUnitTest` | First run **UP-TO-DATE in 14s** — Gradle cache hit on the surviving R7 outputs; rejected as verification (a cached pass proves inputs unchanged, not that this environment can run them). Forced `--rerun`: **1778 / 0 / 0 across 165 files in 1m31s** — the R7 state reproduced honestly |
+| Red test (RVW-20) | `testDebugUnitTest --tests …LoyaltyLedgerWitnessTest` | 3 tests, **1 failure — exactly the collision case** (no exception raised, counter drifted: the fail-open documented in FINDINGS §10); the other two contracts green |
+| Fix | `LoyaltyRepo.consumeCouponInTransaction` | `insertOrIgnore`'s return value now asserted (`-1` ⇒ `require` throws ⇒ the whole invoice transaction rolls back, undoing the atomic consume); the sync/restore union paths keep their documented `-1` tolerance untouched |
+| Green re-run | same test class | **3 / 3 green** (54s) |
+| Full suite at tip | `testDebugUnitTest --rerun` | **1781 / 0 / 0 across 166 files** (+3 tests, +1 file) — forced rerun, exit 0 |
+| Gates at tip | 4 × `tools/check_*.py` | 4/4 PASS (no strings touched — parity intact) |
+| Build | `assembleDebug` | BUILD SUCCESSFUL in 32s — `app-debug-unsigned.apk` **26,662,010 bytes**, `aapt dump badging`: `versionCode='16' versionName='3.2.7'` |
+| Lint | `lintRelease` | First attempt: **kernel OOM kill** (dmesg: java anon-rss 2.64 GB) with an orphaned 3 GB-heap KotlinCompileDaemon found squatting — orphans killed, constrained-heap retry (`-Xmx2g`) **green in 5m23s**; the R5/R6/R7 4 GB-sandbox pattern, third documented occurrence |
+| Secret scan | wave diff | CLEAN — no tokens/keys/credentials in any added line |
+| Push state | — | **Nothing pushed**; `origin/main` still `672d995`; merge/push remains the owner's sole act — a valid credential existing is not an instruction to use it for writes |
