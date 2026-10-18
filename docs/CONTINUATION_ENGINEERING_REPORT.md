@@ -69,12 +69,14 @@ CHANGELOG V 3.2.5 entry; four INDEPENDENT_* docs carry Wave R6 sections with rea
 
 ## 13. Owner Decision List (unchanged items + hygiene)
 
-1. **Merge/push** — the branch is 33 commits ahead, verified, APPROVED FOR MERGE; the act is yours (requires a *valid* credential — the supplied PAT is 401).
+1. **Merge/push** — the branch is now 37 commits ahead, verified, APPROVED FOR MERGE; the act is yours (requires a *valid* credential — the supplied PAT is 401).
 2. **Token rotation (action now)** — the PAT was pasted into a chat channel; revoke and rotate regardless of validity.
-3. **Coupon append-only ledger** — adopt or defer the design in FINDINGS §7-ب (needs schema v18).
+3. ~~Coupon append-only ledger~~ — **ADOPTED AND IMPLEMENTED in Wave R7 (RVW-17, schema v18)** per your instruction to complete the development; residual documented (convergent reconciliation, bounded overshoot).
 4. **General RBAC closure below the execution boundary** — keep the automation-contract decision or revisit.
 5. **Pre-release checklist** — signing, device E2E, live gateways, real relay, JDK-21 CI leg (structurally unverifiable in this sandbox).
 
 ## 14. Roadmap (Next Waves)
 
-R7 candidates in priority order: (1) owner-authorized merge + tag `v3.2.5` once a valid credential exists; (2) coupon ledger implementation if the owner adopts §7-ب; (3) full-fidelity v1→v17 single-chain migration test (per-version column bookkeeping — the step tests now cover each hop, the composition test would additionally prove one continuous ancient-device upgrade); (4) a `--self-test` habit for the remaining three Python gates (the network gate set the precedent); (5) instrumented-device run for the NOT-VERIFIED checklist when hardware access exists.
+**Wave R7 (2026-10-18) — executed in full:** items (2)(3)(4) of the candidates below were implemented as RVW-17 (§7-ب ledger, schema v18), RVW-18 (v1→v18 composition test), RVW-19 (`--self-test` on the three remaining gates); verification at the tip: 4/4 gates + 4/4 self-tests, suite 1778/0/0 (165 files), `assembleDebug` (`versionCode='15'`), `lintRelease`. Remaining candidates:
+
+R8 candidates in priority order: (1) owner-authorized merge + tag once a valid credential exists (owner-only, still the single blocking act); (2) instrumented-device run for the NOT-VERIFIED checklist when hardware access exists; (3) optional hardening beyond the current decision set only if the owner reopens them (general RBAC closure; coupon `qty > 1` semantics if multi-redemption ever becomes a business rule — the ledger schema already carries `qty` for it).
