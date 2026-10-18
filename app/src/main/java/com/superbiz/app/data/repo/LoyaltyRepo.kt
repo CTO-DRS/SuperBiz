@@ -123,8 +123,14 @@ class LoyaltyRepo(private val db: AppDatabase) {
      *     إلى ما دون الحد (تحت-عدّ الدمج الموثق أو أي انجراف) فما دام الدفتر
      *     يشهد ببلوغ الحد فالاستهلاك مرفض (اتجاه الفشل: رفض بلا خصم، أبداً العكس).
      *  ② التحديث الذري المشروط (consume) يبقى حارس الاستهلاك الفردي كما هو.
-     *  ③ الحدث بساعة صفِر يتركها مشغّل اللمس — فيدخل دفتر الدفع دلتا تلقائياً،
-     *     وإعادة إدراج نفس المعرّف الحتمي (deviceId|invoiceId|code) تُتجاهل دالّاً.
+     *  ③ الحدث بساعة صفِر يتركها مشغّل اللمس — فيدخل دفتر الدفع دلتا تلقائياً.
+     *  ④ [RVW-20 V 3.2.7] الشاهد إلزامي لا اختياري: قيمة insertOrIgnore محسوبة —
+     *     ‎-1 (تصادم eventId الحتمي: نفس الفاتورة والكود على نفس الجهاز) يُسقط
+     *     المعاملة كلها فلا انجراف عدّاد بلا شاهد أبداً (الاتجاه المفتوح الموثق
+     *     كان يسمح بصمت بخصم بلا دفتر). التسامح مع ‎-1 حصراً في المسار الاتحادي
+     *     (المزامنة/الاستعادة — دورة إعادة الدفع موثقة هناك) لا في مسار الاستهلاك.
+     *     لا مسار حي يصطدم بالعقد: POS يولّد invId جديداً كل مرة، والمحرر لا يمرّر
+     *     couponId أصلاً — فالعقد دفاع عميق بحدّ قاعدة البيانات مهما جاء مستدعٍ مستقبلاً.
      * deviceId يُحلّ قبل فتح المعاملة (InvoiceRepo يمرره — قراءة DataStore داخل
      * معاملة Room غير مضمونة) — فراغه لا يمنع الشاهد ("|id|code" ما يزال فريداً
      * بمفتاح الفاتورة المحلي) لكنه يوثّق في السجل أن المزوّد غير مربوط.
@@ -139,12 +145,18 @@ class LoyaltyRepo(private val db: AppDatabase) {
             }
         }
         require(db.coupons().consume(couponId, now) == 1) { "coupon not consumable: $couponId" }
-        db.couponRedemptions().insertOrIgnore(
+        // [RVW-20 V 3.2.7] الشاهد إلزامي: ‎-1 = تصادم المعرّف الحتمي (استهلاك مكرر لنفس
+        // الفاتورة على نفس الجهاز) — يُرمى هنا فيتراجع الاستهلاك الذري والحفظ كله معه:
+        // فشل مغلَق بالاتجاه الصحيح (رفض بلا خصم) لا انجراف عدّاد بلا شاهد أبداً.
+        val witness = db.couponRedemptions().insertOrIgnore(
             com.superbiz.app.data.db.CouponRedemptionEntity(
                 eventId = "$deviceId|$invoiceId|${c.code}", code = c.code,
                 invoiceId = invoiceId, qty = 1, at = now, origin = deviceId
             )
         )
+        require(witness != -1L) {
+            "coupon ledger witness collision: $deviceId|$invoiceId|${c.code} (fail-closed rollback)"
+        }
     }
 
     /**
