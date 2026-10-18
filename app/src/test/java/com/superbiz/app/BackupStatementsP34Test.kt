@@ -114,9 +114,11 @@ class BackupStatementsP34Test {
     }
 
     @Test
-    fun `tablesFound map covers all twenty five tables`() {
+    fun `tablesFound map covers all twenty six tables`() {
         val stats = planImport(fullData(), emptySet(), emptySet())
-        assertEquals(25, stats.tablesFound.size)
+        // [RVW-17 V 3.2.6] 25 + دفتر استهلاك الكوبونات = 26
+        assertEquals(26, stats.tablesFound.size)
+        assertEquals(0, stats.tablesFound[BackupTables.COUPON_REDEMPTIONS])
         // الأسماء الثمانية الجديدة حاضرة بأحجامها الحقيقية
         assertEquals(1, stats.tablesFound[BackupTables.STATEMENT_TEMPLATES])
         assertEquals(1, stats.tablesFound[BackupTables.SIGNATURES])

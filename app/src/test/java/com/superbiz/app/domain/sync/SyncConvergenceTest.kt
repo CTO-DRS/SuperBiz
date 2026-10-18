@@ -11,6 +11,7 @@ import com.superbiz.app.data.db.Product
 import com.superbiz.app.data.repo.SyncClock
 import com.superbiz.app.data.repo.SyncEngine
 import com.superbiz.app.data.repo.SyncRound
+import com.superbiz.app.data.repo.toSpec
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -74,9 +75,10 @@ class SyncConvergenceTest {
         val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        // مخطط v16 تُنشئه Room — ثم تُركَّب حارس المشغّلات والمشغّلات نفسها (SQL زمن التشغيل)
+        // مخطط v18 تُنشئه Room — ثم تُركَّب حارس المشغّلات والمشغّلات نفسها (SQL زمن التشغيل)
         db.openHelper.writableDatabase
         for (sql in AppGraph.syncRuntimeSql()) db.openHelper.writableDatabase.execSQL(sql)
+        for (sql in AppGraph.syncRuntimeSql18()) db.openHelper.writableDatabase.execSQL(sql)
         return db
     }
 
@@ -336,5 +338,83 @@ class SyncConvergenceTest {
             dbA.coupons().byId(cid)?.usedCount,
             dbB.coupons().byOrigin("aaaa-device", cid)?.usedCount
         )
+    }
+
+    // ═══════════════ [RVW-17 V 3.2.6] دفتر الاستهلاك — التصحيح عند التقارب ═══════════════
+
+    /**
+     * إغلاق الحد الموثق أعلاه بتصميم §7-ب: دفتر أحداث إلحاقي coupon_redemptions
+     * يُزامن باتحاد أعراف (add-only — بلا حذف ولا تعديل). الجهازان يستهلكان دون
+     * اتصال كما في الاختبار السابق — العدّاد المجمع يبقى تحت-عابداً (1 لا 2)،
+     * لكن دفتر الأحداث يتقارب على شاهدين حقيقيين على الجهازين معاً، فبوابة
+     * fail-closed (ledgerUses ≥ maxUses) ترفض كل استهلاك لاحق على الجهازين.
+     * ودلالة الاتحاد تُقفل حرفياً: جولة إعادة مزامنة كاملة لا تضاعف شيئاً.
+     * (المحاكاة على مستوى DAO — ما يفعله LoyaltyRepo.consumeCouponInTransaction
+     * داخل معاملة الفاتورة حرفياً: استهلاك ذرّي ثم إدراج حدث بساعة صفِر يتركها
+     * لمشغّل اللمس، فتدخل دفتر الدفع دلتا تلقائياً.)
+     */
+    @Test
+    fun `coupon redemption ledger reconciles distributed consumption - effective uses = 2 on both devices`() = runBlocking {
+        val relay = Loopback()
+        val now = System.currentTimeMillis()
+
+        // 1) A ينشئ كوبون maxUses=2 ويزامن (B يستورده)
+        val cid = dbA.coupons().upsert(
+            com.superbiz.app.data.db.CouponEntity(code = "RACE-2", maxUses = 2, active = true)
+        )
+        round(engineA, relay); round(engineB, relay)
+        val bRow0 = dbB.coupons().byOrigin("aaaa-device", cid)!!
+
+        // 2) دون اتصال: كل جهاز يستهلك ويكتب حدث دفتره (نمط LoyaltyRepo حرفياً)
+        assertEquals(1, dbA.coupons().consume(cid, now))
+        dbA.couponRedemptions().insertOrIgnore(
+            com.superbiz.app.data.db.CouponRedemptionEntity(
+                eventId = "aaaa-device|11|RACE-2", code = "RACE-2",
+                invoiceId = 11L, qty = 1, at = now, origin = "aaaa-device"
+            )
+        )
+        assertEquals(1, dbB.coupons().consume(bRow0.id, now))
+        dbB.couponRedemptions().insertOrIgnore(
+            com.superbiz.app.data.db.CouponRedemptionEntity(
+                eventId = "bbbb-device|22|RACE-2", code = "RACE-2",
+                invoiceId = 22L, qty = 1, at = now, origin = "bbbb-device"
+            )
+        )
+        forceClock(dbA, "coupons", cid, 5_000L)
+        forceClock(dbB, "coupons", bRow0.id, 6_000L)
+
+        // 3) تقارب كامل بجولتي دفع وسحب
+        round(engineA, relay); round(engineB, relay)
+        round(engineA, relay); round(engineB, relay)
+
+        // 4) الحكم الأول — الحد القديم كما هو: العدّاد المجمع تحت-عابد (1 لا 2)
+        assertEquals("حد AUD-3 الموثق يبقى كما هو على العداد", 1, dbA.coupons().byId(cid)?.usedCount)
+        assertEquals(1, dbB.coupons().byOrigin("aaaa-device", cid)?.usedCount)
+
+        // 5) الحكم الجديد — الدفتر يتقارب على شاهدين على الجهازين معاً
+        assertEquals("الشاهدان متقاربان على A", 2, dbA.couponRedemptions().countByCode("RACE-2"))
+        assertEquals("الشاهدان متقاربان على B", 2, dbB.couponRedemptions().countByCode("RACE-2"))
+        val idsA = dbA.couponRedemptions().allOnce().map { it.eventId }.toSet()
+        val idsB = dbB.couponRedemptions().allOnce().map { it.eventId }.toSet()
+        assertEquals("مجموعتا الأحداث متطابقتان بايتياً", idsA, idsB)
+        assertEquals(setOf("aaaa-device|11|RACE-2", "bbbb-device|22|RACE-2"), idsA)
+
+        // 6) بوابة fail-closed: الاستخدام الفعلي (2) بلغ الحد ⇒ الرفض على الجهازين
+        for ((label, db) in listOf("A" to dbA, "B" to dbB)) {
+            val row = if (label == "A") db.coupons().byId(cid)!! else db.coupons().byOrigin("aaaa-device", cid)!!
+            val check = com.superbiz.app.domain.LoyaltyP46.checkSpec(
+                row.toSpec(ledgerUses = db.couponRedemptions().countByCode("RACE-2")),
+                now = now + 1, basePiasters = 10_000L
+            )
+            assertTrue("جهاز $label: الدفتر يرفض الاستهلاك الثالث",
+                check is com.superbiz.app.domain.LoyaltyP46.CouponCheck.Rejected &&
+                    check.reason == com.superbiz.app.domain.LoyaltyP46.CouponReject.EXHAUSTED)
+        }
+
+        // 7) دلالة الاتحاد حرفياً: جولتا إعادة مزامنة كاملتان لا تضاعفان شيئاً
+        round(engineA, relay); round(engineB, relay)
+        round(engineA, relay); round(engineB, relay)
+        assertEquals("إعادة المزامنة لا تكرر الأحداث (A)", 2, dbA.couponRedemptions().countByCode("RACE-2"))
+        assertEquals("إعادة المزامنة لا تكرر الأحداث (B)", 2, dbB.couponRedemptions().countByCode("RACE-2"))
     }
 }

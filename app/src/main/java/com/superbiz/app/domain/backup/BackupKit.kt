@@ -18,6 +18,7 @@ import com.superbiz.app.data.db.Visit
 // [P34-M1] نطاق v4 — كيانات جداول منظومة الكشوف الثمانية (23/23)
 import com.superbiz.app.data.db.AuditLogEntity
 import com.superbiz.app.data.db.CouponEntity
+import com.superbiz.app.data.db.CouponRedemptionEntity
 import com.superbiz.app.data.db.LoyaltyEntryEntity
 import com.superbiz.app.data.db.NoteTemplateEntity
 import com.superbiz.app.data.db.SignatureEntity
@@ -93,10 +94,10 @@ const val BACKUP_FORMAT = "superbiz-backup"
 
 /**
  * [P36-BK] عدد جداول النسخة — العقد المرجعي للرقاقة المعروضة في مركز الإعدادات
- * («تغطية النسخ: 25/25»). يُختبر بالانعكاس في BackupContractP36Test ضد عدد حقول
+ * («تغطية النسخ: 26/26»). يُختبر بالانعكاس في BackupContractP36Test ضد عدد حقول
  * [BackupData] نفسها فلا ينحرف الرقم المعلن عن الواقع المصدَّر أبداً.
  */
-const val BACKUP_TABLE_COUNT = 25
+const val BACKUP_TABLE_COUNT = 26
 
 /** [P13-b] إصدار الصيغة الحالي — أي إصدار أعلى يُرفض برسالة واضحة لا بمحاولة تحليل أعمى
  * [P14-b] يبقى 1 في v2 و[P15-b] يبقى 1 في الصيغة لم تتغير، فقط توسّع نطاق
@@ -145,7 +146,11 @@ data class BackupData(
     // [P46-W1] نطاق v5 — جدولا الولاء والكوبونات (25/25): قائمتان جديدتان افتراضيتان
     // فتنجو ملفات النسخ السابقة وبناة BackupData الموضعية في الاختبارات بلا تعديل
     val loyaltyEntries: List<LoyaltyEntryEntity> = emptyList(),
-    val coupons: List<CouponEntity> = emptyList()
+    val coupons: List<CouponEntity> = emptyList(),
+    // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات (26/26 — تصميم §7-ب): قائمة افتراضية
+    // فتنجو ملفات ما قبل v3.2.6 — ويُقرأ والتسلسل للتشتيف الكامل، لكن التنفيذ
+    // الدمجي لا يدرجه حصراً (NON_MERGEABLE — شواهد استهلاك مالي مثل الفواتير)
+    val couponRedemptions: List<CouponRedemptionEntity> = emptyList()
 )
 
 /** [P13-b] نتيجة التحليل: إما بيانات كاملة أو رسالة خطأ عربية — لا حالات وسطى */
@@ -229,13 +234,15 @@ object BackupTables {
 
     const val LOYALTY_ENTRIES = "loyalty_entries"
     const val COUPONS = "coupons"
+    // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — شواهد الاستهلاك الموزّع
+    const val COUPON_REDEMPTIONS = "coupon_redemptions"
 
     val ALL: List<String> = listOf(
         PARTIES, PRODUCTS, INVOICES, INVOICE_ITEMS, PAYMENTS, VISITS, EXPENSES,
         CHECKS, PLANS, INSTALLMENTS, CURRENCIES, RULES, JOURNAL, JOURNAL_LINES, STOCK_MOVES,
         STATEMENT_TEMPLATES, SIGNATURES, STAMPS, NOTE_TEMPLATES,
         STATEMENTS, STATEMENT_DELIVERIES, STATEMENT_RULES, AUDIT_LOG,
-        LOYALTY_ENTRIES, COUPONS
+        LOYALTY_ENTRIES, COUPONS, COUPON_REDEMPTIONS
     )
 }
 
@@ -252,7 +259,12 @@ object BackupTables {
 val NON_MERGEABLE_TABLES: List<String> = listOf(
     BackupTables.INVOICES, BackupTables.INVOICE_ITEMS, BackupTables.PAYMENTS,
     BackupTables.JOURNAL, BackupTables.JOURNAL_LINES, BackupTables.STOCK_MOVES,
-    BackupTables.CURRENCIES, BackupTables.RULES
+    BackupTables.CURRENCIES, BackupTables.RULES,
+    // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — شواهد مالية مرتبطة بفواتير غائمة
+    // عن القاعدة في المسار الدمجي؛ إدخالها وحدها يحسب استهلاكاً بلا فاتورته فيرفض
+    // كوبوناً صالحاً (fail-closed بالاتجاه الخاطئ) — فتنتقل مع تاريخها المالي
+    // عبر «استبدال كامل» حصراً، والمزامنة الحية بين الأجهزة المزدوجة هي مسارها الطبيعي
+    BackupTables.COUPON_REDEMPTIONS
 )
 
 /** [RVW-1 إصلاح] جداول الاكتشاف التي لن يدخلها الدمج — من خريطة counts الفعلية للملف */
@@ -267,7 +279,7 @@ fun totalRows(d: BackupData): Int =
         d.journal.size + d.journalLines.size + d.stockMoves.size +
         d.statementTemplates.size + d.signatures.size + d.stamps.size + d.noteTemplates.size +
         d.statements.size + d.statementDeliveries.size + d.statementRules.size + d.auditLog.size +
-        d.loyaltyEntries.size + d.coupons.size
+        d.loyaltyEntries.size + d.coupons.size + d.couponRedemptions.size
 
 // ─────────────────────────── الكتابة ───────────────────────────
 
@@ -312,6 +324,7 @@ fun buildBackupJson(d: BackupData): String {
     count(BackupTables.AUDIT_LOG, d.auditLog.size)
     count(BackupTables.LOYALTY_ENTRIES, d.loyaltyEntries.size)
     count(BackupTables.COUPONS, d.coupons.size)
+    count(BackupTables.COUPON_REDEMPTIONS, d.couponRedemptions.size)
     sb.append('}')
     // tables: صفوف كل جدول كائنات بحقول الكيان الأصلية
     sb.append(",\"tables\":{")
@@ -351,6 +364,7 @@ fun buildBackupJson(d: BackupData): String {
     table(BackupTables.AUDIT_LOG, d.auditLog) { auditLogToJson(it) }
     table(BackupTables.LOYALTY_ENTRIES, d.loyaltyEntries) { loyaltyEntryToJson(it) }
     table(BackupTables.COUPONS, d.coupons) { couponToJson(it) }
+    table(BackupTables.COUPON_REDEMPTIONS, d.couponRedemptions) { couponRedemptionToJson(it) }
     sb.append("}}")
     return sb.toString()
 }
@@ -910,7 +924,9 @@ fun parseBackup(text: String): BackupParseResult {
                 auditLog = decodeTable(tables, BackupTables.AUDIT_LOG, legacy) { m, _ -> auditLogFromJson(m) },
                 // [P46-W1] نطاق v5 — جدولا الولاء والكوبونات (متسامحان: جدول غائب = قائمة فارغة)
                 loyaltyEntries = decodeTable(tables, BackupTables.LOYALTY_ENTRIES, legacy) { m, _ -> loyaltyEntryFromJson(m) },
-                coupons = decodeTable(tables, BackupTables.COUPONS, legacy) { m, _ -> couponFromJson(m) }
+                coupons = decodeTable(tables, BackupTables.COUPONS, legacy) { m, _ -> couponFromJson(m) },
+                // [RVW-17 V 3.2.6] دفتر الاستهلاك (متسامح: جدول غائب = قائمة فارغة — ملفات ما قبل v3.2.6)
+                couponRedemptions = decodeTable(tables, BackupTables.COUPON_REDEMPTIONS, legacy) { m, _ -> couponRedemptionFromJson(m) }
             ),
             null
         )
@@ -1347,6 +1363,31 @@ private fun couponFromJson(m: Map<*, *>) = CouponEntity(
     createdAt = m.lngF("createdAt", 0L)
 )
 
+/** [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — تسلسل شاهد الاستهلاك (نمط الكوبون حرفياً) */
+private fun couponRedemptionToJson(e: CouponRedemptionEntity): String {
+    val sb = StringBuilder(160)
+    sb.append('{')
+    sb.lng("id", e.id); sb.append(',')
+    sb.str("eventId", e.eventId); sb.append(',')
+    sb.str("code", e.code); sb.append(',')
+    sb.lng("invoiceId", e.invoiceId); sb.append(',')
+    sb.append("\"qty\":").append(e.qty); sb.append(',')
+    sb.lng("at", e.at); sb.append(',')
+    sb.str("origin", e.origin)
+    sb.append('}')
+    return sb.toString()
+}
+
+private fun couponRedemptionFromJson(m: Map<*, *>) = CouponRedemptionEntity(
+    id = m.lngF("id", 0L),
+    eventId = m.strF("eventId", ""),
+    code = m.strF("code", ""),
+    invoiceId = m.lngF("invoiceId", 0L),
+    qty = m.intF("qty", 1),
+    at = m.lngF("at", 0L),
+    origin = m.strF("origin", "")
+)
+
 // ─────────────────────────── خطة الدمج ───────────────────────────
 
 /**
@@ -1640,7 +1681,8 @@ fun planImport(
         BackupTables.STATEMENT_RULES to d.statementRules.size,
         BackupTables.AUDIT_LOG to d.auditLog.size,
         BackupTables.LOYALTY_ENTRIES to d.loyaltyEntries.size,
-        BackupTables.COUPONS to d.coupons.size
+        BackupTables.COUPONS to d.coupons.size,
+        BackupTables.COUPON_REDEMPTIONS to d.couponRedemptions.size
     )
     return ImportStats(
         importedP, skippedP, importedPr, skippedPr, failed, tables,

@@ -15,6 +15,11 @@ class InvoiceRepo(
     private val loyalty: LoyaltyRepo? = null,
     // [Z2-أ V 1.5.0] خاتم ZATCA-2 — null يبقي كل السلوك القائم حرفياً (نمط loyalty)
     private val zatca: ZatcaStamper? = null,
+    // [RVW-17 V 3.2.6] مزوّد هوية الجهاز لشاهد دفتر الكوبونات — يُحلّ مرة واحدة
+    // قبل فتح معاملة الحفظ (قراءة DataStore داخل معاملة Room غير مضمونة).
+    // الافتراضي فراغ = شاهد بلا هوية جهاز (ما يزال فريداً بمفتاح الفاتورة المحلي)؛
+    // الإنتاج يربط SyncEnableStore.deviceIdOnce في SuperBizApp.
+    private val deviceIdProvider: suspend () -> String = { "" },
 ) {
 
     // أي تغيير على الفواتير (حفظ/إلغاء) يجدد ويدجات الشاشة الرئيسية — نفس نمط LedgerRepo
@@ -88,6 +93,9 @@ class InvoiceRepo(
         // القديمة (مخزون + قيود) داخل نفس المعاملة قبل تطبيق الجديد — نفس منطق voidInvoice —
         // مع منع التحصيل الفوري على التعديل ومن تعديل فاتورة ملغاة، والحفاظ على رقم الفاتورة
         val isUpdate = invoice.id != 0L
+        // [RVW-17 V 3.2.6] هوية الجهاز لشاهد دفتر الكوبونات — تُحلّ قبل المعاملة حصراً
+        // (قراءة DataStore داخل معاملة Room غير مضمونة) وبحاجة الاستهلاك فقط
+        val deviceId = if (couponId > 0L) deviceIdProvider() else ""
         var invId = 0L
         db.withTransaction {
             // [P5-H7 إصلاح]: الفاتورة القديمة تُقرأ أولاً في مسار التعديل — وهي أساس
@@ -197,11 +205,13 @@ class InvoiceRepo(
             // [P46-W1] الولاء والكوبون داخل نفس المعاملة — بعد اكتمال القيد والتحصيل:
             // الكسب ثم الاستبدال ثم الاستهلاك — وأي require هنا يرجع الفاتورة كلها
             // (بنوداً وقيوداً ومخزوناً ونقاطاً) إلى ما قبل المعاملة.
+            // [RVW-17 V 3.2.6] شاهد الدفتر يحمل invId وهوية الجهاز (حُلّت قبل المعاملة) —
+            // فكل استهلاك فعلي يترك شاهداً حتمياً فريداً في coupon_redemptions.
             if (loyalty != null && (loyaltyEarn > 0L || loyaltyRedeem > 0L || couponId > 0L)) {
                 val note = withNumber.number
                 loyalty.earnInTransaction(withNumber.partyId, loyaltyEarn, invId, note)
                 loyalty.redeemInTransaction(withNumber.partyId, loyaltyRedeem, invId, note)
-                if (couponId > 0L) loyalty.consumeCouponInTransaction(couponId, withNumber.date)
+                if (couponId > 0L) loyalty.consumeCouponInTransaction(couponId, withNumber.date, invId, deviceId)
             }
         }
         onMutate?.invoke()
