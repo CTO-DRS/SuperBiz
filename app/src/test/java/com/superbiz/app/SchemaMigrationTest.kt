@@ -1115,4 +1115,147 @@ class SchemaMigrationTest {
         }
         return out
     }
+
+    // ═══════════════ [RVW-15] ترحيلات 1→2 و2→3 — الحلقة الوحيدة الباقية بلا تغطية ═══════════════
+    // سجل الترحيلات 16 خطوة؛ كان مغطىً خطوةً خطوة من 3→4 حتى 16→17 (أسفل)، وبقيت
+    // 1→2 (جدولا الأقساط) و2→3 (جدول المصروفات) بلا اختبار — وهما من نوع «إنشاء فقط»
+    // (CREATE TABLE/INDEX IF NOT EXISTS — لا قراءة من الجداول القائمة ولا ALTER عليها).
+    // المرجع غير الدوري للأعمدة والفهارس: 5.json المُصدَّر من معالج Room — الجداول
+    // الثلاثة لم تتغير بنيتها منذ إنشائها (إعادة بناء 4→5 لمسّت 8 جداول أخرى، وما
+    // أضافه على installment_plans من مفتاح أجنبي هو قيد مستوى v5 لا عمود).
+
+    /** بنية v1 الدنيا: 9 جداول التأسيس فقط — installment_plans/installments/expenses
+     *  غائبة عمداً فهي مخلوقات الترحيلات موضع الاختبار نفسها */
+    private fun minimalV1Schema(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE `parties` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `phone` TEXT NOT NULL, `type` INTEGER NOT NULL, `note` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `archived` INTEGER NOT NULL)")
+        db.execSQL("CREATE TABLE `journal` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `date` INTEGER NOT NULL, `memo` TEXT NOT NULL, `refType` TEXT, `refId` INTEGER)")
+        db.execSQL("CREATE TABLE `journal_lines` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `entryId` INTEGER NOT NULL, `account` TEXT NOT NULL, `debit` REAL NOT NULL, `credit` REAL NOT NULL, `partyId` INTEGER, `currency` TEXT NOT NULL, `fxRate` REAL NOT NULL)")
+        db.execSQL("CREATE TABLE `products` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `sku` TEXT NOT NULL, `barcode` TEXT NOT NULL, `unit` TEXT NOT NULL, `costPrice` REAL NOT NULL, `salePrice` REAL NOT NULL, `stockQty` REAL NOT NULL, `reorderLevel` REAL NOT NULL, `category` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `archived` INTEGER NOT NULL)")
+        db.execSQL("CREATE TABLE `stock_moves` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `productId` INTEGER NOT NULL, `qty` REAL NOT NULL, `reason` TEXT NOT NULL, `date` INTEGER NOT NULL, `refType` TEXT, `refId` INTEGER, `note` TEXT NOT NULL)")
+        db.execSQL("CREATE TABLE `invoices` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `number` TEXT NOT NULL, `partyId` INTEGER NOT NULL, `type` INTEGER NOT NULL, `date` INTEGER NOT NULL, `dueDate` INTEGER NOT NULL, `subtotal` REAL NOT NULL, `discount` REAL NOT NULL, `taxRate` REAL NOT NULL, `taxAmount` REAL NOT NULL, `total` REAL NOT NULL, `paid` REAL NOT NULL, `costTotal` REAL NOT NULL, `status` INTEGER NOT NULL, `currency` TEXT NOT NULL, `fxRate` REAL NOT NULL, `note` TEXT NOT NULL)")
+        db.execSQL("CREATE TABLE `invoice_items` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `invoiceId` INTEGER NOT NULL, `productId` INTEGER, `desc` TEXT NOT NULL, `qty` REAL NOT NULL, `unitPrice` REAL NOT NULL, `discount` REAL NOT NULL)")
+        db.execSQL("CREATE TABLE `payments` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `partyId` INTEGER, `invoiceId` INTEGER, `checkId` INTEGER, `amount` REAL NOT NULL, `date` INTEGER NOT NULL, `direction` INTEGER NOT NULL, `method` TEXT NOT NULL, `note` TEXT NOT NULL)")
+        db.execSQL("CREATE TABLE `checks` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `number` TEXT NOT NULL, `partyId` INTEGER NOT NULL, `bank` TEXT NOT NULL, `amount` REAL NOT NULL, `issueDate` INTEGER NOT NULL, `dueDate` INTEGER NOT NULL, `direction` INTEGER NOT NULL, `status` INTEGER NOT NULL, `note` TEXT NOT NULL)")
+    }
+
+    /** عقد الأعمدة (اسم، نوع، notnull) كما في 5.json — ترتيب حرفي لا تقبل */
+    private fun assertColumns(db: SupportSQLiteDatabase, table: String, expected: List<Triple<String, String, String>>) {
+        val actual = tableColumns(db, table).map { Triple(it.name, it.type, it.notNull) }
+        assertEquals("أعمدة $table بطول غير متوقع", expected.size, actual.size)
+        for (i in expected.indices) {
+            assertEquals("عمود $i في $table", expected[i], actual[i])
+        }
+    }
+
+    @Test
+    fun migration1to2_createsInstallmentTablesInExactRoomShape_andKeepsData() {
+        val ctx = ApplicationProvider.getApplicationContext<Context>()
+        val config = SupportSQLiteOpenHelper.Configuration.builder(ctx)
+            .name(null) // قاعدة في الذاكرة
+            .callback(object : SupportSQLiteOpenHelper.Callback(1) {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    minimalV1Schema(db)
+                    // بذر بيانات ما قبل الترحيل — يجب أن تنجو كاملة
+                    db.execSQL("INSERT INTO `parties` (`id`,`name`,`phone`,`type`,`note`,`createdAt`,`archived`) VALUES (1, 'عميل', '050', 0, '', 100, 0)")
+                    db.execSQL("INSERT INTO `invoices` (`id`,`number`,`partyId`,`type`,`date`,`dueDate`,`subtotal`,`discount`,`taxRate`,`taxAmount`,`total`,`paid`,`costTotal`,`status`,`currency`,`fxRate`,`note`) VALUES (1, 'INV-0001', 1, 0, 100, 200, 80.0, 0.0, 0.0, 0.0, 80.0, 30.0, 0.0, 1, 'SAR', 1.0, '')")
+                }
+                override fun onUpgrade(db: SupportSQLiteDatabase, old: Int, new: Int) = Unit
+            })
+            .build()
+        val helper = FrameworkSQLiteOpenHelperFactory().create(config)
+        val db = helper.writableDatabase
+        try {
+            val migration = com.superbiz.app.AppGraph.MIGRATIONS[0]
+            assertEquals(1, migration.startVersion)
+            assertEquals(2, migration.endVersion)
+            migration.migrate(db)
+
+            // 1) البنية مطابقة لما يصدّره Room (5.json) حرفياً — ترتيباً ونوعاً وعدم-إتاحة
+            assertColumns(db, "installment_plans", listOf(
+                Triple("id", "INTEGER", "1"), Triple("title", "TEXT", "1"),
+                Triple("partyId", "INTEGER", "1"), Triple("direction", "INTEGER", "1"),
+                Triple("total", "REAL", "1"), Triple("downPayment", "REAL", "1"),
+                Triple("financed", "REAL", "1"), Triple("months", "INTEGER", "1"),
+                Triple("startDate", "INTEGER", "1"), Triple("currency", "TEXT", "1"),
+                Triple("note", "TEXT", "1"), Triple("createdAt", "INTEGER", "1"),
+                Triple("archived", "INTEGER", "1")
+            ))
+            assertColumns(db, "installments", listOf(
+                Triple("id", "INTEGER", "1"), Triple("planId", "INTEGER", "1"),
+                Triple("seq", "INTEGER", "1"), Triple("amount", "REAL", "1"),
+                Triple("dueDate", "INTEGER", "1"), Triple("paidAmount", "REAL", "1"),
+                Triple("paidDate", "INTEGER", "0"), Triple("status", "INTEGER", "1")
+            ))
+
+            // 2) الفهارس الخمسة بأسماء Room القياسية
+            for (idx in listOf(
+                "index_installment_plans_partyId", "index_installment_plans_direction",
+                "index_installments_planId", "index_installments_dueDate", "index_installments_status"
+            )) {
+                db.query("SELECT name FROM sqlite_master WHERE type = 'index' AND name = '$idx'").use { c ->
+                    assertTrue("فهرس $idx مفقود بعد 1→2", c.moveToFirst())
+                }
+            }
+
+            // 3) بيانات ما قبل الترحيل نجوت — والجداول الجديدة قابلة للكتابة فعلاً
+            assertEquals("صف الطرف القائم ضاع", 1L, scalar(db, "SELECT COUNT(*) FROM parties"))
+            assertEquals("الفاتورة القائمة ضاعت", 1L, scalar(db, "SELECT COUNT(*) FROM invoices"))
+            db.execSQL("INSERT INTO `installment_plans` (`id`,`title`,`partyId`,`direction`,`total`,`downPayment`,`financed`,`months`,`startDate`,`currency`,`note`,`createdAt`,`archived`) VALUES (1, 'خطة', 1, 0, 100.0, 0.0, 100.0, 4, 100, 'SAR', '', 100, 0)")
+            db.execSQL("INSERT INTO `installments` (`id`,`planId`,`seq`,`amount`,`dueDate`,`paidAmount`,`paidDate`,`status`) VALUES (1, 1, 1, 25.0, 100, 0.0, NULL, 0)")
+            assertEquals(1L, scalar(db, "SELECT COUNT(*) FROM installment_plans"))
+            assertEquals(1L, scalar(db, "SELECT COUNT(*) FROM installments"))
+
+            // 4) إعادة التشغيل آمنة — IF NOT EXISTS لا يرمي ولا يكرر
+            migration.migrate(db)
+            assertEquals("إعادة 1→2 ضاعفت شيئاً", 1L, scalar(db, "SELECT COUNT(*) FROM installment_plans"))
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun migration2to3_createsExpensesTableInExactRoomShape_andKeepsData() {
+        val ctx = ApplicationProvider.getApplicationContext<Context>()
+        val config = SupportSQLiteOpenHelper.Configuration.builder(ctx)
+            .name(null)
+            .callback(object : SupportSQLiteOpenHelper.Callback(1) {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    minimalV1Schema(db)
+                    db.execSQL("INSERT INTO `parties` (`id`,`name`,`phone`,`type`,`note`,`createdAt`,`archived`) VALUES (1, 'عميل', '050', 0, '', 100, 0)")
+                }
+                override fun onUpgrade(db: SupportSQLiteDatabase, old: Int, new: Int) = Unit
+            })
+            .build()
+        val helper = FrameworkSQLiteOpenHelperFactory().create(config)
+        val db = helper.writableDatabase
+        try {
+            // السلسلة الحرفية لجهاز v1 القديم: خطوتا التأسيس ثم اختبار البنية
+            com.superbiz.app.AppGraph.MIGRATIONS[0].migrate(db)
+            val migration = com.superbiz.app.AppGraph.MIGRATIONS[1]
+            assertEquals(2, migration.startVersion)
+            assertEquals(3, migration.endVersion)
+            migration.migrate(db)
+
+            assertColumns(db, "expenses", listOf(
+                Triple("id", "INTEGER", "1"), Triple("amount", "REAL", "1"),
+                Triple("category", "TEXT", "1"), Triple("note", "TEXT", "1"),
+                Triple("date", "INTEGER", "1"), Triple("createdAt", "INTEGER", "1")
+            ))
+            for (idx in listOf("index_expenses_date", "index_expenses_category")) {
+                db.query("SELECT name FROM sqlite_master WHERE type = 'index' AND name = '$idx'").use { c ->
+                    assertTrue("فهرس $idx مفقود بعد 2→3", c.moveToFirst())
+                }
+            }
+            assertEquals("صف الطرف القائم ضاع", 1L, scalar(db, "SELECT COUNT(*) FROM parties"))
+            db.execSQL("INSERT INTO `expenses` (`id`,`amount`,`category`,`note`,`date`,`createdAt`) VALUES (1, 12.5, 'مواصلات', '', 100, 100)")
+            assertEquals(1L, scalar(db, "SELECT COUNT(*) FROM expenses"))
+            assertEquals(12.5, scalarDouble(db, "SELECT amount FROM expenses WHERE id = 1"), 0.0001)
+
+            // إعادة التشغيل آمنة
+            migration.migrate(db)
+            assertEquals("إعادة 2→3 ضاعفت شيئاً", 1L, scalar(db, "SELECT COUNT(*) FROM expenses"))
+        } finally {
+            db.close()
+        }
+    }
 }
