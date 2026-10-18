@@ -277,6 +277,11 @@ class InvoiceRepo(
             // المعاملة: إلغاء بيع كسب نقاطاً يسترجعها، وإلغاء بيع استبدل نقاطاً يعيدها —
             // فلا نقاط أشباح تُكسب بإلغاء وإعادة إنشاء الفاتورة نفسها
             loyalty?.reverseInvoiceInTransaction(fresh.id, "إلغاء ${fresh.number}")
+            // [RVW-21 — wave R9] الكوبون لا يُسترجع عند الإلغاء عمداً: الاستهلاك حدث
+            // واقعي موثق بشاهد append-only لا يُمحى، والاتجاه آمن للمال (فشل مغلق
+            // يمنع إحياء كوبون مستهلك عبر إلغاء وإعادة إنشاء). عكس النقاط هنا مقصود
+            // بعقد «لا نقاط أشباح»؛ عكس الكوبون قرار مالك مُسجَّل بخياريه الموثقين
+            // (FINDINGS §11) — العقد مقفول بـ CouponVoidSemanticsTest حتى يُقضى فيه.
             val items = db.invoiceItems().forInvoice(fresh.id)
             for (it in items) {
                 val pid = it.productId ?: continue
