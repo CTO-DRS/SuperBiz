@@ -81,6 +81,36 @@ class CsvKitTest {
         }
     }
 
+    // ─── [RVW-25][Wave R11] صيغة السالب الحرفية: ‎-func(…)‎ تُنفَّذ في Excel — حرس واعٍ بالشكل ───
+    // دليل جديد يفتح حسم L-5 جزئياً: ادّعاء «السالب لا يبدأ صيغة» صحيح للأرقام الخالصة
+    // فقط؛ أما ‎-SUM(A1)‎ و‎-1+WEBSERVICE(…)‎ فإكسل يقيّمهما صيغةً (يدخلان سلسلة هجوم
+    // حقيقية: استيراد CSV عدائي → تخزين حرفي → تصدير لاحق → فتح المالك للملف).
+    // الحرس الجديد شكل-واعٍ: بادئة ' فقط حين يتبع السالب حرفٌ (دالة/مرجع خلية) —
+    // والأرقام الخالصة تبقى عارية كعقد L-5 بلا أي مساس.
+
+    @Test
+    fun escape_minusFormulaForm_isGuarded() {
+        assertEquals("'-SUM(A1)", CsvKit.escape("-SUM(A1)"))
+        assertEquals("'-WEBSERVICE(A1)", CsvKit.escape("-WEBSERVICE(A1)"))
+        // صيغة بلا اقتباسات: البادئة فقط
+        assertEquals("'-1+SUM(A1:B2)", CsvKit.escape("-1+SUM(A1:B2)"))
+        // صيغة بعروض مزدوجة: حرس + اقتباس RFC4180 مع مضاعفة الداخلية
+        assertEquals("\"'-1+WEBSERVICE(\"\"http://x\"\")\"", CsvKit.escape("-1+WEBSERVICE(\"http://x\")"))
+        // حروف عربية بعد السالب: نصّ لا رقم — يُحرس أيضاً
+        assertEquals("'-مرحبا", CsvKit.escape("-مرحبا"))
+    }
+
+    @Test
+    fun escape_minusNumericForms_stayBare() {
+        // أرقام خالصة بلا أي حرف: قيم لا صيغ — عقد L-5 باقٍ حرفياً
+        assertEquals("-46.6", CsvKit.escape("-46.6"))
+        assertEquals("-1", CsvKit.escape("-1"))
+        assertEquals("-250.75", CsvKit.escape("-250.75"))
+        assertEquals("-2+3", CsvKit.escape("-2+3")) // حسابية أعداد خالصة — لا وصول بيانات
+        assertEquals("- 46", CsvKit.escape("- 46")) // بلا حروف: يبقى كما هو
+        assertEquals("-", CsvKit.escape("-"))
+    }
+
     // ─── buildCsv ───
 
     @Test

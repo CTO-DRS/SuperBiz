@@ -73,6 +73,7 @@ object ZatcaQueue {
         val rejected: Int = 0,
         val deferred: Int = 0,   // فشل عابر — يعود بمجدوله
         val windowLate: Int = 0, // مبسطة مضت نافذتها عند معالجتها
+        val missingDocs: Int = 0, // [RVW-27][Wave R11] وثائق مفقودة من الأرشيف — تُحصى لا تُهمس
     )
 
     /**
@@ -101,8 +102,14 @@ object ZatcaQueue {
             val due = dueQueue(loadDue(), nowElapsed).take(maxBatch)
             var sent = 0
             var accepted = 0; var rejected = 0; var deferred = 0; var late = 0
+            var missing = 0 // [RVW-27][Wave R11]
             for (q in due) {
-                val doc = loadDocument(q.invoiceId) ?: continue // وثيقة مفقودة: أرشفة أولاً
+                // وثيقة مفقودة من الأرشيف: شذوذ بيانات — تُحصى في الملخص ولا تُرسل ولا
+                // تُكتب حالة لها؛ كانت تُتخطى بصمت فتبقى تدور مستحقةً كل دورة بلا أثر
+                // في أي عدّاد (عنصر سام يبتلع حصة الدفعة بصمت). الترقيم يجعلها مرئية
+                // للمستدعي فيقرر (تنبيه/سجل) دون أن يغيّر هذا المعالج سياستها.
+                val doc = loadDocument(q.invoiceId)
+                if (doc == null) { missing++; continue } // [RVW-27][Wave R11] تُحصى لا تُهمس
                 sent++
                 val result = try {
                     if (q.isStandard) {
@@ -145,7 +152,7 @@ object ZatcaQueue {
                 }
                 if (!q.isStandard && windowState(q, nowWall) == WindowState.LATE) late++
             }
-            return ProcessSummary(sent, accepted, rejected, deferred, late)
+            return ProcessSummary(sent, accepted, rejected, deferred, late, missing)
         }
     }
 }
