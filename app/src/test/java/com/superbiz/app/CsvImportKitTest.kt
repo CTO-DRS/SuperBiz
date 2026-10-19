@@ -165,4 +165,35 @@ class CsvImportKitTest {
         val reExported = CsvKit.buildCsv(listOf("الاسم"), listOf(listOf(mapped.rows[0].name)), bom = false)
         assertTrue("يجب أن يبدأ الحقل المصدَّر بعلامة الحرس", reExported.contains("'=HYPERLINK"))
     }
+
+    // ═══════════ (6) [RVW-26][Wave R11] الأسعار السالبة تُرفض صفّاً بأسباب مسمّاة ═══════════
+    // الاتساق مع الكمية: parseQty يرفض السالب منذ H4-6 بينما parseMoney كان يقبل أسعاراً
+    // سالبة فتنشئ أصنافاً بسعر بيع/تكلفة منفي (تشويه تقييم المخزون وسلوك غريب في السلة).
+    // سلة البيع تُطوّق الإجماليات عند صفر فلا نهب مالٍ — لكن عقد الاستيراد أشدّ: الصف
+    // التالف يُتخطى بسبب مسمّى، والسعر السالب تالف بتعريف المجال.
+
+    @Test
+    fun c6_negativePrices_skippedWithNamedReason() {
+        val csv = "الاسم,سعر التكلفة,سعر البيع,الكمية المتوفرة\n" +
+            "سالب البيع,10,-5,3\n" +
+            "سالب التكلفة,-2,15,3\n" +
+            "سالبان,-1,-1,3\n" +
+            "صالح,10,15,3"
+        val mapped = CsvImportKit.mapProducts(CsvImportKit.parse(csv)!!)!!
+        assertEquals(1, mapped.rows.size)
+        assertEquals("صالح", mapped.rows[0].name)
+        assertEquals(3, mapped.skipped.size)
+        assertTrue("كل صف مرفوض بسبب سالب مسمّى", mapped.skipped.all { it.contains("سالب") })
+    }
+
+    @Test
+    fun c6_zeroPrices_stillAccepted_giftItems() {
+        // الصفر مشروع (هدية/بنر ترويجي) — السالب وحده المحظور
+        val csv = "الاسم,سعر التكلفة,سعر البيع,الكمية المتوفرة\nهدية,0,0,5"
+        val mapped = CsvImportKit.mapProducts(CsvImportKit.parse(csv)!!)!!
+        assertEquals(1, mapped.rows.size)
+        assertEquals(0L, mapped.rows[0].costPiasters)
+        assertEquals(0L, mapped.rows[0].salePiasters)
+        assertEquals(0, mapped.skipped.size)
+    }
 }

@@ -33,9 +33,20 @@ object CsvKit {
      * أزاله — «-46.6» في تصدير المفضّلات كانت تُكتب «'-46.6» فتقرأ Sheets إحداثيات
      * النصَّ لا رقم. السالب لا يبدأ صيغة في Excel (قيمة عددية) — المجموعة الآن
      * = + @ TAB CR في المسارين، وهذه الدالة هي المصدر الوحيد (DataExport تفوّض لها).
+     *
+     * [RVW-25][Wave R11] فجوة L-5 الجزئية تُغلق بحرس شكل-واعٍ: ادّعاء «السالب لا يبدأ
+     * صيغة» صحيح للأرقام الخالصة فقط — إكسل يقيّم ‎-SUM(A1)‎ و‎-1+WEBSERVICE(…)‎ صيغةً
+     * (حروفاً = + @ كانت تحرسها والسالب كان الثقب الوحيد). البادئة ' تُضاف الآن حين
+     * يبدأ الحقل بـ '-' ويليه حرفٌ (دالة/مرجع خلية/نص) — والأرقام الخالصة (‎-46.6،
+     * ‎-2+3) تبقى عارية كعقد L-5 حرفياً فلا تُكسر إحداثيات ولا أرصدة.
      */
     fun escape(field: String): String {
-        val guarded = if (field.isNotEmpty() && field[0] in "=@+\t\r") "'$field" else field
+        val guarded = when {
+            field.isEmpty() -> field
+            field[0] in "=@+\t\r" -> "'$field"
+            field[0] == '-' && field.length > 1 && field.substring(1).any { it.isLetter() } -> "'$field"
+            else -> field
+        }
         if (guarded.indexOfAny(NEEDS_QUOTES) < 0) return guarded
         return "\"" + guarded.replace("\"", "\"\"") + "\""
     }

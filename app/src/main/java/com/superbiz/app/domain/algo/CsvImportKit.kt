@@ -25,6 +25,8 @@ import com.superbiz.app.util.Money
  *    (SKU/الباركود/الأسعار للأصناف، الهاتف للأطراف) لكشف النوع حتمياً.
  * 5) التحليل RFC4180-lite: BOM يزال، اقتباس كامل الحقل، «""» هروب، CRLF/LF/CR،
  *    والصفوف تُحاذى عرض الرأس (قصّ الزائد + حشو الناقص).
+     * 6) [RVW-26][Wave R11] **الأسعار السالبة تالف**: سعر تكلفة/بيع سالب يُتخطى الصف
+     *    بسبب مسمّى — اتساقاً مع رفض الكمية السالبة منذ H4-6 (الصفر مشروع للهدايا).
  */
 object CsvImportKit {
 
@@ -144,7 +146,12 @@ object CsvImportKit {
             val name = r[iName].trim()
             if (name.isEmpty()) { skipped.add("صف ${idx + 2}: الاسم فارغ"); return@forEachIndexed }
             val cost = parseMoney(r, iCost) ?: run { skipped.add("صف ${idx + 2}: سعر تكلفة غير قابل للتحليل"); return@forEachIndexed }
+            // [RVW-26][Wave R11] سعر تكلفة سالب = صف تالف (اتساق مع الكمية السالبة) — الصفر مشروع (هدايا)
+            if (cost < 0L) { skipped.add("صف ${idx + 2}: سعر تكلفة سالب"); return@forEachIndexed }
             val sale = parseMoney(r, iSale) ?: run { skipped.add("صف ${idx + 2}: سعر بيع غير قابل للتحليل"); return@forEachIndexed }
+            // [RVW-26][Wave R11] سعر بيع سالب يرفض صفّاً: سلة البيع تطويق الإجماليات عند صفر
+            // فلا نهب مال، لكن التقييم المخزني وسلوك السلة يتشوهان — عقد الاستيراد أشدّ: صفّ بأسباب مسمّاة
+            if (sale < 0L) { skipped.add("صف ${idx + 2}: سعر بيع سالب"); return@forEachIndexed }
             val stock = parseQty(r, iStock) ?: run { skipped.add("صف ${idx + 2}: كمية غير قابلة للتحليل"); return@forEachIndexed }
             val reorder = parseQty(r, iReorder) ?: run { skipped.add("صف ${idx + 2}: حد طلب غير قابل للتحليل"); return@forEachIndexed }
             rows.add(
