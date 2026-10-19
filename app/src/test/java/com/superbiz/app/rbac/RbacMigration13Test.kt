@@ -260,6 +260,8 @@ class RbacMigration13Test {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
         val room = androidx.room.Room.databaseBuilder(ctx, com.superbiz.app.data.db.AppDatabase::class.java, dbName)
             .allowMainThreadQueries()
+            // [AUD-8 V 3.2.1]: المخطط صار 17 — افتحة تتطلب تسلسل الترحيلات الكامل
+            .addMigrations(*com.superbiz.app.AppGraph.MIGRATIONS.toTypedArray())
             .build()
         try {
             // أي عدم تطابق بين SQL الترحيل ومخطط Room v14 يرمى هنا (RoomOpenHelper.checkIdentity)
@@ -335,14 +337,15 @@ class RbacMigration13Test {
     fun migration12to13_isInMigrationsListAndWiredInBuilder() {
         // عقد التسجيل: الترحيل الأخير في القائمة المكشوفة للاختبارات
         // [H4-1 V 2.5.0]: أُلحق 14→15 بالنهاية — القائمة صارت 14، والفهرس 11 (12→13) سليم مكانه
-        assertEquals(15, AppGraph.MIGRATIONS.size)
+        // [AUD-8 V 3.2.1]: أُلحق 16→17 (فهارس الهوية) — القائمة صارت 16
+        assertEquals(17, AppGraph.MIGRATIONS.size) // [RVW-17] + MIGRATION_17_18
         // [Z2-أ V 1.5.0]: أُلحق 13→14 بالنهاية — مشترك RBAC+ZATCA-2 صار الفهرس 11
         val shared = AppGraph.MIGRATIONS[11]
         assertEquals(12, shared.startVersion)
         assertEquals(13, shared.endVersion)
         val last = AppGraph.MIGRATIONS.last()
-        // [H4-3 V 3.0.0]: الأخير الآن المزامنة المشفرة 15→16
-        assertEquals(15, last.startVersion)
-        assertEquals(16, last.endVersion)
+        // [RVW-17 V 3.2.6]: الأخير الآن دفتر استهلاك الكوبونات 17→18
+        assertEquals(17, last.startVersion)
+        assertEquals(18, last.endVersion)
     }
 }

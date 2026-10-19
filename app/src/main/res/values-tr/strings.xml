@@ -1680,6 +1680,7 @@
     <string name="bk_import_ok_line">%1$d müşteri eklendi, %2$d atlandı, %3$d ürün eklendi, %4$d atlandı</string>
     <string name="bk_import_failed_rows">%1$d boş satır atlandı</string>
     <string name="bk_tables_line">Bulunan tablolar: %1$s</string>
+    <string name="bk_merge_skips_financial">Birleştirme tarafından içe aktarılmadı (yalnızca okundu): %1$s — finansal geçmiş için Tam değiştir\'i kullanın</string>
     <string name="bk_warn">Geri yükleme, yalnızca mevcut olmayan müşterileri ve ürünleri ekler — Faturaları veya mevcut kayıtları değiştirmez</string>
     <string name="bk_fail_title">İşlem başarısız</string>
     <string name="bk_ok">Tamam</string>
@@ -1712,7 +1713,7 @@
     <string name="bk_import_checks_line">Çekler: %1$d eklendi, %2$d atlandı</string>
     <string name="bk_import_plans_line">Taksit planları: %1$d eklendi, %2$d atlandı</string>
     <string name="bk_import_installments_line">Taksitler: %1$d eklendi, %2$d atlandı</string>
-    <string name="bk_warn3">Geri yükleme, yalnızca mevcut olmayan müşterileri, ürünleri, ziyaretleri, giderleri, çekleri, taksit planlarını ve taksitleri ekler — Faturaları, ödemeleri veya kısıtlamaları değiştirmez</string>
+    <string name="bk_warn3">Birleştirme yalnızca eksik tarafları, ürünleri, ziyaretleri, giderleri, çekleri, taksit planlarını, taksitleri, ekstreleri (şablon ve kurallarıyla), imzaları, kaşeleri, not şablonlarını, denetim günlüğünü, sadakati ve kuponları ekler — fatura ve satırlarını, ödemeleri, yevmiye kayıtları ve satırlarını, stok hareketlerini, para birimlerini veya kuralları hiçbir zaman içe aktarmaz; finansal geçmiş yalnızca Tam değiştir ile taşınır</string>
     <string name="vr_more_names">ve %1$d daha müşteri...</string>
     <string name="zat_export_t">Genel anahtarı aktar</string>
     <string name="zat_export_d">Fatura imzalarını doğrulamak için denetçilerin ve müşterilerin genel anahtarınızı paylaşın</string>
@@ -2396,6 +2397,10 @@
     <string name="sync_pass_confirm_fp">Parmak İzi Onayı</string>
     <string name="sync_fingerprint">Eşleştirme Parmak İzi — Etkinleştirmeden önce diğer cihazda yüz yüze karşılaştırın:</string>
     <string name="sync_fingerprint_hint">Farklı parmak izlerine sahip iki cihaz asla hiçbir şeyi paylaşmaz</string>
+    <string name="sync_pair_code_label">Eşleştirme kodu (isteğe bağlı — ikinci cihaz için)</string>
+    <string name="sync_pair_code_hint">Eski sürümlerle uyumluluk için boş bırakın; yeni eşleştirme için ilk cihazın kodunu olduğu gibi girin</string>
+    <string name="sync_pair_code_invalid">Geçersiz kod — diğer cihazın ekranından olduğu gibi kopyalayın</string>
+    <string name="sync_pair_code_show">Eşleştirme kodu (diğer cihaza kopyalayın):</string>
     <string name="sync_save">Kaydet</string>
     <string name="sync_cancel">İptal</string>
     <string name="pulse_title">İşlem Nabzı</string>

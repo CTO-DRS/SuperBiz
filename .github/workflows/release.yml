@@ -13,8 +13,49 @@ permissions:
   contents: write
 
 jobs:
+  # [RVW-9 V 3.2.3] بوابة «CI أخضر قبل النشر» — كانت الحزمة الموقّعة تُنشر لأي وسم v*
+  # بلا شرط نجاح. الآن: البوابات والاختبارات تجري على مرجع الوسم نفسه أولاً،
+  # والبناء/التوقيع/النشر لا يبدأ إلا بعد نجاحها (needs).
+  verify:
+    name: Verify (gates + unit tests) — publish gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.x
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Strings format gate
+        run: python tools/check_strings_format.py
+
+      - name: Strings parity gate
+        run: python tools/check_strings.py
+
+      - name: Locale coverage gate
+        run: python tools/check_locale_coverage.py
+
+      - name: Network boundary gate (ADR-001)
+        run: python tools/check_network_boundary.py
+
+      - name: Setup JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle (caching)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests (release)
+        run: ./gradlew :app:testReleaseUnitTest --stacktrace
+
   build:
     name: Build, sign and publish
+    needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:

@@ -14,7 +14,7 @@ import androidx.room.PrimaryKey
  * تُضاف إلى: parties/products/visits/coupons/statement_templates/signatures/stamps/note_templates
  * (العملات بعمود الساعة حصراً — الرمز نفسه هوية).
  */
-@Entity(tableName = "parties", indices = [Index("archived"), Index("name")])
+@Entity(tableName = "parties", indices = [Index("archived"), Index("name"), Index("originDeviceId", "originId")])
 data class Party(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
@@ -87,7 +87,7 @@ data class JournalLine(
     val fxRate: Double = 1.0
 )
 
-@Entity(tableName = "products", indices = [Index("barcode"), Index("archived")])
+@Entity(tableName = "products", indices = [Index("barcode"), Index("archived"), Index("originDeviceId", "originId")])
 data class Product(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
@@ -389,7 +389,7 @@ data class Installment(
  */
 @Entity(
     tableName = "visits",
-    indices = [Index("partyId"), Index("visitedAt")]
+    indices = [Index("partyId"), Index("visitedAt"), Index("originDeviceId", "originId")]
 )
 data class Visit(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -416,7 +416,7 @@ data class Visit(
  * أو قالب مستقل تماماً (baseTemplateId = "CUSTOM"). إعدادات الشكل كلها JSON كي تبقى
  * الشاشة (17-b) والعارض (17-c) حُرَّين بتطوير الحقول دون ترحيلات جديدة.
  */
-@Entity(tableName = "statement_templates")
+@Entity(tableName = "statement_templates", indices = [Index("originDeviceId", "originId")])
 data class StatementTemplateEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
@@ -433,7 +433,7 @@ data class StatementTemplateEntity(
 )
 
 /** [P17-a] تواقيع مالك العمل — صورة تُطبع أسفل الكشف؛ واحدة افتراضية بمعاملة Room (أول clearance) */
-@Entity(tableName = "signatures")
+@Entity(tableName = "signatures", indices = [Index("originDeviceId", "originId")])
 data class SignatureEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
@@ -449,7 +449,7 @@ data class SignatureEntity(
 )
 
 /** [P17-a] أختام الشركة — صورة تُطبع على الكشف؛ ختم افتراضي واحد بمعاملة Room */
-@Entity(tableName = "stamps")
+@Entity(tableName = "stamps", indices = [Index("originDeviceId", "originId")])
 data class StampEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
@@ -464,7 +464,7 @@ data class StampEntity(
 )
 
 /** [P17-a] قوالب ملاحظات جاهزة تُدرَج في حقل ملاحظات الكشف */
-@Entity(tableName = "note_templates")
+@Entity(tableName = "note_templates", indices = [Index("originDeviceId", "originId")])
 data class NoteTemplateEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String,
@@ -665,7 +665,7 @@ data class LoyaltyEntryEntity(
  * maxUses = 0 يعني بلا حد (عقد LoyaltyP46.checkSpec)، وexpiresAt = 0 يعني لا انتهاء.
  * usedCount يُرفع بتحديث ذرّي مشروط (CouponDao.consume) فلا يتجاوز الحد مهما تسابقت القراءات.
  */
-@Entity(tableName = "coupons", indices = [Index(value = ["code"], unique = true)])
+@Entity(tableName = "coupons", indices = [Index(value = ["code"], unique = true), Index("originDeviceId", "originId")])
 data class CouponEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val code: String,                  // فريد — البوابة LoyaltyP46.checkCoupon تبحث به
@@ -689,6 +689,43 @@ object LoyaltyP46Kinds {
     const val KIND_FIXED = 0
     const val KIND_PERCENT = 1
 }
+
+/**
+ * [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — جدول أحداث إلحاقي (تصميم §7-ب، schema v18).
+ *
+ * الخلفية: عدّاد usedCount المجمَّع يُدمج بحدّ أقصى بين الأجهزة (AUD-3)، فاستهلاكان
+ * دون اتصال على جهازين يتقاربان على usedCount=1 رغم أن الاستهلاك حصل مرتين —
+ * الحد الموثق بفضل اختبار RVW-2 التخريبي. هذا الدفتر هو التصحيح: كل استهلاك
+ * يكتب حدثاً واحداً غير قابل للتعديل ولا للحذف، والمزامنة اتحاد أعراف بمعرّف
+ * الحدث الحتمي فلا يضيع استهلاك حقيقي ولا يتضاعف صف بعد إعادة المزامنة.
+ *
+ * eventId: معرّف الحتمة deviceId|invoiceId|code — فريد بمستوى القاعدة (فهرس فريد)
+ * ليعيد الإدراج بنفس المعرّف (دورة استعادة ثم إعادة دفع) أن يُتجاهل دالّاً.
+ * invoiceId معرّف محلي على الجهاز الأصلي — شاهد تتبّع لا مفتاح ربط بين الأجهزة.
+ * الجدول إلحاقي أبدًا: لا مسار تعديل ولا مسار حذف في DAO كله — الاستهلاك
+ * اليوم أحادي الاتجاه (عقد CouponDao.consume الموثق).
+ */
+@Entity(
+    tableName = "coupon_redemptions",
+    indices = [
+        Index(value = ["eventId"], unique = true),
+        Index("code"),
+        Index("originDeviceId", "originId")
+    ]
+)
+data class CouponRedemptionEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val eventId: String,               // deviceId|invoiceId|code — حتمي فريد
+    val code: String,                  // كود الكوبون المستهلك (بحث وعدّ بالكود)
+    val invoiceId: Long = 0L,          // الفاتورة المستهلكة على جهاز الأصل (0 = بلا فاتورة)
+    val qty: Int = 1,                  // كمية الاستهلاك — 1 بعقد consume الواحد
+    val at: Long,                      // لحظة الاستهلاك
+    val origin: String,                // معرّف الجهاز المستهلك (شاهد جنائي)
+    // [H4-3][v18] مزامنة — نمط الجداول المزامنة حرفياً (مخلوقة مزامنةً من ولادتها)
+    val syncUpdatedAt: Long = 0,
+    val originDeviceId: String = "",
+    val originId: Long = 0
+)
 
 // ═══════════════════════════════════════════════════════════════════════════
 // [H1-3][H1-4][v13] هوية المستخدمين المحلية — RBAC على الجهاز الواحد

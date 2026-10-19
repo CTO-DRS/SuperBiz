@@ -25,8 +25,17 @@ object TimeMath {
         set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
     }.timeInMillis
 
-    /** نهاية اليوم المحلي (23:59.999) */
-    fun endOfDay(ms: Long): Long = startOfDay(ms) + DAY_MS - 1
+    /**
+     * نهاية اليوم المحلي (23:59.999) — [AUD-6 إصلاح] كانت startOfDay + 86,399,999 ثابتة:
+     * في يوم 25 ساعة (رجوع التوقيت الصيفي) تسقط مبيعات/سجلات الساعة 23:00–24:00،
+     * وفي يوم 23 ساعة (تقدّم التوقيت) تسرّب الساعة الأولى من اليوم التالي.
+     * الآن: منتصف ليلة الغد المحلي عبر التقويم ناقص 1ms — يلتقط طول اليوم الفعلي (23/24/25س)
+     * وفي المناطق بلا توقيت صيفي مطابق للسلوك القديم بايتاً ببايت.
+     */
+    fun endOfDay(ms: Long): Long = Calendar.getInstance().apply {
+        timeInMillis = startOfDay(ms)
+        add(Calendar.DAY_OF_MONTH, 1)
+    }.timeInMillis - 1
 
     /** هل التوقيتان في اليوم المحلي نفسه؟ (تجميع مبيعات اليوم) */
     fun isSameLocalDay(a: Long, b: Long): Boolean = startOfDay(a) == startOfDay(b)

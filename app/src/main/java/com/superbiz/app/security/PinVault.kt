@@ -43,9 +43,34 @@ object PinVault {
 
     /** يشفّر بصمة الهاش ويعيد النص الجاهز للتخزين في DataStore */
     fun encrypt(hashHex: String): String {
+        // [AUD-5 إصلاح] النواة بمفتاح صريح — ولا يزال تقييم keyProvider() نفسه
+        // داخل الحماية: فشل Keystore يُلف PinVaultException (فشل مغلق) لا استثناء خاماً
+        return try {
+            encryptWith(keyProvider(), hashHex)
+        } catch (e: PinVaultException) {
+            throw e
+        } catch (e: Exception) {
+            // [P6-M6-14 إصلاح] فشل مغلق: لا يُكتب "v1:<hashHex>" عاري جديد مطلقاً — الكتابة
+            // الصامتة كانت تُبعد المادة عن حماية العتاد فتصبح الرموز قابلة للكسر دون اتصال.
+            throw PinVaultException(
+                "تعذر تغليف بصمة الرمز بمفتاح Keystore — الرفض مغلق ولا يُخزَّن أي بديل قابل للكسر دون اتصال",
+                e
+            )
+        }
+    }
+
+    /**
+     * [AUD-5 إصلاح] نواة التغليف بمفتاح صريح — كانت encryptFor/decryptFor تستبدلان
+     * مزوّد المفتاح العام keyProvider مؤقتاً (تبديل متغير عالمي بلا مزامنة): عمليتان
+     * PIN متزامنتان لمستخدمين مختلفين كانتا قد تغلّفان/تفكّان بمفتاح المستخدم الخطأ
+     * (سباق كلاسيكي read-modify-write-restore). الآن المفتاح يُمرر كوسيط صريح
+     * فلا حالة مشتركة قابلة للتسابق إطلاقاً — والمزوّدان القابلان للحقن
+     * (keyProvider/userKeyProvider) باقيان كما هما لاختبارات Robolectric.
+     */
+    private fun encryptWith(key: SecretKey, hashHex: String): String {
         try {
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.ENCRYPT_MODE, keyProvider())
+            cipher.init(Cipher.ENCRYPT_MODE, key)
             val iv = cipher.iv
             val ct = cipher.doFinal(hashHex.toByteArray(Charsets.UTF_8))
             return KS_PREFIX + iv.joinToString("") { "%02x".format(it) } +
@@ -67,6 +92,15 @@ object PinVault {
      * قراءة "v1:" القديمة مدعومة للتوافق (ترحيل مخزون الإصدارات السابقة).
      */
     fun decrypt(blob: String): String? {
+        // [AUD-5 إصلاح] مسار v1 لا يحتاج مفتاحاً إطلاقاً — يُقصّر قبل أي لمسة للمزوّد
+        // (فشل Keystore لا يجوز أن يفسد قراءة المخزون القديم — عقد الاختبار الموثق)
+        if (blob.startsWith(V1_PREFIX)) return blob.removePrefix(V1_PREFIX).ifEmpty { null }
+        // تقييم keyProvider() داخل الحماية نفسها — فشل المفتاح الرئيسي = null صادق
+        return try { decryptWith(keyProvider(), blob) } catch (_: Exception) { null }
+    }
+
+    /** نواة الفك بمفتاح صريح — نفس العقد البايتي حرفياً (انظر encryptWith) */
+    private fun decryptWith(key: SecretKey, blob: String): String? {
         return try {
             when {
                 blob.startsWith(V1_PREFIX) -> blob.removePrefix(V1_PREFIX).ifEmpty { null }
@@ -77,7 +111,7 @@ object PinVault {
                     val iv = parts[0].chunked(2).map { it.toInt(16).toByte() }.toByteArray()
                     val ct = parts[1].chunked(2).map { it.toInt(16).toByte() }.toByteArray()
                     val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-                    cipher.init(Cipher.DECRYPT_MODE, keyProvider(), GCMParameterSpec(TAG_LEN_BITS, iv))
+                    cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(TAG_LEN_BITS, iv))
                     String(cipher.doFinal(ct), Charsets.UTF_8)
                 }
                 else -> null
@@ -148,15 +182,9 @@ object PinVault {
      * والفرق الوحيد هو alias المفتاح داخل Keystore. فشل Keystore عند التغليف
      * يرمي PinVaultException (فشل مغلق) تماماً كالمسار الرئيسي.
      */
-    fun encryptFor(userId: Long, hashHex: String): String {
-        val saved = keyProvider
-        return try {
-            keyProvider = { userKeyProvider(userId) }
-            encrypt(hashHex)
-        } finally {
-            keyProvider = saved
-        }
-    }
+    fun encryptFor(userId: Long, hashHex: String): String =
+        // [AUD-5 إصلاح] مفتاح المستخدم صراحةً — لا تبديل للحالة العامة ولا سباق
+        encryptWith(userKeyProvider(userId), hashHex)
 
     /**
      * [H1-4][v13] فك مغلّف مستخدم — يجرّب المفتاح الرئيسي أولاً (بذرة المالك
@@ -165,14 +193,10 @@ object PinVault {
      * يفتح أبداً على null.
      */
     fun decryptFor(userId: Long, blob: String): String? {
-        decrypt(blob)?.let { return it }   // بذرة المالك المُرحّلة + اختبارات المفتاح المحقون
-        val saved = keyProvider
-        return try {
-            keyProvider = { userKeyProvider(userId) }
-            decrypt(blob)
-        } finally {
-            keyProvider = saved
-        }
+        // مسار v1 بلا مفتاح (انظر decrypt) — ثم بذرة المالك، ثم مفتاح المستخدم صراحةً
+        if (blob.startsWith(V1_PREFIX)) return blob.removePrefix(V1_PREFIX).ifEmpty { null }
+        decryptWith(keyProvider(), blob)?.let { return it }
+        return decryptWith(userKeyProvider(userId), blob)
     }
 
     /** يحمّل مفتاح التغليف أو ينشئه مرة واحدة داخل العتاد (داخلي: يُعاد ربطه في الاختبارات بعد الحقن) */

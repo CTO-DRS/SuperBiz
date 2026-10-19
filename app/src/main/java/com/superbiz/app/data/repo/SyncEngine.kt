@@ -5,6 +5,7 @@ import androidx.room.withTransaction
 import com.superbiz.app.data.db.AppDatabase
 import com.superbiz.app.data.db.Currency
 import com.superbiz.app.data.db.CouponEntity
+import com.superbiz.app.data.db.CouponRedemptionEntity
 import com.superbiz.app.data.db.NoteTemplateEntity
 import com.superbiz.app.data.db.Party
 import com.superbiz.app.data.db.Product
@@ -95,6 +96,15 @@ class SyncEngine(
         abstract suspend fun deleteByKey(key: String, my: String): Boolean
         abstract fun bodyOf(row: T, my: String): String
         abstract fun fromBody(m: Map<*, *>, key: String): T
+
+        /**
+         * [AUD-3 إصلاح] دمج عدّاد أحادي الاتجاه من صف خسر قرار LWW — يُستدعى حين
+         * يفوز الصف المحلي بالساعة رغم أن الوارد يحمل عدّاداً أعلى (استهلاك حقيقي
+         * حدث على الجهاز الآخر). يُدمج العدّاد حصراً دون مساس ببقية الحقول أو الساعة،
+         * والكتابة تحت كابح المشغّلات فلا تعود الدفتر ولا تُعيد فتح النزاع.
+         * يعيد true إن كان دمجاً كُتب. الافتراضي false (لا عدّادات لدى بقية الجداول).
+         */
+        open suspend fun counterMerge(local: T, incoming: T): Boolean = false
     }
 
     private fun adapterFor(table: String): Adapter<*>? = when (table) {
@@ -103,6 +113,7 @@ class SyncEngine(
         "currencies" -> CurrencyAdapter()
         "visits" -> VisitAdapter()
         "coupons" -> CouponAdapter()
+        "coupon_redemptions" -> CouponRedemptionAdapter()
         "statement_templates" -> StatementTemplateAdapter()
         "note_templates" -> NoteTemplateAdapter()
         else -> null
@@ -110,7 +121,7 @@ class SyncEngine(
 
     private fun allAdapters(): List<Adapter<*>> = listOf(
         PartyAdapter(), ProductAdapter(), CurrencyAdapter(), VisitAdapter(),
-        CouponAdapter(), StatementTemplateAdapter(), NoteTemplateAdapter()
+        CouponAdapter(), CouponRedemptionAdapter(), StatementTemplateAdapter(), NoteTemplateAdapter()
     )
 
     private fun originPair(key: String, my: String, localId: Long): Pair<String, Long> {
@@ -280,11 +291,20 @@ class SyncEngine(
         override suspend fun applyIncoming(incoming: CouponEntity, key: String, at: Long, my: String): Boolean {
             val local = findByKey(key, my)
             val (pod, poid) = originPair(key, my, local?.id ?: 0L)
+            // [AUD-3 إصلاح] usedCount لا يجوز LWW — كان العدّاد المحلي يُداس بآخر كاتب:
+            // استهلاك على جهازين للكوبون نفسه (0→1 على كل منهما) يُبطل أحد الاستهلاكين
+            // عند المزامنة فينفق كوبون maxUses=1 مرتين. الدمج بـmax يحفظ أعلى عدّاد
+            // حقيقي — الاستهلاك اليوم أحادي الاتجاه (لا مسار إنقاص في CouponDao كله)
+            // فmax دقيق دائمًا؛ إن أُضيف مستقبلًا مسار إفراج عن استهلاك (ربط الإلغاء)
+            // وجب الانتقال إلى دفتر استهلاك append-only يُجمع لا إلى عدّاد. القيد الذري
+            // consume (WHERE usedCount < maxUses) يبقى حارس الاستهلاك الفردي،
+            // وهذا الدمج حارس التقارب بين الأجهزة.
+            val mergedUsed = maxOf(local?.usedCount ?: 0, incoming.usedCount)
             db.coupons().upsert((local ?: incoming).copy(
                 id = local?.id ?: 0,
                 code = incoming.code, kind = incoming.kind, amountPiasters = incoming.amountPiasters,
                 percent = incoming.percent, expiresAt = incoming.expiresAt, maxUses = incoming.maxUses,
-                usedCount = incoming.usedCount, active = incoming.active, note = incoming.note,
+                usedCount = mergedUsed, active = incoming.active, note = incoming.note,
                 createdAt = incoming.createdAt,
                 syncUpdatedAt = at, originDeviceId = pod, originId = poid
             )); return true
@@ -292,6 +312,14 @@ class SyncEngine(
         override suspend fun deleteByKey(key: String, my: String): Boolean {
             val local = findByKey(key, my) ?: return false
             db.coupons().delete(local.id); return true
+        }
+        // [AUD-3 إصلاح] استهلاك الكوبون عدّاد أحادي الاتجاه — الوارد الأقدم ساعة
+        // (خسر LWW) قد يحمل عدّاداً أعلى من الحقيقة المحلية: يُمتص بـmax دون مساس
+        // ببقية الحقول (تحرير B المحلي يبقى مالكها) ولا الساعة (لا إعادة فتح نزاع)
+        override suspend fun counterMerge(local: CouponEntity, incoming: CouponEntity): Boolean {
+            if (incoming.usedCount <= local.usedCount) return false
+            db.coupons().upsert(local.copy(usedCount = incoming.usedCount))
+            return true
         }
         override fun bodyOf(row: CouponEntity, my: String) = "{\"code\":" + w(row.code) + ",\"kind\":" + w(row.kind) +
             ",\"amountPiasters\":" + w(row.amountPiasters) + ",\"percent\":" + w(row.percent) +
@@ -303,6 +331,57 @@ class SyncEngine(
             percent = m.d("percent"), expiresAt = m.lg("expiresAt"), maxUses = m.lg("maxUses").toInt(),
             usedCount = m.lg("usedCount").toInt(), active = m.b("active", true),
             note = m.s("note"), createdAt = m.lg("createdAt")
+        )
+    }
+
+    /**
+     * [RVW-17 V 3.2.6] مهايئ دفتر استهلاك الكوبونات — الاتحاد الإلحاقي (تصميم §7-ب).
+     * عقد المهايئ مختلف جوهرياً عن كل المهايئات السابقة:
+     *  • applyIncoming: يُدرج الصف الوارد حصراً إن لم يوجد — والصف الموجود لا يُمسّ
+     *    أبداً (الصف غير قابل للتعديل؛ لا LWW ولا نزاع — الشاهد الأول هو الحقيقة).
+     *  • deleteByKey: لا حذف أبداً — الدفتر إلحاقي، والحذف من دفتر شواهد مالي يفقد
+     *    الحقيقة؛ الوارد المحمل بلا صف محلي يدرج، وما عدا ذلك لا شيء.
+     *  • counterMerge: لا عدّاد — العدّ محسوم بـCOUNT عند القراءة لا بالدمج.
+     * إدراج الوارد بساعة الوارد (at) يبطل مشغّل اللمس (WHEN syncUpdatedAt = 0)
+     * فلا صدى في الدفتر الدلتا — نمط باقي المهايئات حرفياً.
+     * الأقران الأقدمون: adapterFor يعيد null لجدول غير معروف فيُتخطى صفه (skipped++)
+     * — التفاوت بروتوكولي مقصود وموثق في §7-ب.
+     */
+    private inner class CouponRedemptionAdapter : Adapter<CouponRedemptionEntity>("coupon_redemptions") {
+        override suspend fun allOnce() = db.couponRedemptions().allOnce()
+        override fun clockOf(row: CouponRedemptionEntity) = row.syncUpdatedAt
+        override fun identityOf(row: CouponRedemptionEntity, my: String) =
+            if (row.originDeviceId.isEmpty()) Triple("", row.id, "$my|${row.id}")
+            else Triple(row.originDeviceId, row.originId, "${row.originDeviceId}|${row.originId}")
+        override suspend fun findByKey(key: String, my: String): CouponRedemptionEntity? {
+            val (od, oid) = splitKey(key)
+            return if (od == my) db.couponRedemptions().byId(oid) else db.couponRedemptions().byOrigin(od, oid)
+        }
+        override suspend fun applyIncoming(incoming: CouponRedemptionEntity, key: String, at: Long, my: String): Boolean {
+            val local = findByKey(key, my)
+            // الصف موجود — الشاهد غير قابل للتعديل ولا للحذف: لا شيء يُكتب
+            if (local != null) return false
+            val (pod, poid) = originPair(key, my, 0L)
+            // الاتحاد بمعرّف الحدث الحتمي — إدراج مكرر (نفس eventId بهوية مزامنة مختلفة،
+            // دورة استعادة ثم إعادة دفع مثلاً) يُتجاهل بالفهرس الفريد دالّاً
+            db.couponRedemptions().insertOrIgnore(
+                incoming.copy(id = 0, syncUpdatedAt = at, originDeviceId = pod, originId = poid)
+            )
+            return true
+        }
+        override suspend fun deleteByKey(key: String, my: String): Boolean {
+            // لا حذف في دفتر الشواهد — الحذف الوارد يُسجل تابوتاً في sync_log كالعادة
+            // لكن الجدول لا يُمسّ؛ صفوفه شواهد استهلاك حقيقية لا ملك قابل للإلغاء
+            return false
+        }
+        override fun bodyOf(row: CouponRedemptionEntity, my: String) =
+            "{\"eventId\":" + w(row.eventId) + ",\"code\":" + w(row.code) +
+                ",\"invoiceId\":" + w(row.invoiceId) + ",\"qty\":" + w(row.qty) +
+                ",\"at\":" + w(row.at) + ",\"origin\":" + w(row.origin) + "}"
+        override fun fromBody(m: Map<*, *>, key: String) = CouponRedemptionEntity(
+            eventId = m.s("eventId"), code = m.s("code", " "),
+            invoiceId = m.lg("invoiceId"), qty = m.lg("qty").toInt(),
+            at = m.lg("at"), origin = m.s("origin")
         )
     }
 
@@ -473,7 +552,20 @@ class SyncEngine(
                     // تحرير B لصف أصله A ليس صداً على A
                     if (!SyncMerge.remoteWins(at, localClock, fromDevice, my)) {
                         if (deleted) recordTombstone(table, key, at)
-                        skipped++; continue
+                        // [AUD-3 إصلاح] خسارة LWW لا تلغي حقيقة عدّاد أعلى: استهلاك حقيقي
+                        // على الجهاز الآخر يجب أن يُمتص محلياً وإن كان صفّه أقدم ساعة —
+                        // وإلا عاد الكوبون قابلاً للاستهلاك من جديد (إنفاق مزدوج عبر الأجهزة)
+                        if (!deleted && local != null) {
+                            val incomingRow = (m["r"] as? Map<*, *>)
+                                ?.let { runCatching { adapter.fromBody(it, key) }.getOrNull() }
+                            if (incomingRow != null && runCatching {
+                                    @Suppress("UNCHECKED_CAST")
+                                    (a as Adapter<Any>).counterMerge(local, incomingRow)
+                                }.getOrDefault(false)) applied++ else skipped++
+                        } else {
+                            skipped++
+                        }
+                        continue
                     }
                     if (deleted) {
                         val ok = runCatching { adapter.deleteByKey(key, my) }.getOrDefault(false)

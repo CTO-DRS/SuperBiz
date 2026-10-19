@@ -1679,6 +1679,7 @@
     <string name="bk_import_ok_line">%1$d tiers ajoutés (%2$d ignorés) et %3$d produits ajoutés (%4$d ignorés)</string>
     <string name="bk_import_failed_rows">%1$d lignes invalides ont été ignorées</string>
     <string name="bk_tables_line">Tables trouvées : %1$s</string>
+    <string name="bk_merge_skips_financial">Non importés par la fusion (lecture seule) : %1$s — utilisez le remplacement complet pour l\'historique financier</string>
     <string name="bk_warn">La restauration ajoute uniquement les tiers et produits qui n\'existent pas encore — les factures et écritures du journal ne sont jamais touchées</string>
     <string name="bk_fail_title">Échec de l\'opération</string>
     <string name="bk_ok">OK</string>
@@ -1711,7 +1712,7 @@
     <string name="bk_import_checks_line">Chèques : %1$d ajoutés, %2$d ignorés</string>
     <string name="bk_import_plans_line">Plans de versements : %1$d ajoutés, %2$d ignorés</string>
     <string name="bk_import_installments_line">Versements : %1$d ajoutés, %2$d ignorés</string>
-    <string name="bk_warn3">La restauration ajoute uniquement les tiers, produits, visites, dépenses, chèques, plans de versements et versements qui n\'existent pas encore — les factures, paiements et écritures du journal ne sont jamais touchés</string>
+    <string name="bk_warn3">La fusion n\'ajoute que les clients, produits, visites, dépenses, chèques, échéanciers, échéances, relevés (modèles et règles compris), signatures, tampons, modèles de notes, journal d\'audit, fidélité et coupons manquants — elle n\'importe jamais les factures et leurs lignes, paiements, écritures et leurs lignes, mouvements de stock, devises ni règles ; l\'historique financier passe uniquement par le remplacement complet</string>
     <string name="vr_more_names">%1$d autres clients…</string>
     <string name="zat_export_t">Exporter la clé publique</string>
     <string name="zat_export_d">Partagez votre clé publique pour que les vérificateurs puissent contrôler les signatures des factures</string>
@@ -2395,6 +2396,10 @@
     <string name="sync_pass_confirm_fp">Confirmer l\'empreinte</string>
     <string name="sync_fingerprint">Empreinte d\'appairage — vérifiez-la en face à face sur l\'autre appareil avant de l\'activer :</string>
     <string name="sync_fingerprint_hint">Deux appareils avec des empreintes différentes ne partageront jamais rien</string>
+    <string name="sync_pair_code_label">Code d\'appairage (facultatif — pour le second appareil)</string>
+    <string name="sync_pair_code_hint">Laissez vide pour la compatibilité avec les anciennes versions ; pour un nouvel appairage, saisissez le code du premier appareil tel quel</string>
+    <string name="sync_pair_code_invalid">Code invalide — copiez-le exactement depuis l\'écran de l\'autre appareil</string>
+    <string name="sync_pair_code_show">Code d\'appairage (copiez-le sur l\'autre appareil) :</string>
     <string name="sync_save">Enregistrer</string>
     <string name="sync_cancel">Annuler</string>
     <string name="pulse_title">Pouls complet de l\'activité</string>

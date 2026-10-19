@@ -143,6 +143,8 @@ class ZatcaMigration14Test {
             val ctx = ApplicationProvider.getApplicationContext<Context>()
             val room = androidx.room.Room.databaseBuilder(ctx, com.superbiz.app.data.db.AppDatabase::class.java, dbName!!)
                 .allowMainThreadQueries()
+                // [AUD-8 V 3.2.1]: المخطط صار 17 — افتحة تتطلب تسلسل الترحيلات الكامل
+                .addMigrations(*com.superbiz.app.AppGraph.MIGRATIONS.toTypedArray())
                 .build()
             try {
                 kotlinx.coroutines.runBlocking {

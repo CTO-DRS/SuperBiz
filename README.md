@@ -1,11 +1,11 @@
 # SuperBiz
 
-**Version: V 3.2.0**
-**اكتمال اللغات — خمس لغات بتغطية 100% (الأفق الرابع مغلق)**
+**Version: V 3.2.1**
+**موجة التدقيق الهندسي 2026-10 — تسع علات مؤكدة مغلقة باختبارات انحدار**
 
 ![SuperBiz](assets/banner.png)
 
-![Version](https://img.shields.io/badge/الإصدار-V%203.2.0-8B5CF6?style=flat-square&labelColor=0B1026)
+![Version](https://img.shields.io/badge/الإصدار-V%203.2.1-8B5CF6?style=flat-square&labelColor=0B1026)
 ![Tests](https://img.shields.io/badge/الاختبارات-1716%20خضراء-34D399?style=flat-square&labelColor=0B1026)
 ![Platform](https://img.shields.io/badge/Android-7.0%2B%20(minSdk%2024)-3B82F6?style=flat-square&labelColor=0B1026)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-8B5CF6?style=flat-square&labelColor=0B1026)
@@ -153,10 +153,10 @@ SuperBiz/
 
 | البند | القيمة |
 |---|---|
-| الإصدار | **V 3.2.0 — الأفق الخامس: الامتثال الخليجي + الفرنسية + مبدّل اللغات الست + عقد التصدير** |
-| versionCode | 8 |
-| تاريخ الإصدار | 2026-10-09 |
-| الوسم | `v3.2.0` |
+| الإصدار | **V 3.2.1 — موجة التدقيق الهندسي 2026-10 (AUD-1..AUD-9): اكتمال النسخ الاحتياطي v13–v16 + توازن الدفتر عند الاستعادة + عدّاد الكوبون في المزامنة + خزنة PIN بلا سباق + سر الويب هوك مغلّف + مخطط v17 (فهارس الهوية) + حدود يوم DST-safe** |
+| versionCode | 10 |
+| تاريخ الإصدار | 2026-10-17 |
+| الوسم | — (فرع `audit/remediation-2026-10`) — التفاصيل في [`docs/SUPERBIZ_AUDIT_REPORT.md`](docs/SUPERBIZ_AUDIT_REPORT.md) |
 | رقم الإصدار داخل التطبيق | يُعرض من `BuildConfig.VERSION_NAME` في مركز الإعدادات (حول) وتذييل كل مستندات PDF — لا يوجد أي رقم إصدار صلب في الكود |
 
 ## فهرس التوثيق

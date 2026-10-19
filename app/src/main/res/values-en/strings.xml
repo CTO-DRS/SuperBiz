@@ -1770,6 +1770,7 @@
     <string name="bk_import_ok_line">Added %1$d parties (skipped %2$d) and %3$d products (skipped %4$d)</string>
     <string name="bk_import_failed_rows">%1$d invalid rows were ignored</string>
     <string name="bk_tables_line">Tables found: %1$s</string>
+    <string name="bk_merge_skips_financial">Not imported by merge (read only): %1$s — use Full replace to move financial history</string>
     <string name="bk_warn">Restore only adds parties and products that do not exist yet — invoices and journal entries are never touched</string>
     <string name="bk_fail_title">Operation failed</string>
     <string name="bk_ok">OK</string>
@@ -1806,7 +1807,7 @@
     <string name="bk_import_checks_line">Checks: added %1$d, skipped %2$d</string>
     <string name="bk_import_plans_line">Installment plans: added %1$d, skipped %2$d</string>
     <string name="bk_import_installments_line">Installments: added %1$d, skipped %2$d</string>
-    <string name="bk_warn3">Restore only adds parties, products, visits, expenses, checks, installment plans and installments that do not exist yet — invoices, payments and journal entries are never touched</string>
+    <string name="bk_warn3">Merge only adds missing parties, products, visits, expenses, checks, installment plans, installments, statements with their templates and rules, signatures, stamps, note templates, audit log, loyalty and coupons — it never imports invoices, invoice items, payments, journal entries or their lines, stock moves, currencies or rules; financial history moves via Full replace only</string>
     <string name="vr_more_names">%1$d more customers…</string>
 
     <!-- [P16] strings (merged from p16_strings) -->
@@ -2519,6 +2520,10 @@
     <string name="sync_pass_confirm_fp">Confirm fingerprint</string>
     <string name="sync_fingerprint">Pairing fingerprint — verify it face-to-face on the other device before enabling:</string>
     <string name="sync_fingerprint_hint">Two devices with different fingerprints will never share anything</string>
+    <string name="sync_pair_code_label">Pairing code (optional — for the second device)</string>
+    <string name="sync_pair_code_hint">Leave empty for compatibility with older versions; for a new pairing enter the first device\'s code exactly</string>
+    <string name="sync_pair_code_invalid">Invalid code — copy it exactly from the other device\'s screen</string>
+    <string name="sync_pair_code_show">Pairing code (copy it to the other device):</string>
     <string name="sync_save">Save</string>
     <string name="sync_cancel">Cancel</string>
     <string name="pulse_title">Full business pulse</string>

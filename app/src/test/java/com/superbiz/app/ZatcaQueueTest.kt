@@ -17,6 +17,25 @@ import org.junit.Test
  */
 class ZatcaQueueTest {
 
+    // ───────── [RVW-27][Wave R11] الوثيقة المفقودة تُحصى لا تُهمس ─────────
+
+    @Test
+    fun processOnce_missingDocument_countedNotSpunSilently() = runTest {
+        val h = Harness()
+        h.queue.add(q(7, 1)) // لا وثيقة له في docs — شذوذ بيانات حقيقي
+        h.queue.add(q(8, 2))
+        h.docs[8L] = "xml-8" to "hash-8"
+        val s = h.processor.processOnce()
+        // الإرسال الوحيد للوثيقة الحاضرة (8) — المفقودة (7) لم تلمس البوابة إطلاقاً
+        assertEquals(listOf("uuid-8"), h.gateway.reported.map { it.uuid })
+        assertEquals(0, h.gateway.cleared.size) // مبسّطة → مسار الإبلاغ وحده
+        assertEquals(1, s.attempted)   // الوثيقة الحاضرة وحدها حُاولت
+        assertEquals(1, s.accepted)
+        assertEquals(1, s.missingDocs) // المفقودة مُحصاة في الملخص لا همساً
+        // ولا تراجع ولا محاولة مزيّفة للمفقودة — تبقى مستحقة بلا كتابة حالة
+        assertTrue(h.deferredCalls.none { it.first == 7L })
+    }
+
     // ─── أدوات بناء القوائم ───
 
     private fun q(

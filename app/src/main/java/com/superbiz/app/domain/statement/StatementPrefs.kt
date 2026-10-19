@@ -101,6 +101,15 @@ object StatementPrefs {
     }
 
     fun save(context: Context, ui: SmtpPrefsUi) {
+        // [RVW-13 V 3.2.4] تهيئة قناة الصادر المالي (SMTP + بيانات الاعتماد + المرسل إليه)
+        // = Op.GENERAL_SETTINGS (المالك والمدير — مصفوفة §3 سطر 10، صنف الطابعات/الأتمتة).
+        // البوابة في طبقة prefs حصراً: كل مسارات الحفظ الأربعة في الشاشة تمر من هنا،
+        // وجلسة أدنى لا تُوصّل كشوف العملاء إلى خادم/عنوان تختاره — القراءة (smtpConfig)
+        // بلا بوابة عمداً: المرسل المجدول (SYSTEM) والمستعرض في الشاشة لا يكتبان.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
         val sec = SmtpPrefsUi.securityEnum(ui.security)
         // [تدقيق H-6] كلمة المرور لا تُلمس القرص إلا مشفّرة بصيغة ks: من PinVault —
         // فشل Keystore يرمي PinVaultException (فشل مغلق — لا نص عاري ولا بديل قابل للكسر)،
