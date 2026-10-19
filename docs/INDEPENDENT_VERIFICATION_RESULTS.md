@@ -276,3 +276,19 @@ Discovery reconciled the records before any action: the incoming session summary
 | Push state | — | **Nothing pushed**; `origin/main` still `672d995`; working branches local-only; no credential ever touched this session's git operations (all anonymous) |
 
 **Honesty ledger for this wave:** one environment rollback (the first execution lost wholesale — documented, not hidden), one kernel-OOM kill (dmesg-documented, retried green). No flakes, no traps, no cached-result acceptance: every accepted number above comes from a task that genuinely executed in the re-execution session.
+
+## 17. Wave R11 (2026-10-19) — Three Territories Reviewed: RVW-25/26/27 Fixed Test-First, Two Verdict-Solid; Full Re-Verification (this session's own runs)
+
+| # | Verification step | Command / method | Result |
+|---|---|---|---|
+| 1 | State reconciliation | `git log` + `ls-remote` (anonymous) | tip `87c81e8`, tree clean, 42 ahead of `origin/main` `672d995`; PR #1 open (unmerged) — records matched reality |
+| 2 | RED proof (test-first) | filtered `testDebugUnitTest`: CsvKitTest + CsvImportKitTest + ZatcaQueueTest | 57 tests, **exactly the 3 new behavioral cases FAILED** (`escape_minusFormulaForm_isGuarded`, `c6_negativePrices_skippedWithNamedReason`, `processOnce_missingDocument_countedNotSpunSilently`); all pre-existing contracts green — fixes then applied |
+| 3 | GREEN proof | same filtered run after fixes | **57/57 GREEN** (two test-authoring defects in my own new tests were caught by this loop and corrected — recorded honestly) |
+| 4 | Python gates | 4 checkers + `--self-test` ×4 | 4/4 PASS + 4/4 self-tests PASS |
+| 5 | Full suite, forced re-run | `:app:testDebugUnitTest --rerun` (up-to-date trap avoided) | **1797 tests / 0 failed / 0 errors / 0 skipped** across **168 files** (+5 new tests vs R10's 1792); two `SearchHealthVMTest` cases flaked on `Dispatchers.Main` concurrent-set under full-suite load → **isolated re-run ×2: GREEN both** (same documented load-flake class as R10's ConfigRbacGateTest; the three changed files touch no dispatcher) |
+| 6 | Sandbox OOM ledger | dmesg | 7th OOM: full-suite run (java anon-rss 1.24–1.59GB killed); 8th OOM: cold lintRelease release-compile (java 1.92GB killed) — both the documented 4GB-sandbox pattern; both recovered via daemon purge + constrained heap, both after the code under test was already proven green |
+| 7 | Build identity | `assembleDebug` + aapt | SUCCESSFUL; `com.superbiz.app` `versionCode='18'` `versionName='3.2.9'` (bumped per the R8 production-fix precedent) |
+| 8 | Lint | `lintRelease` after purging `intermediates/lint*` + `reports` (UP-TO-DATE trap avoided) | **GREEN 5m21s** — real `lintAnalyzeRelease` execution |
+| 9 | Wave secret scan | diff inspection (code + tests + docs) | CLEAN — no credentials, no secrets, no generated artifacts committed |
+
+Honest ledger: the RED→GREEN loop caught two defects in my own test code (an expected-string that forgot RFC4180 quote-wrapping; an assertion that counted the legitimate send of the *present* document instead of proving the *missing* one untouched) before catching anything else — corrected in place, recorded here rather than silently rewritten. The production `ProcessSummary` return initially dropped the new counter; the test caught it before any commit.
