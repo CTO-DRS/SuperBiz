@@ -133,3 +133,25 @@ The adversarial target was the **webhook delivery chain** — payload builder (`
 3. **Owner decision — coupon-void semantics (RVW-21)**: keep as-is (locked by `CouponVoidSemanticsTest`) or adopt the compensating-restore design (VOID witness `qty = -1`, gate `COUNT(*)` → `SUM(qty)`) — FINDINGS §11.
 4. **Owner decision — webhook unsigned-fallback (report §19 item 4)**: when a configured secret is configured but unreadable, keep unsigned delivery (current) or fail closed (no-send, honest `lastResult=false`).
 5. **Optional hardening only if reopened**: general RBAC closure.
+
+## 21. Wave R11 (2026-10-19) — "Complete the remaining tasks": the Three Queued Territories Reviewed — 3 Fixes (RVW-25/26/27), 2 Verdict-Solid Territories, Both Open Rulings Briefed
+
+Executed after the owner-authorized upload (branch/tag/release/PR #1) closed the rollback-exposure risk. The wave opened the three new adversarial territories from the R10 roadmap and closed what surfaced, test-first with an observable RED phase:
+
+1. **[RVW-25] CSV export injection hole (the minus-function form)** — L-5's "a leading minus never starts a formula" claim was true only for pure numerics; Excel evaluates `-SUM(A1)` / `-1+WEBSERVICE(…)` as formulas, and the hostile-import → verbatim-store → later-export chain made the hole real. Fixed shape-aware in `CsvKit.escape` (guard `'` iff a letter follows the minus); every locked numeric case untouched.
+2. **[RVW-26] CSV import accepted negative prices** — one validity discipline now applies to all numeric columns; negative cost/sale skip the row with named reasons, zero stays legal for gift items. POS money-safety floors documented (no money was losable; this is data-quality + valuation skew).
+3. **[RVW-27] ZATCA missing-document spin made visible** — `ProcessSummary.missingDocs` (additive); the poison element is now countable instead of silently consuming batch slots forever.
+4. **Verdict-solid with evidence**: Installments and Checks money math (all suspects pre-guarded at the repo layer — enumerated in FINDINGS §13-د), ZATCA reboot-stall (production wrapper immune by construction), callback-crash at-least-once semantics (idempotent AUD-4 transactions).
+5. **Owner briefs delivered**: RVW-21 (coupon-void: keep-as-is vs compensating-restore) and webhook unsigned-fallback (fail-closed vs keep-as-is) now have one-glance decision tables in FINDINGS §13-ه — ruling requires only a word from the owner.
+
+Verification (all genuinely re-run this session): RED(3)→GREEN filtered; gates 4/4 + self-tests 4/4; **forced full suite 1797/0/0/0 across 168 files** (+5 tests); `assembleDebug` aapt-confirmed **versionCode 18 / 3.2.9**; `lintRelease` GREEN fresh 5m21s; secret scan CLEAN. Two sandbox kernel-OOMs (7th/8th documented) recovered via the established constrained-heap protocol, both after the code was already proven green.
+
+## 22. Roadmap (Next Waves)
+
+**Completed this wave, closing the R10 roadmap's executable items.** What remains is not engineering work:
+
+1. **Owner: merge PR #1** (`review/independent-premerge-2026-10` → `main`) — the branch now carries R11 on top of the verified R10 tip; the PR updates automatically.
+2. **Owner: rule RVW-21 + webhook unsigned-fallback** — one-glance tables ready in FINDINGS §13-ه; either ruling is safe to implement in a short follow-up wave with the existing locks green.
+3. **Owner: revoke/rotate all four chat-exposed tokens** (one admin-scoped, one used this session for push/tag/release/PR only) — still open, still urgent; no credential was present in the R11 session and none is needed for engineering waves.
+4. **Instrumented-device run** (hardware-gated): the NOT-VERIFIED checklist, the RVW-22 failure-path empirical proof on a real socket stack, and the RVW-24 ART confirmation — the only remaining verification item that no sandbox can satisfy.
+5. **General below-VM RBAC enforcement** — stays parked unless the owner reopens it (6 documented alternate paths, all requiring the owner's session context).

@@ -236,3 +236,12 @@ The "Complete" continuation wave, opened on a rebuilt toolchain after a sandbox 
 - **Verification (re-execution):** forced-rerun suite **1792/0/0 across 168 files** (+8, +1) in 1m38s; `assembleDebug` successful (`aapt`: `versionCode='17' versionName='3.2.8'`); `lintRelease` green in 4m7s after one documented 4 GB-sandbox kernel-OOM (dmesg java 2.63 GB; orphaned 797 MB killed; constrained-heap retry); secret scan CLEAN; details in `INDEPENDENT_VERIFICATION_RESULTS.md` §16 and finding record in `INDEPENDENT_REVIEW_FINDINGS.md` §12.
 
 Commits: (code fix + tests + version) and (docs) — nothing pushed; remote untouched (`origin/main` still `672d995`).
+
+## Wave R11 (2026-10-19) — RVW-25/26/27: the CSV Injection Hole Closed, Import Validation Unified, the ZATCA Poison Element Made Visible
+
+- **[RVW-25] fix(webhook's sibling — export): `CsvKit.escape` shape-aware minus guard.** Leading `-` followed by a letter (`-SUM(A1)`, `-1+WEBSERVICE(…)`, `-مرحبا`) now gets the `'` guard; pure numerics stay bare exactly as L-5 locked them. Test-first: `escape_minusFormulaForm_isGuarded` (RED on the 4 formula forms, GREEN after) + `escape_minusNumericForms_stayBare` locking 6 numeric forms including the pre-existing `-2+3` contract.
+- **[RVW-26] fix(import): negative cost/sale prices skip the row with named reasons** (`سعر تكلفة سالب` / `سعر بيع سالب`) — consistency with the H4-6 negative-quantity contract; zero stays legal (gifts). Test-first: `c6_negativePrices_skippedWithNamedReason` (RED → GREEN) + `c6_zeroPrices_stillAccepted_giftItems`.
+- **[RVW-27] fix(queue): `ProcessSummary.missingDocs` (additive, default 0)** — `processOnce` counts archived-document misses instead of `continue`-ing silently; policy unchanged (nothing sent, nothing written). Test-first: `processOnce_missingDocument_countedNotSpunSilently` (RED → GREEN; also caught the return-statement dropping the counter before any commit).
+- **Version**: V3.2.9 / versionCode 18 (production code changed; R8 precedent).
+- **Verification**: RED(3)→GREEN(57) filtered; gates 4/4 + self-tests 4/4; forced full suite 1797/0/0/0 (168 files; 2 load-flakes isolated-green ×2); assembleDebug aapt `18`/`3.2.9`; lintRelease GREEN 5m21s fresh; secret scan CLEAN.
+- **Verdict-solid (no change)**: Installments (bounds at repo layer, overpay-clamped pay, engine fallbacks unreachable), Checks (whitelist transitions, fresh-read posting, ghost-free delete), ZATCA reboot-stall (production passes `lastAttemptElapsedMs=0` — immune), callback-crash at-least-once (idempotent AUD-4 transactions).
