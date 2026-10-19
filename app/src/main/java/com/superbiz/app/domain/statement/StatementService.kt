@@ -169,7 +169,22 @@ object StatementService {
      * الافتراضية (قرار موثق ① أعلاه) وseq مستخرج من ذيل statementNumber بعد آخر '-'.
      * statementNumber تالفاً غير رقمي (مستحيل عملياً لأنه يولد بstatementNumber)
      * يعطي "000000" بدل الاستثناء — تحقق نقي لا يفشل.
+     *
+     * [RVW-7 V 3.2.2] النسخة الممتدة تُلحق لاحقة عشوائية "-<entropy>" (انظر
+     * newVerificationEntropy): معرّف "SB-ST-20260924-000042-K7QM" بدل معرّف
+     * كله قابل للتخمين (تاريخ + عدّاد تسلسلي متوقع) — التحقق بحث محلي حرفي،
+     * فالتخمين كان يتيح حصر كشوف الآخرين عبر الرابط/QR. التوافق الرجعي
+     * محفوظ حرفياً: المعرّفات القديمة المطبوعة تتحقق كما هي (مطابقة تامة)،
+     * والنسخة ثنائية الوسائط بلا entropy تعيد العقد التاريخي بايتاً بايتاً.
+     * ميزة إضافية: جهازان مستقلان يصدران نفس seq بنفس اليوم كان يتصادمان
+     * على قيد UNIQUE عند الدمج — اللاحقة العشوائية تجعل الاصطدام مستحيلاً عملياً.
      */
+    fun verificationId(statementNumber: String, at: Long, entropy: String): String {
+        val base = verificationId(statementNumber, at)
+        if (entropy.isBlank()) return base
+        return "$base-$entropy"
+    }
+
     fun verificationId(statementNumber: String, at: Long): String {
         val c = Calendar.getInstance().apply { timeInMillis = at }
         val ymd = String.format(
@@ -179,6 +194,20 @@ object StatementService {
         val seq = statementNumber.substringAfterLast('-', "").takeWhile { it.isDigit() }
         val seqPadded = (if (seq.isEmpty()) "0" else seq).padStart(6, '0')
         return "SB-ST-$ymd-$seqPadded"
+    }
+
+    /**
+     * [RVW-7 V 3.2.2] عنصر العشوائية لمعرّف التحقق — أبجدية بلا محارف ملتبسة
+     * بصرياً (بلا 0/O و1/I/L) كي يبقى المعرّف مقروءاً صوتياً هاتفياً كما كان.
+     * المدخل Random (وليس SecureRandom) حصراً لقابلية الاختبار الحتمي —
+     * موقع الإنتاج يمرر SecureRandom كما هو.
+     */
+    private const val ENTROPY_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+
+    fun newVerificationEntropy(count: Int = 4, random: java.util.Random = java.security.SecureRandom()): String {
+        val sb = StringBuilder(count)
+        repeat(count) { sb.append(ENTROPY_ALPHABET[random.nextInt(ENTROPY_ALPHABET.length)]) }
+        return sb.toString()
     }
 
     /** رقم عرض للطرف "P-000001" — ثابت لا يتغير بغياب أعمدة ترقيم في parties */

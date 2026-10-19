@@ -29,13 +29,14 @@ class BackupContractP36Test {
             "ثابت التغطية المعلن انحرف عن واقع BackupData",
             BACKUP_TABLE_COUNT, tableFields.size
         )
-        assertEquals(25, BACKUP_TABLE_COUNT)
+        // [RVW-17 V 3.2.6] 25 + دفتر استهلاك الكوبونات = 26
+        assertEquals(26, BACKUP_TABLE_COUNT)
     }
 
     @Test
-    fun `BackupData carries exactly 25 list tables`() {
+    fun `BackupData carries exactly 26 list tables`() {
         // عقد مزدوج صريح: كل حقول الجداول قوائم (انحراف النوع يكسر buildBackupJson)
-        assertEquals(25, tableFields.size)
+        assertEquals(26, tableFields.size)
         tableFields.forEach { f ->
             assertTrue(
                 "حقل الجدول ${f.name} يجب أن يكون قائمة صفوف",

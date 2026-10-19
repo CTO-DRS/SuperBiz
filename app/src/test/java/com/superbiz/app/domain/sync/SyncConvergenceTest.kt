@@ -11,6 +11,7 @@ import com.superbiz.app.data.db.Product
 import com.superbiz.app.data.repo.SyncClock
 import com.superbiz.app.data.repo.SyncEngine
 import com.superbiz.app.data.repo.SyncRound
+import com.superbiz.app.data.repo.toSpec
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -74,9 +75,10 @@ class SyncConvergenceTest {
         val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        // مخطط v16 تُنشئه Room — ثم تُركَّب حارس المشغّلات والمشغّلات نفسها (SQL زمن التشغيل)
+        // مخطط v18 تُنشئه Room — ثم تُركَّب حارس المشغّلات والمشغّلات نفسها (SQL زمن التشغيل)
         db.openHelper.writableDatabase
         for (sql in AppGraph.syncRuntimeSql()) db.openHelper.writableDatabase.execSQL(sql)
+        for (sql in AppGraph.syncRuntimeSql18()) db.openHelper.writableDatabase.execSQL(sql)
         return db
     }
 
@@ -258,5 +260,161 @@ class SyncConvergenceTest {
         // الطرف أعيد ربطه بهوية B المحلية
         val partyOnB = importedVisit?.partyId?.let { dbB.parties().byId(it) }
         assertEquals("عميل الزيارات", partyOnB?.name)
+    }
+
+    // ═══════════ [AUD-3] عدّاد استهلاك الكوبون لا يجوز LWW — إصلاح الإنفاق المزدوج ═══════════
+    //
+    // السيناريو الحتمي للعلة القديمة: جهاز A يستهدِم الكوبون (usedCount 0→1) دون اتصال،
+    // وجهاز B يعدّل بيانات الكوبون (لا استهلاك) بساعة أحدث — مزامنة LWW كانت تُنزل صفّ B
+    // فوق صفّ A فتمحو الاستهلاك ويتاح الكوبون للاستهلاك من جديد (إنفاق مزدوج عبر الأجهزة).
+    // العقد المصلَح: usedCount يُدمج بـmax فلا ينقص تحت أعلى عدد حقيقي مرصود.
+    @Test
+    fun `coupon usedCount survives LWW edit from a peer that never consumed`() = runBlocking {
+        val relay = Loopback()
+        val now = System.currentTimeMillis()
+
+        // 1) A ينشئ كوبون maxUses=2 ويزامن (B يستورده — usedCount=0)
+        val cid = dbA.coupons().upsert(
+            com.superbiz.app.data.db.CouponEntity(code = "SYNC-1", maxUses = 2, active = true)
+        )
+        round(engineA, relay); round(engineB, relay)
+        assertEquals(0, dbB.coupons().byOrigin("aaaa-device", cid)?.usedCount)
+
+        // 2) دون اتصال: A يستهلك (0→1 ذرياً) وB يعدّل الملاحظة بساعة أحدث بلا استهلاك
+        assertEquals(1, dbA.coupons().consume(cid, now))
+        val bRow = dbB.coupons().byOrigin("aaaa-device", cid)!!
+        dbB.coupons().upsert(bRow.copy(note = "تعديل من B"))
+        forceClock(dbA, "coupons", cid, 5_000L)
+        forceClock(dbB, "coupons", bRow.id, 6_000L)
+
+        // 3) جولتا دفع وسحب حتى التقارب الكامل
+        round(engineA, relay); round(engineB, relay)
+        round(engineA, relay); round(engineB, relay)
+
+        // 4) الحكم: استهلاك A محفوظ على الجهازين (القديم كان يصفّره على A)
+        assertEquals("استهلاك A باقٍ على A", 1, dbA.coupons().byId(cid)?.usedCount)
+        assertEquals("استهلاك A انتقل إلى B", 1, dbB.coupons().byOrigin("aaaa-device", cid)?.usedCount)
+        // وتحرير B (الملاحظة) وصل أيضاً — الدمج حفظ القيمتين لا صراع خاسر
+        assertEquals("تعديل B باقٍ", "تعديل من B", dbA.coupons().byId(cid)?.note)
+    }
+
+    // ═══════════ [RVW-2] اختبار عدائي موثِّق لحدود AUD-3 المعروفة ═══════════
+    // الاستهلاك المتزامن دون اتصال على جهازين للكوبون نفسه: كلٌّ يرفع العداد 0→1،
+    // ودمج max يجعل التقارب 1 — بينما الاستهلاك الحقيقي 2 (إنفاق مزدوج واحد يفلت).
+    // هذا اختبار «توثيق السقف الحالي» لا تصديق عليه: دمج max يضمن تقارب العداد
+    // ولا يضمن exactly-once موزّعاً — العلاج الجذري دفتر استهلاك append-only يُجمع
+    // (قرار معماري موثق في تعليق AUD-3 داخل SyncEngine — قرار مالك لا إصلاح موجة).
+    // إذا فشل هذا الاختبار يوماً فقد تغيرت الدلالة — راجع العقد قبل «إصلاحه».
+    @Test
+    fun `adversarial documents the known limit - simultaneous offline consumption converges to max but under-counts`() = runBlocking {
+        val relay = Loopback()
+        val now = System.currentTimeMillis()
+
+        // 1) A ينشئ كوبون maxUses=5 ويزامن (B يستورده — usedCount=0 على الجهازين)
+        val cid = dbA.coupons().upsert(
+            com.superbiz.app.data.db.CouponEntity(code = "RACE-1", maxUses = 5, active = true)
+        )
+        round(engineA, relay); round(engineB, relay)
+
+        // 2) دون اتصال: الجهازان يستهلكان الكوبون نفسه معاً (0→1 على كلٍّ على حدة)
+        //    حارس الاستهلاك الذري WHERE usedCount < maxUses يجيز كليهما محلياً بصدق
+        assertEquals(1, dbA.coupons().consume(cid, now))
+        val bRow = dbB.coupons().byOrigin("aaaa-device", cid)!!
+        assertEquals(1, dbB.coupons().consume(bRow.id, now))
+        forceClock(dbA, "coupons", cid, 5_000L)
+        forceClock(dbB, "coupons", bRow.id, 6_000L)
+
+        // 3) تقارب كامل بجولتي دفع وسحب
+        round(engineA, relay); round(engineB, relay)
+        round(engineA, relay); round(engineB, relay)
+
+        // 4) الحكم الموثِّق: العداد يتقارب على max(1,1)=1 — لا 2 — لأن العداد
+        //    مجمَّع لا دفتر أحداث؛ الاستهلاكان حصل فعلاً والواحد فقط ظاهر في العداد.
+        //    النتيجة مقصودة وموثقة كحدود AUD-3 (إنفاق مزدوج موزّع واحد يفلت من max).
+        assertEquals(1, dbA.coupons().byId(cid)?.usedCount)
+        assertEquals(1, dbB.coupons().byOrigin("aaaa-device", cid)?.usedCount)
+        // ودير الصف متقارب بايتياً كأي جدول مزامن — التقارب سليم، العدّ هو المحدود
+        assertEquals(
+            dbA.coupons().byId(cid)?.usedCount,
+            dbB.coupons().byOrigin("aaaa-device", cid)?.usedCount
+        )
+    }
+
+    // ═══════════════ [RVW-17 V 3.2.6] دفتر الاستهلاك — التصحيح عند التقارب ═══════════════
+
+    /**
+     * إغلاق الحد الموثق أعلاه بتصميم §7-ب: دفتر أحداث إلحاقي coupon_redemptions
+     * يُزامن باتحاد أعراف (add-only — بلا حذف ولا تعديل). الجهازان يستهلكان دون
+     * اتصال كما في الاختبار السابق — العدّاد المجمع يبقى تحت-عابداً (1 لا 2)،
+     * لكن دفتر الأحداث يتقارب على شاهدين حقيقيين على الجهازين معاً، فبوابة
+     * fail-closed (ledgerUses ≥ maxUses) ترفض كل استهلاك لاحق على الجهازين.
+     * ودلالة الاتحاد تُقفل حرفياً: جولة إعادة مزامنة كاملة لا تضاعف شيئاً.
+     * (المحاكاة على مستوى DAO — ما يفعله LoyaltyRepo.consumeCouponInTransaction
+     * داخل معاملة الفاتورة حرفياً: استهلاك ذرّي ثم إدراج حدث بساعة صفِر يتركها
+     * لمشغّل اللمس، فتدخل دفتر الدفع دلتا تلقائياً.)
+     */
+    @Test
+    fun `coupon redemption ledger reconciles distributed consumption - effective uses = 2 on both devices`() = runBlocking {
+        val relay = Loopback()
+        val now = System.currentTimeMillis()
+
+        // 1) A ينشئ كوبون maxUses=2 ويزامن (B يستورده)
+        val cid = dbA.coupons().upsert(
+            com.superbiz.app.data.db.CouponEntity(code = "RACE-2", maxUses = 2, active = true)
+        )
+        round(engineA, relay); round(engineB, relay)
+        val bRow0 = dbB.coupons().byOrigin("aaaa-device", cid)!!
+
+        // 2) دون اتصال: كل جهاز يستهلك ويكتب حدث دفتره (نمط LoyaltyRepo حرفياً)
+        assertEquals(1, dbA.coupons().consume(cid, now))
+        dbA.couponRedemptions().insertOrIgnore(
+            com.superbiz.app.data.db.CouponRedemptionEntity(
+                eventId = "aaaa-device|11|RACE-2", code = "RACE-2",
+                invoiceId = 11L, qty = 1, at = now, origin = "aaaa-device"
+            )
+        )
+        assertEquals(1, dbB.coupons().consume(bRow0.id, now))
+        dbB.couponRedemptions().insertOrIgnore(
+            com.superbiz.app.data.db.CouponRedemptionEntity(
+                eventId = "bbbb-device|22|RACE-2", code = "RACE-2",
+                invoiceId = 22L, qty = 1, at = now, origin = "bbbb-device"
+            )
+        )
+        forceClock(dbA, "coupons", cid, 5_000L)
+        forceClock(dbB, "coupons", bRow0.id, 6_000L)
+
+        // 3) تقارب كامل بجولتي دفع وسحب
+        round(engineA, relay); round(engineB, relay)
+        round(engineA, relay); round(engineB, relay)
+
+        // 4) الحكم الأول — الحد القديم كما هو: العدّاد المجمع تحت-عابد (1 لا 2)
+        assertEquals("حد AUD-3 الموثق يبقى كما هو على العداد", 1, dbA.coupons().byId(cid)?.usedCount)
+        assertEquals(1, dbB.coupons().byOrigin("aaaa-device", cid)?.usedCount)
+
+        // 5) الحكم الجديد — الدفتر يتقارب على شاهدين على الجهازين معاً
+        assertEquals("الشاهدان متقاربان على A", 2, dbA.couponRedemptions().countByCode("RACE-2"))
+        assertEquals("الشاهدان متقاربان على B", 2, dbB.couponRedemptions().countByCode("RACE-2"))
+        val idsA = dbA.couponRedemptions().allOnce().map { it.eventId }.toSet()
+        val idsB = dbB.couponRedemptions().allOnce().map { it.eventId }.toSet()
+        assertEquals("مجموعتا الأحداث متطابقتان بايتياً", idsA, idsB)
+        assertEquals(setOf("aaaa-device|11|RACE-2", "bbbb-device|22|RACE-2"), idsA)
+
+        // 6) بوابة fail-closed: الاستخدام الفعلي (2) بلغ الحد ⇒ الرفض على الجهازين
+        for ((label, db) in listOf("A" to dbA, "B" to dbB)) {
+            val row = if (label == "A") db.coupons().byId(cid)!! else db.coupons().byOrigin("aaaa-device", cid)!!
+            val check = com.superbiz.app.domain.LoyaltyP46.checkSpec(
+                row.toSpec(ledgerUses = db.couponRedemptions().countByCode("RACE-2")),
+                now = now + 1, basePiasters = 10_000L
+            )
+            assertTrue("جهاز $label: الدفتر يرفض الاستهلاك الثالث",
+                check is com.superbiz.app.domain.LoyaltyP46.CouponCheck.Rejected &&
+                    check.reason == com.superbiz.app.domain.LoyaltyP46.CouponReject.EXHAUSTED)
+        }
+
+        // 7) دلالة الاتحاد حرفياً: جولتا إعادة مزامنة كاملتان لا تضاعفان شيئاً
+        round(engineA, relay); round(engineB, relay)
+        round(engineA, relay); round(engineB, relay)
+        assertEquals("إعادة المزامنة لا تكرر الأحداث (A)", 2, dbA.couponRedemptions().countByCode("RACE-2"))
+        assertEquals("إعادة المزامنة لا تكرر الأحداث (B)", 2, dbB.couponRedemptions().countByCode("RACE-2"))
     }
 }

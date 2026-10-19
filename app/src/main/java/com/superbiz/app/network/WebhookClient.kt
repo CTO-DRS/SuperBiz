@@ -30,7 +30,14 @@ class WebhookClient(private val store: WebhookStore) {
             conn.setFixedLengthStreamingMode(payload.toByteArray(Charsets.UTF_8).size)
             conn.outputStream.use { it.write(payload.toByteArray(Charsets.UTF_8)) }
             val code = conn.responseCode
-            runCatching { conn.inputStream.close() }
+            // [RVW-22][Wave R10] إغلاق مجرى الاستجابة في كل الحالات: كان الإغلاق
+            // يلمس inputStream فقط — وعلى 4xx/5xx يرمي الوصول استثناءً يبتلعه
+            // runCatching فيبقى errorStream مفتوحاً بلا قارئ، فلا تعود الاتصال
+            // للمِجمع ويتسرب مقبس لكل تسليم فاشل (نقطة نهاية منقولة أو معطوبة =
+            // تسريبات متراكمة على جهاز يطلق حدثاً لكل فاتورة). الاختيار حسب
+            // الحالة: 2xx يغلق inputStream، وغيره يغلق errorStream (قد يكون
+            // عديماً — الاستدعاء الآمن)، والفشل هنا عابر مسجَّل كما في الأعلى.
+            runCatching { (if (code in 200..299) conn.inputStream else conn.errorStream)?.close() }
             code in 200..299
         } catch (e: Exception) {
             false

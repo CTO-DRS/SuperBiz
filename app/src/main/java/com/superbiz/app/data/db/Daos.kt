@@ -979,6 +979,14 @@ interface AuditLogDao {
     /** [P34-M1] تصدير النسخة الكاملة 23/23 — السجل كاملاً بترتيب الإلحاق (سجل للقراءة فقط يُنقل كما هو) */
     @Query("SELECT * FROM audit_log ORDER BY id")
     suspend fun allLogs(): List<AuditLogEntity>
+
+    /**
+     * [RVW-6 V 3.2.2] سقف تخزين السجل — يحفظ الأحدث :keep صفًا ويحذف الأقدم فحسب
+     * (إلحاق فقط بمعناه التشغيلي: لا تعديل ولا إعادة ترتيب — حذف سياسة تخزين موثقة).
+     * LIMIT -1 OFFSET :keep في SQLite: بلا حد مع إزاحة = كل ما بعد الأحدث keep.
+     */
+    @Query("DELETE FROM audit_log WHERE id IN (SELECT id FROM audit_log ORDER BY id DESC LIMIT -1 OFFSET :keep)")
+    suspend fun keepNewest(keep: Int): Int
 }
 
 @Dao
@@ -1096,6 +1104,9 @@ interface MaintenanceDao {
     // [P46-W1] نقاط الولاء والكوبونات — المسح الكامل لا يترك الجداول الجديدة حية
     @Query("DELETE FROM loyalty_entries") suspend fun wipeLoyaltyEntries()
     @Query("DELETE FROM coupons") suspend fun wipeCoupons()
+    // [AUD-1 إصلاح] أرشيف ZATCA كان غائبًا عن المسح الكامل: استبدال القاعدة كان يترك
+    // أرشيفًا يتيمًا لفواتير لم تعد موجودة ثم يفشل إدراج النسخة الجديدة بنفس invoiceId
+    @Query("DELETE FROM zatca_docs") suspend fun wipeZatcaDocs()
 
     @androidx.room.Transaction
     suspend fun wipeAll() {
@@ -1112,6 +1123,8 @@ interface MaintenanceDao {
         wipeStatementRules(); wipeAuditLog()
         // [P46-W1] الولاء يُمسح قبل أبوينه (parties/invoices) — والكوبونات مستقلة
         wipeLoyaltyEntries(); wipeCoupons()
+        // [AUD-1 إصلاح] أرشيف ZATCA يُمسح بعد الفواتير (لا FK صريح لكنه تابع منطقي لها)
+        wipeZatcaDocs()
         wipeParties(); wipeRules(); wipeCurrencies()
     }
 }
@@ -1256,6 +1269,45 @@ interface CouponDao {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — أحداث إلحاقية موزّعة (تصميم §7-ب)
+// ═══════════════════════════════════════════════════════════════════════════
+
+@androidx.room.Dao
+interface CouponRedemptionDao {
+
+    /**
+     * إدراج بتجاهل التعارض — العقد الدالّ للاتحاد: إعادة الحدث نفسه (نفس
+     * eventId الفريد، من دورة استعادة أو إعادة دفع) لا تُدرج صفّاً ثانياً
+     * وتعيد ‎-1. لا مسار تعديل ولا حذف في هذا DAO كله — الدفتر إلحاقي أبدًا.
+     */
+    @androidx.room.Insert(onConflict = androidx.room.OnConflictStrategy.IGNORE)
+    suspend fun insertOrIgnore(e: CouponRedemptionEntity): Long
+
+    /** الاستخدام الفعلي للكوبون = عدد شواهد الدفتر لكوده — بوابة fail-closed في checkSpec */
+    @Query("SELECT COUNT(*) FROM coupon_redemptions WHERE code = :code")
+    suspend fun countByCode(code: String): Int
+
+    /** لقطة المسح الكامل للمزامنة والنسخ */
+    @Query("SELECT * FROM coupon_redemptions")
+    suspend fun allOnce(): List<CouponRedemptionEntity>
+
+    /** بحث مزامنة — صف مستورد بهوية أصلية (نمط الجداول المزامنة حرفياً) */
+    @Query("SELECT * FROM coupon_redemptions WHERE originDeviceId = :od AND originId = :oid LIMIT 1")
+    suspend fun byOrigin(od: String, oid: Long): CouponRedemptionEntity?
+
+    /** بحث مزامنة — صف أصلي محلي بمعرّفه (صدى دفعة تحتوي صفوفنا نفسها) */
+    @Query("SELECT * FROM coupon_redemptions WHERE id = :id LIMIT 1")
+    suspend fun byId(id: Long): CouponRedemptionEntity?
+
+    @Query("SELECT COUNT(*) FROM coupon_redemptions")
+    suspend fun count(): Int
+
+    /** حصراً للاستعادة «استبدال كامل» — المسار الدمجي لا يلمس هذا الجدول مطلقاً (NON_MERGEABLE) */
+    @Query("DELETE FROM coupon_redemptions")
+    suspend fun wipe()
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // [H1-3][H1-4][v13] DAOs هوية المستخدمين — RBAC على الجهاز الواحد
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1341,6 +1393,10 @@ interface ZatcaDocDao {
     @Query("SELECT COUNT(*) FROM zatca_docs")
     suspend fun count(): Int
 
+    /** [AUD-1] لقطة كاملة مرتبة بالفاتورة — تصدير النسخ الاحتياطي */
+    @Query("SELECT * FROM zatca_docs ORDER BY invoiceId")
+    suspend fun allOnce(): List<ZatcaDocEntity>
+
     /** قبول إبلاغ/تخليص — يغلق المحاولة ويمحوا سبب الرفض */
     @Query(
         """UPDATE zatca_docs SET reportedAt = :at, attemptCount = 0,
@@ -1382,6 +1438,14 @@ interface SyncLogDao {
     @Query("DELETE FROM sync_log WHERE imported = 0")
     suspend fun prunePushed()
 
+    /**
+     * [RVW-6 V 3.2.2] تقليم صيانة الإقلاع — نفس SQL قلم الدفع لكن بدلالة موثقة:
+     * يُستدعى حصراً خلف بوابة Retention.pruneSyncLedger (جهاز بلا مزامنة قط)
+     * حيث كل المعلّق (imported=0) عبء ميت بلا مستهلك. الشواهد لا تُمس.
+     */
+    @Query("DELETE FROM sync_log WHERE imported = 0")
+    suspend fun pruneUnsyncedLedger(): Int
+
     @Query("DELETE FROM sync_log")
     suspend fun clearAll()
 }
@@ -1398,6 +1462,9 @@ interface SyncLogDao {
         StatementRuleEntity::class, AuditLogEntity::class,
         // [P46-W1] نقاط الولاء والكوبونات — جدولان بإنشاء فقط (ترحيل 11→12 في SuperBizApp)
         LoyaltyEntryEntity::class, CouponEntity::class,
+        // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — جدول إلحاقي بإنشاء فقط
+        // (ترحيل 17→18 في SuperBizApp — CREATE TABLE/INDEX فقط، لا جدول قائم يُلمس)
+        CouponRedemptionEntity::class,
         // [H4-3][v16] دفتر المزامنة
         SyncLogEntity::class,
         // [H1-3][H1-4] هوية المستخدمين والأدوار — جدولان بإنشاء فقط + عمودا إسناد التدقيق
@@ -1424,7 +1491,12 @@ interface SyncLogDao {
     // (ترحيل 14→15 في SuperBizApp — ALTER ADD COLUMN ببذور محايدة: "" = بالأساس نفسه)
     // [H4-3 V 3.0.0] مزامنة E2E — sync_log + أعمدة هوية وساعة على الجداول التسعة
     // (ترحيل 15→16 في SuperBizApp — إلحاقي خالص + مشغّلات SQLite لعقد LWW)
-    version = 16,
+    // [AUD-8 V 3.2.1] فهارس الهوية على الجداول الثمانية — كانت byOrigin(originDeviceId, originId)
+    // التي تُستدعى لكل صف وارد في دفعة مزامنة مسحًا كاملاً O(N) بلا فهرس
+    // (ترحيل 16→17 في SuperBizApp — إنشاء فهارس فقط، لا أعمدة ولا جداول)
+    // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — جدول بإنشاء فقط
+    // (ترحيل 17→18 في SuperBizApp — CREATE TABLE/INDEX/مشغّلات مزامنة فقط، إلحاقي خالص)
+    version = 18,
     exportSchema = true
 )
 
@@ -1456,6 +1528,8 @@ abstract class AppDatabase : androidx.room.RoomDatabase() {
     // [P46-W1] نقاط الولاء والكوبونات
     abstract fun loyalty(): LoyaltyDao
     abstract fun coupons(): CouponDao
+    // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — أحداث إلحاقية موزّعة
+    abstract fun couponRedemptions(): CouponRedemptionDao
     // [H1-3][H1-4] هوية المستخدمين والأدوار
     abstract fun users(): UserDao
     abstract fun userSecrets(): UserSecretDao

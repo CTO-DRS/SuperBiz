@@ -1770,6 +1770,7 @@
     <string name="bk_import_ok_line">أُضيف %1$d عميلاً، وتخطي %2$d، وأُضيف %3$d منتجاً، وتخطي %4$d</string>
     <string name="bk_import_failed_rows">تم تجاهل %1$d صفاً تالفاً</string>
     <string name="bk_tables_line">الجداول المكتشفة: %1$s</string>
+    <string name="bk_merge_skips_financial">لم يُستورد بالدمج (قراءة فقط): %1$s — لنقل التاريخ المالي استخدم «استبدال كامل»</string>
     <string name="bk_warn">الاستعادة تضيف العملاء والمنتجات غير الموجودة فقط — لا تعدّل الفواتير أو القيود</string>
     <string name="bk_fail_title">فشل العملية</string>
     <string name="bk_ok">حسناً</string>
@@ -1806,7 +1807,7 @@
     <string name="bk_import_checks_line">الشيكات: أُضيف %1$d، وتخطي %2$d</string>
     <string name="bk_import_plans_line">خطط الأقساط: أُضيفت %1$d، وتخطي %2$d</string>
     <string name="bk_import_installments_line">الأقساط: أُضيف %1$d، وتخطي %2$d</string>
-    <string name="bk_warn3">الاستعادة تضيف العملاء والمنتجات والزيارات والمصروفات والشيكات وخطط الأقساط والأقساط غير الموجودة فقط — لا تعدّل الفواتير أو المدفوعات أو القيود</string>
+    <string name="bk_warn3">الدمج يضيف غير الموجود من الأطراف والمنتجات والزيارات والمصروفات والشيكات وخطط الأقساط والأقساط والكشوف وقوالبها والتواقيع والأختام وقوالب الملاحظات وسجل التدقيق والولاء والكوبونات — ولا يستورد أبدًا الفواتير وبنودها والمدفوعات والقيود وسطورها وحركات المخزون والعملات والقواعد؛ التاريخ المالي ينتقل عبر «استبدال كامل» فقط</string>
     <string name="vr_more_names">و%1$d عملاء آخرين…</string>
 
     <!-- [P16] strings (merged from p16_strings) -->
@@ -2519,6 +2520,10 @@
     <string name="sync_pass_confirm_fp">تأكيد البصمة</string>
     <string name="sync_fingerprint">بصمة الإقران — طابِقها وجهاً لوجه على الجهاز الآخر قبل تفعيله:</string>
     <string name="sync_fingerprint_hint">جهازان ببصمتين مختلفتين لن يشاركا أي شيء أبداً</string>
+    <string name="sync_pair_code_label">رمز الإقران (اختياري — للجهاز الثاني)</string>
+    <string name="sync_pair_code_hint">اتركه فارغاً للتوافق مع النسخ القديمة؛ للإقران الجديد أدخل رمز الجهاز الأول كما هو</string>
+    <string name="sync_pair_code_invalid">رمز غير صالح — انسخه من شاشة الجهاز الآخر حرفياً</string>
+    <string name="sync_pair_code_show">رمز الإقران (انسخه إلى الجهاز الآخر):</string>
     <string name="sync_save">حفظ</string>
     <string name="sync_cancel">إلغاء</string>
     <string name="pulse_title">نبض العمل الكامل</string>

@@ -38,13 +38,16 @@ class LoyaltyRepo(private val db: AppDatabase) {
     /**
      * فحص كوبون بالكود عبر البوابة الموحدة — يعيد الخصم أو سبب الرفض.
      * (الجلب هنا والمحاكمة في LoyaltyP46.checkSpec — الحساب نقي والوصول للقاعدة هنا فقط)
+     * [RVW-17 V 3.2.6] العدّ من الدفتر الحي (شواهد coupon_redemptions للكود) يُمرّر
+     * للمواصفة — بوابة الاستهلاك الموزّع fail-closed تجري حيةً من قاعدة الحقائق نفسها.
      */
     suspend fun checkCoupon(code: String, now: Long, basePiasters: Long): LoyaltyP46.CouponCheck {
         val trimmed = code.trim()
         if (trimmed.isEmpty()) return LoyaltyP46.CouponCheck.Rejected(LoyaltyP46.CouponReject.EMPTY)
         val c = db.coupons().byCode(trimmed)
             ?: return LoyaltyP46.CouponCheck.Rejected(LoyaltyP46.CouponReject.NOT_FOUND)
-        return LoyaltyP46.checkSpec(c.toSpec(), now, basePiasters)
+        val ledgerUses = db.couponRedemptions().countByCode(trimmed)
+        return LoyaltyP46.checkSpec(c.toSpec(ledgerUses), now, basePiasters)
     }
 
     /** الكوبونات كلها — شاشة الإدارة في الإعدادات */
@@ -114,9 +117,46 @@ class LoyaltyRepo(private val db: AppDatabase) {
      * استهلاك كوبون داخل معاملة قائمة — الحكم من الصفوف المتغيرة:
      * 0 = الكوبون غير صالح لحظة الحفظ (استُنفد/انتهى/عُطّل) ⇒ فشل الحفظ كله،
      * وهذا هو العقد: لا فاتورة بخصم كوبون لم يُستهلك فعلاً.
+     *
+     * [RVW-17 V 3.2.6] كتابة شاهد الدفتر داخل المعاملة نفسها (تصميم §7-ب):
+     *  ① بوابة الدفتر fail-closed قبل التحديث الذري — حتى لو انجرع usedCount
+     *     إلى ما دون الحد (تحت-عدّ الدمج الموثق أو أي انجراف) فما دام الدفتر
+     *     يشهد ببلوغ الحد فالاستهلاك مرفض (اتجاه الفشل: رفض بلا خصم، أبداً العكس).
+     *  ② التحديث الذري المشروط (consume) يبقى حارس الاستهلاك الفردي كما هو.
+     *  ③ الحدث بساعة صفِر يتركها مشغّل اللمس — فيدخل دفتر الدفع دلتا تلقائياً.
+     *  ④ [RVW-20 V 3.2.7] الشاهد إلزامي لا اختياري: قيمة insertOrIgnore محسوبة —
+     *     ‎-1 (تصادم eventId الحتمي: نفس الفاتورة والكود على نفس الجهاز) يُسقط
+     *     المعاملة كلها فلا انجراف عدّاد بلا شاهد أبداً (الاتجاه المفتوح الموثق
+     *     كان يسمح بصمت بخصم بلا دفتر). التسامح مع ‎-1 حصراً في المسار الاتحادي
+     *     (المزامنة/الاستعادة — دورة إعادة الدفع موثقة هناك) لا في مسار الاستهلاك.
+     *     لا مسار حي يصطدم بالعقد: POS يولّد invId جديداً كل مرة، والمحرر لا يمرّر
+     *     couponId أصلاً — فالعقد دفاع عميق بحدّ قاعدة البيانات مهما جاء مستدعٍ مستقبلاً.
+     * deviceId يُحلّ قبل فتح المعاملة (InvoiceRepo يمرره — قراءة DataStore داخل
+     * معاملة Room غير مضمونة) — فراغه لا يمنع الشاهد ("|id|code" ما يزال فريداً
+     * بمفتاح الفاتورة المحلي) لكنه يوثّق في السجل أن المزوّد غير مربوط.
      */
-    suspend fun consumeCouponInTransaction(couponId: Long, now: Long) {
+    suspend fun consumeCouponInTransaction(couponId: Long, now: Long, invoiceId: Long, deviceId: String) {
+        val c = db.coupons().byId(couponId)
+            ?: throw IllegalArgumentException("coupon not found: $couponId")
+        if (c.maxUses > 0) {
+            val uses = db.couponRedemptions().countByCode(c.code)
+            require(uses < c.maxUses) {
+                "coupon ledger exhausted: ${c.code} $uses/${c.maxUses} (fail-closed)"
+            }
+        }
         require(db.coupons().consume(couponId, now) == 1) { "coupon not consumable: $couponId" }
+        // [RVW-20 V 3.2.7] الشاهد إلزامي: ‎-1 = تصادم المعرّف الحتمي (استهلاك مكرر لنفس
+        // الفاتورة على نفس الجهاز) — يُرمى هنا فيتراجع الاستهلاك الذري والحفظ كله معه:
+        // فشل مغلَق بالاتجاه الصحيح (رفض بلا خصم) لا انجراف عدّاد بلا شاهد أبداً.
+        val witness = db.couponRedemptions().insertOrIgnore(
+            com.superbiz.app.data.db.CouponRedemptionEntity(
+                eventId = "$deviceId|$invoiceId|${c.code}", code = c.code,
+                invoiceId = invoiceId, qty = 1, at = now, origin = deviceId
+            )
+        )
+        require(witness != -1L) {
+            "coupon ledger witness collision: $deviceId|$invoiceId|${c.code} (fail-closed rollback)"
+        }
     }
 
     /**
@@ -135,8 +175,11 @@ class LoyaltyRepo(private val db: AppDatabase) {
     }
 }
 
-/** مواصفة الكوبون للبوابة النقية — من كيان Room (نمط المحركات النقية) */
-fun CouponEntity.toSpec(): LoyaltyP46.CouponSpec = LoyaltyP46.CouponSpec(
+/** مواصفة الكوبون للبوابة النقية — من كيان Room (نمط المحركات النقية).
+ *  [RVW-17] ledgerUses تُمرّر صراحة من مستدعيها (من يستشير الدفتر يُمرّر عدّه؛
+ *  الافتراضي 0 يحفظ حكم ما قبل v18 لمن لا يستشير). */
+fun CouponEntity.toSpec(ledgerUses: Int = 0): LoyaltyP46.CouponSpec = LoyaltyP46.CouponSpec(
     couponId = id, kind = kind, amountPiasters = amountPiasters, percent = percent,
-    expiresAt = expiresAt, maxUses = maxUses, usedCount = usedCount, active = active
+    expiresAt = expiresAt, maxUses = maxUses, usedCount = usedCount, active = active,
+    ledgerUses = ledgerUses
 )

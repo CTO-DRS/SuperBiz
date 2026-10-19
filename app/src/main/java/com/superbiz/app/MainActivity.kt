@@ -196,6 +196,10 @@ var bgSince by rememberSaveable { mutableStateOf(0L) }
                                 if (credsConfigured && settings.lockTimeoutMin <= 0 && stage == 3) {
                                     stage = 2
                                     usersVM.endSession()   // [H1-4] الهوية تموت مع القفل
+                                    // [RVW-4 V 3.2.2] إشارة العملية تعود مقفلة فوراً + إعادة رسم
+                                    // ويدجات فورية بالقناع (المبالغ لا تبقى معروضة للتطبيق في الخلفية)
+                                    com.superbiz.app.domain.AppLockSignal.unlocked = false
+                                    com.superbiz.app.widget.WidgetSync.push(applicationContext, immediate = true)
                                 }
                             }
                             Lifecycle.Event.ON_START -> {
@@ -206,6 +210,9 @@ var bgSince by rememberSaveable { mutableStateOf(0L) }
                                 ) {
                                     stage = 2
                                     usersVM.endSession()   // [H1-4] الهوية تموت مع القفل
+                                    // [RVW-4 V 3.2.2] نفس عقد الإشارة لمسار مهلة إعادة القفل
+                                    com.superbiz.app.domain.AppLockSignal.unlocked = false
+                                    com.superbiz.app.widget.WidgetSync.push(applicationContext, immediate = true)
                                 }
                             }
                             else -> Unit
@@ -241,7 +248,12 @@ var bgSince by rememberSaveable { mutableStateOf(0L) }
                         activity = this,
                         settingsVM = settingsVM,
                         usersVM = usersVM,
-                        onUnlocked = { stage = 3 }
+                        // [RVW-4 V 3.2.2] نجاح فتح القفل يرفع إشارة العملية — الويدجات تعرض
+                        // الأرقام من جديد حسب تفضيل الإخفاء (وإعادة الرسم تصلب عند العودة onResume)
+                        onUnlocked = {
+                            com.superbiz.app.domain.AppLockSignal.unlocked = true
+                            stage = 3
+                        }
                     )
 
                     else -> SuperBizRoot(

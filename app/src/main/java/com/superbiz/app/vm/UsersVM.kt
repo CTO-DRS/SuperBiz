@@ -64,12 +64,23 @@ class UsersVM(app: Application) : AndroidViewModel(app) {
         ensureOwnerSeed()
         _users.value = g.db.users().all()
         _activeUsers.value = g.db.users().activeUsers()
+        refreshMultiUserMode()
     }
 
     /** تحديث المستخدمين الفعّالين لشاشة القفل — بلا بوابة (قراءة دورة الدخول) */
     fun refreshActiveUsers() = launchSafe {
         ensureOwnerSeed()
         _activeUsers.value = g.db.users().activeUsers()
+        refreshMultiUserMode()
+    }
+
+    /**
+     * [RVW-5 V 3.2.2] تحديث علم وضع التعدد — يُستدعى عند كل قراءة مستخدمين
+     * (شاشة القفل عند كل إقلاع + الإدارة) كي يبقى تصنيف إسناد التدقيق
+     * (نظام/مالك ضمني) محدّثاً بعد أي إنشاء أو تعطيل أو حذف مستخدم.
+     */
+    private suspend fun refreshMultiUserMode() {
+        SessionState.multiUserMode = g.db.users().activeUsers().size > 1
     }
 
     fun refreshLockout(userId: Long) = launchSafe {

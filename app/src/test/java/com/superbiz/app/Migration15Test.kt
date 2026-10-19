@@ -138,13 +138,15 @@ class Migration15Test {
             assertEquals(0L, scalar(db, "SELECT COUNT(*) FROM expenses WHERE origFxMicros != 0"))
             assertEquals(0L, rowCount(db, "PRAGMA foreign_key_check"))
 
-            // ═══ التحقق الحاسم: فتح القاعدة نفسها بRoom v15 ═══
+            // ═══ التحقق الحاسم: فتح القاعدة نفسها بRoom (المخطط الحالي بعد AUD-8 = 17) ═══
             db.version = 16
             db.close()
 
             val ctx = ApplicationProvider.getApplicationContext<Context>()
             val room = androidx.room.Room.databaseBuilder(ctx, com.superbiz.app.data.db.AppDatabase::class.java, dbName!!)
                 .allowMainThreadQueries()
+                // [AUD-8 V 3.2.1]: المخطط صار 17 — افتحة تتطلب تسلسل الترحيلات الكامل
+                .addMigrations(*com.superbiz.app.AppGraph.MIGRATIONS.toTypedArray())
                 .build()
             try {
                 kotlinx.coroutines.runBlocking {

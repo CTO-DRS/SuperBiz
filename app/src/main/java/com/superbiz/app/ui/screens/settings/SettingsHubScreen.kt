@@ -498,7 +498,12 @@ private fun PrivacySection(s: com.superbiz.app.data.repo.Settings, vm: SettingsV
         stringResource(R.string.set_row_biometric_hint)
     ) {
         GlassSwitch(s.biometric) { on ->
-            if (on && s.pinHash == null && s.pinBlob == null) vm.notifyToast(pinReqBioMsg)
+            // [RVW-11 V 3.2.3] العقد الآن دالة نقية مُختبرة (LockPolicy) لا شرط UI حر:
+            // لا بيومتريا بلا رمز — نفس بوابـة P5-H4 حرفياً، مثبّتة كعقد قابل للتنفيذ
+            if (on && !com.superbiz.app.domain.LockPolicy.canEnableBiometric(
+                    s.pinHash != null || s.pinBlob != null
+                )
+            ) vm.notifyToast(pinReqBioMsg)
             else vm.setBiometric(on)
         }
     }
@@ -1585,6 +1590,22 @@ private fun BackupCard(
                         color = g.textSecondary,
                         style = MaterialTheme.typography.bodySmall
                     )
+                    // [RVW-1 إصلاح] شفافية الدمج — جداول مالية تُقرأ من النسخة ولا يدخلها
+                    // الدمج (عقد المسار الدمجي الموثق): لا يصح عرضها «مكتشفة» بلا ملاحظة
+                    // صريحة، وإلا إيهام المستخدم بدمج لم يحدث للتاريخ المالي
+                    val nonMergeable = com.superbiz.app.domain.backup
+                        .nonMergeableTablesFound(st.tablesFound)
+                    if (nonMergeable.isNotEmpty()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            stringResource(
+                                R.string.bk_merge_skips_financial,
+                                nonMergeable.joinToString(" · ")
+                            ),
+                            color = g.textSecondary,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             },
             confirmButton = {

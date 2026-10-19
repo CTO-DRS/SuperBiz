@@ -110,6 +110,14 @@ class BackupRepo(
         // [P46-W1] جولة 7 — جدولا الولاء والكوبونات (اكتمال 25/25)
         root.put("loyalty_entries", JSONArray(db.loyalty().allOnce().map { loyaltyEntryJson(it) }))
         root.put("coupons", JSONArray(db.coupons().allOnce().map { couponJson(it) }))
+        // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات (27 جداول مصدّرة) — شواهد الاستهلاك
+        // تنتقل مع تاريخها المالي عبر النسخ الكامل، والمزامنة الحية مسارها بين الأجهزة
+        root.put("coupon_redemptions", JSONArray(db.couponRedemptions().allOnce().map { couponRedemptionJson(it) }))
+        // [AUD-1 إصلاح] أرشيف ZATCA (v14) — الجدول السادس والعشرون: كان غائبًا عن النسخ
+        // والاستعادة تمامًا فكانت سلسلة PIH (latestHash) وأرشيف الست سنوات يفقدان صمتًا
+        // بعد أي استعادة، ويُعاد إصدار ICV مكرر ضد فواتير مبلَّغة أصلًا. الإضافة تراكمية
+        // (الصيغة تبقى 3) والقارئ متسامح: ملفات ما قبل الإصلاح بلا المفتاح ⇒ لا أرشيف يُستعاد
+        root.put("zatca_docs", JSONArray(db.zatcaDocs().allOnce().map { zatcaDocJson(it) }))
         } // [تدقيق H-3] نهاية معاملة اللقطة المتسقة
         // أرشيف الشيكات (DataStore مستقل) لم يكن يُصدَّر — بعد الاستعادة
         // كانت كل الشيكات المؤرشفة تعود إلى القائمة النشطة
@@ -274,6 +282,12 @@ class BackupRepo(
         .put("usedCount", c.usedCount).put("active", c.active)
         .put("note", c.note).put("createdAt", c.createdAt)
 
+    /** [RVW-17 V 3.2.6] شاهد استهلاك الكوبون — أعمدة المزامنة لا تُصدّر (نمط الكوبون حرفياً) */
+    private fun couponRedemptionJson(e: com.superbiz.app.data.db.CouponRedemptionEntity) = JSONObject()
+        .put("id", e.id).put("eventId", e.eventId).put("code", e.code)
+        .put("invoiceId", e.invoiceId).put("qty", e.qty)
+        .put("at", e.at).put("origin", e.origin)
+
     private fun productJson(p: Product) = JSONObject()
         .put("id", p.id).put("name", p.name).put("sku", p.sku).put("barcode", p.barcode)
         .put("unit", p.unit).put("costPrice", p.costPrice).put("salePrice", p.salePrice)
@@ -281,6 +295,12 @@ class BackupRepo(
         .put("archived", p.archived).put("createdAt", p.createdAt)
         // تاريخ إنشاء المنتج لم يكن يُصدَّر — كان يُكتب زمن الاستعادة (نمط partyJson)
 
+    // [AUD-1 إصلاح] اعتماد v13..v16 كاملًا — كان المسار مجمّدًا على حقول v10:
+    // أعمدة هوية ZATCA (uuid/icv/pih/subtype/delivery/buyer*/status) كانت تُفقد بعد كل
+    // استعادة فيفقد الربط سلسلة ICV/PIH وحالة الإبلاغ، وختم الفئة الأصلية (orig*) كان
+    // يضيع على مسار JSON (وكان مسار الدمج BackupKit وحده يغطيه).
+    // الإضافة تراكمية: الصيغة تبقى 3 والقارئات القديمة تتجاهل المفاتيح الجديدة بأمان
+    // (نفس عقد P36-BK حرفيًا) — القارئ عندنا متسامح (opt) فيقبل النسخ القديمة أيضًا.
     private fun invoiceJson(i: Invoice) = JSONObject()
         .put("id", i.id).put("number", i.number).put("partyId", i.partyId).put("type", i.type)
         .put("date", i.date).put("dueDate", i.dueDate).put("subtotal", i.subtotal)
@@ -288,6 +308,17 @@ class BackupRepo(
         .put("total", i.total).put("paid", i.paid).put("costTotal", i.costTotal)
         .put("status", i.status).put("currency", i.currency).put("fxRate", i.fxRate)
         .put("note", i.note)
+        .put("uuid", i.uuid).put("icv", i.icv).put("pih", i.pih)
+        .put("zatcaSubtype", i.zatcaSubtype).put("deliveryDate", i.deliveryDate)
+        .put("buyerName", i.buyerName).put("buyerVat", i.buyerVat).put("buyerAddress", i.buyerAddress)
+        .put("zatcaStatus", i.zatcaStatus)
+        .put("origCurrency", i.origCurrency).put("origTotal", i.origTotal).put("origFxMicros", i.origFxMicros)
+
+    private fun zatcaDocJson(d: com.superbiz.app.data.db.ZatcaDocEntity) = JSONObject()
+        .put("invoiceId", d.invoiceId).put("xml", d.xml).put("xmlHash", d.xmlHash)
+        .put("subtype", d.subtype).put("issuedAt", d.issuedAt)
+        .put("reportedAt", d.reportedAt).put("rejectReason", d.rejectReason)
+        .put("attemptCount", d.attemptCount).put("clearedXml", d.clearedXml)
 
     private fun checkJson(c: CheckEntity) = JSONObject()
         .put("id", c.id).put("number", c.number).put("partyId", c.partyId)
@@ -393,6 +424,13 @@ class BackupRepo(
 
     /** كتابة الملف إلى Uri عبر SAF */
     suspend fun exportTo(uri: Uri): Boolean = withContext(Dispatchers.IO) {
+        // [RVW-12 V 3.2.3] بوابة RBAC (BACKUP_RESTORE — المالك وحده) قبل try كي يُرمى
+        // الرفض استثناءً ظاهراً لا يتحول إلى false صامت. الضمني/SYSTEM يمران حرفياً
+        // (عقد §4.3 وعقد الأتمتة) — دفاع عميق فقط.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
         // كل تسلسل JSON + إدخال/إخراج الملف انتقل إلى Dispatcher.IO بدل خيط الاستدعاء (H-06)
         try {
             val json = exportJson()
@@ -407,6 +445,11 @@ class BackupRepo(
 
     /** نسخة تلقائية داخل مسار التطبيق (يستخدمها العامل الأسبوعي) */
     suspend fun exportLocal(): File {
+        // [RVW-12 V 3.2.3] نفس البوابة — العامل الأسبوعي (SYSTEM/ضمني = OWNER) يمر حرفياً.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
         val dir = File(context.filesDir, "backups").apply { mkdirs() }
         val name = "superbiz-auto-${System.currentTimeMillis()}.json"
         val f = File(dir, name)
@@ -459,6 +502,11 @@ class BackupRepo(
      * الدوران الكامل (BackupRoundtrip/BackupCrossRoundtrip) معاً.
      */
     suspend fun importFrom(uri: Uri): Boolean = withContext(Dispatchers.IO) {
+        // [RVW-12 V 3.2.3] نفس بوابة التصدير — الاستعادة أعلى مخاطر الاغتراب على الإطلاق.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
         // كل قراءة الملف + فك JSON + عمليات القاعدة انتقلت إلى Dispatcher.IO بدل خيط الاستدعاء (H-06)
         try {
             val text = context.contentResolver.openInputStream(uri)?.use { input ->
@@ -510,7 +558,8 @@ class BackupRepo(
                     // [P33-P8] قروش — النسخ القديمة (≤2) ريال Double تُحوَّل via moneyField
                     costPrice = moneyField(j, "costPrice", legacyRiyal),
                     salePrice = moneyField(j, "salePrice", legacyRiyal),
-                    stockQty = j.optDouble("stockQty"), reorderLevel = j.optDouble("reorderLevel"),
+                    // [AUD-9 إصلاح] نفس فخ NaN — المفاتيح الغائبة كانت تفشل بقيد NOT NULL
+                    stockQty = j.optDouble("stockQty", 0.0), reorderLevel = j.optDouble("reorderLevel", 0.0),
                     category = j.optString("category"), archived = j.optBoolean("archived"),
                     createdAt = j.optLong("createdAt"))
             }
@@ -523,14 +572,29 @@ class BackupRepo(
                     // [P33-P8] المبالغ قروش — taxRate/fxRate نسب تبقى Double
                     subtotal = moneyField(j, "subtotal", legacyRiyal, required = true),
                     discount = moneyField(j, "discount", legacyRiyal),
-                    taxRate = j.optDouble("taxRate"),
+                    // [AUD-9 إصلاح] optDouble بلا افتراض تعيد NaN للمفتاح الغائب — وNaN
+                    // يُربَط NULL في SQLite فيفشل الاستعادة كلها بقيود NOT NULL. الافتراض
+                    // المتسامح (0.0) يوافق بذرة الكيان — وfxRate كان له افتراض أصلاً
+                    taxRate = j.optDouble("taxRate", 0.0),
                     taxAmount = moneyField(j, "taxAmount", legacyRiyal),
                     total = moneyField(j, "total", legacyRiyal, required = true),
                     paid = moneyField(j, "paid", legacyRiyal),
                     costTotal = moneyField(j, "costTotal", legacyRiyal),
                     status = j.optInt("status"),
                     currency = j.optString("currency", "SAR"), fxRate = j.optDouble("fxRate", 1.0),
-                    note = j.optString("note"))
+                    note = j.optString("note"),
+                    // [AUD-1 إصلاح] هوية ZATCA وختم الفئة الأصلية — قراءة متسامحة:
+                    // النسخ القديمة بلا المفاتيح تعود البذور المحايدة ""/0 كما هي,
+                    // وorigTotal/origFxMicros تُقرأ خامتين (وحدات العملة الأصلية وليست قروش الأساس
+                    // فلا تجوز مرورها عبر legacyRiyal)
+                    uuid = j.optString("uuid"), icv = j.optLong("icv"), pih = j.optString("pih"),
+                    zatcaSubtype = j.optString("zatcaSubtype"),
+                    deliveryDate = j.optLong("deliveryDate"),
+                    buyerName = j.optString("buyerName"), buyerVat = j.optString("buyerVat"),
+                    buyerAddress = j.optString("buyerAddress"),
+                    zatcaStatus = j.optInt("zatcaStatus"),
+                    origCurrency = j.optString("origCurrency"),
+                    origTotal = j.optLong("origTotal"), origFxMicros = j.optLong("origFxMicros"))
             }
             val items = ArrayList<InvoiceItem>()
             root.optJSONArray("invoice_items")?.each { j ->
@@ -769,12 +833,59 @@ class BackupRepo(
                     active = j.optBoolean("active", true),
                     note = j.optString("note", ""), createdAt = j.optLong("createdAt"))
             }
+            // [RVW-17 V 3.2.6] قراءة دفتر استهلاك الكوبونات — متسامحة: غياب المفتاح
+            // (ملفات ما قبل v3.2.6) = قائمة فارغة بلا مساس
+            val stCouponRedemptions = ArrayList<com.superbiz.app.data.db.CouponRedemptionEntity>()
+            root.optJSONArray("coupon_redemptions")?.each { j ->
+                stCouponRedemptions += com.superbiz.app.data.db.CouponRedemptionEntity(
+                    id = j.getLong("id"), eventId = j.getString("eventId"),
+                    code = j.getString("code"), invoiceId = j.optLong("invoiceId", 0L),
+                    qty = j.optInt("qty", 1), at = j.optLong("at", 0L),
+                    origin = j.optString("origin", ""))
+            }
             // قاعدة اليتيم البنيوية (P34 نفسها دفاعياً): كشف بطرف غائب عن الملف يتخطى،
             // وتسليم بكشف غائب يتخطى بالتسلسل — ملف سليم لا تُمسّ صفوفه إطلاقاً
             val validStStatements = stStatements.filter { it.partyId in partyIds }
             val stStatementIds = validStStatements.map { it.id }.toSet()
             val validStDeliveries = stDeliveries.filter { it.statementId in stStatementIds }
+            // [AUD-1 إصلاح] قراءة أرشيف ZATCA — متسامحة: غياب المفتاح (ملفات ما قبل الإصلاح)
+            // = قائمة فارغة بلا مساس، والأرشفة ذاتها IGNORE فلا تُستبدل صفوف حية
+            val stZatcaDocs = ArrayList<com.superbiz.app.data.db.ZatcaDocEntity>()
+            root.optJSONArray("zatca_docs")?.each { j ->
+                stZatcaDocs += com.superbiz.app.data.db.ZatcaDocEntity(
+                    invoiceId = j.getLong("invoiceId"), xml = j.getString("xml"),
+                    xmlHash = j.getString("xmlHash"), subtype = j.optString("subtype"),
+                    issuedAt = j.getLong("issuedAt"), reportedAt = j.optLong("reportedAt"),
+                    rejectReason = j.optString("rejectReason"),
+                    attemptCount = j.optInt("attemptCount"), clearedXml = j.optString("clearedXml"))
+            }
             val st = root.optJSONObject("settings")
+
+            // ── [AUD-2 إصلاح] التحقق من اتزان القيد المزدوج قبل أي مساس بالقاعدة ──
+            // كل مسارات الحفظ الحية تفرض totalDebit == totalCredit مساواة تامة
+            // (LedgerRepo.post/InvoiceRepo.postJournal عبر AccountingEngine.balanced)،
+            // والاستعادة كانت المسار الوحيد الذي يتجاوز العقد: ملف فاسد/مُحرَّر/مبتور
+            // كان يحقن قيودًا غير متوازنة صمتًا فينحرف ميزان المراجعة والأرصدة قروشًا.
+            // التحقق في مرحلة الفك (قبل المعاملة) — ملف غير متوازن = استعادة كلها مرفوضة
+            // قبل wipeAll، وفق سياسة النواة الصارمة ① الموثقة أعلاه حرفياً:
+            // «قيد بلا سطر مكتمل… = ملف غير قابل للاستعادة».
+            if (jEntries.isNotEmpty()) {
+                val entryIds = jEntries.map { it.id }.toSet()
+                val linesByEntry = jLines.groupBy { it.entryId }
+                for (entry in jEntries) {
+                    val lines = linesByEntry[entry.id]
+                        ?: throw IllegalArgumentException(
+                            "restore rejected: journal entry #${entry.id} has no lines")
+                    val debit = lines.sumOf { it.debit }
+                    val credit = lines.sumOf { it.credit }
+                    if (debit != credit) throw IllegalArgumentException(
+                        "restore rejected: unbalanced journal entry #${entry.id} " +
+                            "(debit=$debit, credit=$credit)")
+                }
+                val orphanLine = jLines.firstOrNull { it.entryId !in entryIds }
+                if (orphanLine != null) throw IllegalArgumentException(
+                    "restore rejected: journal line for missing entry #${orphanLine.entryId}")
+            }
 
             // رفض الملفات الفارغة المحتوى — كانت تمسح قاعدة البيانات كاملة ثم تعيد true
             if (parties.isEmpty() && products.isEmpty() && invoices.isEmpty()) return@withContext false
@@ -789,6 +900,9 @@ class BackupRepo(
                 moves.forEach { db.stockMoves().insert(it) }
                 invoices.forEach { db.invoices().upsert(it) }
                 if (items.isNotEmpty()) db.invoiceItems().insertAll(items)
+                // [AUD-1 إصلاح] استعادة أرشيف ZATCA بعد الفواتير مباشرة — ON CONFLICT IGNORE
+                // (archiveFirst) تعيد الرفض الدفاعي نفسه: صف حي لا يُستبدل أبدًا
+                stZatcaDocs.forEach { db.zatcaDocs().archiveFirst(it) }
                 checks.forEach { db.checks().upsert(it) }
                 plans.forEach { db.installments().insertPlan(it) }
                 if (installments.isNotEmpty()) db.installments().insertInstallments(installments)
@@ -815,6 +929,9 @@ class BackupRepo(
                 // الكوبونات مستقلة، ودفتر الولاء بعد الأطراف والفواتير (المُدخلة أعلاه)
                 // — قاعدة اليتيم الدفاعية نفسها: صف بطرف/فاتورة غائب عن الملف يتخطى
                 stCoupons.forEach { db.coupons().upsert(it) }
+                // [RVW-17 V 3.2.6] دفتر الشواهد بعد الكوبونات — الإدراج IGNORE بمعرّف الحدث
+                // الفريد فلا يضاعف شاهداً موجوداً (استعادة فوق قاعدة حية = اتحاد لا ازدواج)
+                stCouponRedemptions.forEach { db.couponRedemptions().insertOrIgnore(it) }
                 val fileInvoiceIds = invoices.map { it.id }.toSet()
                 val validStLoyalty = stLoyalty.filter {
                     it.partyId in partyIds && (it.invoiceId == null || it.invoiceId in fileInvoiceIds)
@@ -932,6 +1049,9 @@ class BackupRepo(
             }
             true
         } catch (e: Exception) {
+            // [AUD-9 إصلاح] كان الابتلاع الصامت يخفي سبب فشل الاستعادة كلياً —
+            // يُسجَّل السبب في logcat (الشاشة تعرض الفشل العام كما كان)
+            android.util.Log.e("BackupRepo", "importFrom failed: ${e.javaClass.simpleName}: ${e.message}", e)
             false
         }
     }

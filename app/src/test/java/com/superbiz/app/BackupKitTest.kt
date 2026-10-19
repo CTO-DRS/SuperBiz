@@ -18,7 +18,9 @@ import com.superbiz.app.data.db.Visit
 import com.superbiz.app.domain.backup.BackupData
 import com.superbiz.app.domain.backup.BackupTables
 import com.superbiz.app.domain.backup.ImportStats
+import com.superbiz.app.domain.backup.NON_MERGEABLE_TABLES
 import com.superbiz.app.domain.backup.buildBackupJson
+import com.superbiz.app.domain.backup.nonMergeableTablesFound
 import com.superbiz.app.domain.backup.parseBackup
 import com.superbiz.app.domain.backup.planImport
 import com.superbiz.app.domain.backup.totalRows
@@ -641,5 +643,31 @@ class BackupKitTest {
         assertEquals(0, stats.importedInstallments)
         assertEquals(0, stats.skippedInstallments)
         assertEquals(0, stats.failed)
+    }
+
+    // ─── [RVW-1 إصلاح] جداول النسخة التي لا يدخلها الدمج — عقد الشفافية ───
+    // المسار الدمجي (BackupRestoreRepo) يقرأ هذه الجداول الثمانية المالية من الملف
+    // ولا يدرجها قط (عقد موثق في رأس الملف) — يجب أن تظل القائمة دقيقة وإلا عاد
+    // سطر «الجداول المكتشفة» في الواجهة لإيهام المستخدم بدمج لم يحدث.
+    @Test
+    fun nonMergeableTables_contractAndFiltering() {
+        // العقد البنيوي: تسعة جداول (المالية الثمانية + دفتر استهلاك الكوبونات [RVW-17])،
+        // فريدة، كلها ضمن جداول الصيغة المعروفة
+        assertEquals(9, NON_MERGEABLE_TABLES.size)
+        assertEquals(NON_MERGEABLE_TABLES.size, NON_MERGEABLE_TABLES.toSet().size)
+        assertTrue(NON_MERGEABLE_TABLES.all { it in BackupTables.ALL })
+        // القائمة حصراً على الجداول المالية — لا الجداول المرجعية التي يدخلها الدمج
+        assertTrue(BackupTables.PARTIES !in NON_MERGEABLE_TABLES)
+        assertTrue(BackupTables.COUPONS !in NON_MERGEABLE_TABLES)
+        // [RVW-17] دفتر الشواهد مالي كفواتيره — دمجه يحسب استهلاكاً بلا فاتورته
+        assertTrue(BackupTables.COUPON_REDEMPTIONS in NON_MERGEABLE_TABLES)
+        // التصفية من خريطة counts الفعلية: غير الصفري فقط، والغائب يعامل صفراً
+        val counts = mapOf(
+            BackupTables.INVOICES to 3,
+            BackupTables.PARTIES to 5,
+            BackupTables.JOURNAL to 0)
+        assertEquals(listOf(BackupTables.INVOICES), nonMergeableTablesFound(counts))
+        assertTrue(nonMergeableTablesFound(mapOf(BackupTables.INVOICES to 0)).isEmpty())
+        assertTrue(nonMergeableTablesFound(emptyMap()).isEmpty())
     }
 }

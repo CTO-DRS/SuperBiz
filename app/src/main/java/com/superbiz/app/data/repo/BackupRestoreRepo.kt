@@ -83,6 +83,14 @@ class BackupRestoreRepo(
      */
     suspend fun exportTo(uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
         try {
+            // [RVW-12 V 3.2.3] بوابة RBAC طبقة البيانات — الگمّة الجوهرية (مصفوفة الأدوار:
+            // BACKUP_RESTORE للمالك وحده). الجلسة الصريحة للكاشير/المحاسب/المدير تُرفض
+            // هنا حتى لو وصلت من مسار VM مستقبلي غير مؤمّن — دفاع عميق لا تغيير سلوك:
+            // المالك/الضمني (عقد §4.3) وSYSTEM (عقد الأتمتة) يمروان حرفياً.
+            com.superbiz.app.domain.rbac.RoleGate.require(
+                com.superbiz.app.domain.rbac.SessionState.effective(),
+                com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+            )
             // [تدقيق H-3] بناء BackupData داخل معاملة Room واحدة — عزل اللقطة يجعل
             // النسخة متسقة (فاتورة بلا بنودها لا تولد)، مطابقة لإصلاح المسار الأول في BackupRepo.
             val data = db.withTransaction {
@@ -119,7 +127,10 @@ class BackupRestoreRepo(
                 auditLog = db.auditLog().allLogs(),
                 // [P46-W1] نطاق v5 — جدولا الولاء والكوبونات (اكتمال 25/25)
                 loyaltyEntries = db.loyalty().allOnce(),
-                coupons = db.coupons().allOnce()
+                coupons = db.coupons().allOnce(),
+                // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات (26/26) — يُصدّر للتشتيف الكامل،
+                // والتنفيذ الدمجي أدناه لا يدرجه حصراً (NON_MERGEABLE — عقد P13-b المالي)
+                couponRedemptions = db.couponRedemptions().allOnce()
                 )
             }
             val json = buildBackupJson(data)
@@ -147,6 +158,11 @@ class BackupRestoreRepo(
 */
     suspend fun importFrom(uri: Uri): Result<ImportStats> = withContext(Dispatchers.IO) {
         try {
+            // [RVW-12 V 3.2.3] نفس بوابة التصدير — الاستعادة أعلى مخاطر الاغتراب على الإطلاق.
+            com.superbiz.app.domain.rbac.RoleGate.require(
+                com.superbiz.app.domain.rbac.SessionState.effective(),
+                com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+            )
             val text = readTextCapped(uri)
             val parsed = parseBackup(text)
             val data = parsed.data
@@ -259,6 +275,13 @@ class BackupRestoreRepo(
                         (it.invoiceId == null || it.invoiceId in existingInvoiceIds)
                 }
                 for (e in newLoyalty) db.loyalty().insert(e)
+                // ═══ [RVW-17 V 3.2.6] coupon_redemptions لا يدخل الدمج حصراً (NON_MERGEABLE) ═══
+                // دفتر شواهد استهلاك الكوبونات تاريخ مالي مرتبط بالفواتير — والفواتير لا تُستعاد
+                // في المسار الدمجي، فإدخال الشواهد وحدها يحسب استهلاكاً بلا فاتورته فيرفض
+                // بوابة الدفتر fail-closed كوبوناً صالحاً (فشل بالاتجاه الخاطئ). الشواهد تنتقل
+                // عبر «استبدال كامل» حصراً (BackupRepo) وعبر المزامنة الحية بين الأجهزة المزدوجة.
+                // الملف يحمل الجدول كاملاً (counts/tables) وتنبيه الاكتشاف (nonMergeableTablesFound)
+                // يُظهره للمستخدم — فلا إيهام بدمج لم يحدث (عقد RVW-1 حرفياً).
                 // ═══ [P34-M1] نطاق v4 — الترتيب إلزامي: المستقل ثم الكشوف (يتيم الأطراف) ثم ═══
                 // التسليمات (يتيمة الكشوف) ثم القواعد ثم سجل التدقيق — قواعد اليتيم نفسها
                 // التي احتسبها planImport حرفياً: الخطة = التنفيذ بلا انحراف.
