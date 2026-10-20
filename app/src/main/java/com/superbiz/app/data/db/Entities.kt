@@ -839,3 +839,69 @@ data class SyncLogEntity(
     val imported: Boolean = false,
     val at: Long = System.currentTimeMillis()
 )
+
+// ═══════════════════════════════════════════════════════════════════════════
+// [E2.1 V 3.5.0] النواة متعددة الفروع — الفروع ومخزونها ونقل بينها بحالة نقل صريحة
+// ═══════════════════════════════════════════════════════════════════════════
+// عقد خارطة الطريق E2.1: «فروع ومستودعات بوراثة RBAC من مصفوفة E0.4، ونقل
+// بيني بحالة نقل صريحة (إرسال/استلام/تسوية فروق) — لا مخزون شبح أبداً،
+// وثابت الحفظ مُختبر خصائصياً: مجموع المخزون عبر الفروع محفوظ في كل مسار نقل».
+//
+// قرار تصميمي موثق (مستوى V3.5 النواتي): `branch_stock` هو **مستوى النقل**
+// — يُبذر ترحيلياً من المخزون الكلي (الفرع 0 = المخزن الرئيسي)، ويتحرك حصراً
+// بمحرك النقل. مبيعات POS تُبقى على عقد v18 (products.stockQty) حرفياً —
+// تدقيق المستويين وتكاملهما مع الجرد = سطح V3.6 (التقسيم الطبيعي لقبول
+// الإيبك على V3.5–V3.6). الفروع بلا أعمدة مزامنة في هذه النواة — هي بنية
+// جهاز محلي حتى مستوى السحابة (E3.3)، والقرار موثق هنا لا مصمت.
+
+@Entity(
+    tableName = "branches",
+    indices = [Index("name", unique = true)]
+)
+data class BranchEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val kind: Int = 0,             // 0 = متجر، 1 = مستودع
+    val active: Boolean = true,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+/** مخزون مستوى النقل لكل (فرع، صنف) — يكتبه محرك النقل حصراً */
+@Entity(
+    tableName = "branch_stock",
+    primaryKeys = ["branchId", "productId"],
+    indices = [Index("productId")]
+)
+data class BranchStockEntity(
+    val branchId: Long,
+    val productId: Long,
+    val qty: Double = 0.0
+)
+
+/** نقل بيني — الحالة الصريحة: 0 قيد النقل، 1 مُستلم، 2 ملغى (رُدّ للمصدر) */
+@Entity(
+    tableName = "stock_transfers",
+    indices = [Index("status"), Index("fromBranchId"), Index("toBranchId")]
+)
+data class StockTransferEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val fromBranchId: Long,
+    val toBranchId: Long,
+    val status: Int = 0,
+    val sentAt: Long,
+    val receivedAt: Long = 0L,
+    val note: String = ""
+)
+
+/** سطر نقل — qty المُرسل وreceivedQty المستلم فعلاً؛ الفرق = تسوية بصرية */
+@Entity(
+    tableName = "stock_transfer_lines",
+    indices = [Index("transferId"), Index("productId")]
+)
+data class StockTransferLineEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val transferId: Long,
+    val productId: Long,
+    val qty: Double,
+    val receivedQty: Double = 0.0
+)

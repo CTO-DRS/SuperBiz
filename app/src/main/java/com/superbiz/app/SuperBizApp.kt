@@ -44,7 +44,7 @@ class AppGraph(val context: android.content.Context) {
             // [H1-3][v13]: أُضيف MIGRATION_12_13 — نسيانه هنا يعني فشل فتح قاعدة v12 القائمة
             // [Z2-أ][v14]: أُضيف MIGRATION_13_14 — نسيانه هنا يعني فشل فتح قاعدة v13 القائمة
             // [H4-1][v15]: أُضيف MIGRATION_14_15 — نسيانه هنا يعني فشل فتح قاعدة v14 القائمة
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19)
             .build()
     }
     val settings by lazy { SettingsRepo(context) }
@@ -981,6 +981,52 @@ class AppGraph(val context: android.content.Context) {
             }
         }
 
+        // [E2.1 V 3.5.0] النواة متعددة الفروع — أربعة جداول بإنشاء فقط + بذر الفرع
+        // الرئيسي ومخزون مستوى النقل منه. بناية Room المُصدّرة (19.json) حرفياً —
+        // لا جدول قائم يُلمس، والبذر INSERT..SELECT صف واحد للفرع الرئيسي ثم نسخة
+        // qty لكل صنف (مستوى النقل يبدأ مطابقاً للمخزون الكلي لحظة الترقية).
+        private val MIGRATION_18_19 = object : androidx.room.migration.Migration(18, 19) {
+            override fun migrate(d: androidx.sqlite.db.SupportSQLiteDatabase) {
+                d.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `branches` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`name` TEXT NOT NULL, `kind` INTEGER NOT NULL, `active` INTEGER NOT NULL, " +
+                        "`createdAt` INTEGER NOT NULL)"
+                )
+                d.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_branches_name` ON `branches` (`name`)")
+                d.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `branch_stock` (`branchId` INTEGER NOT NULL, " +
+                        "`productId` INTEGER NOT NULL, `qty` REAL NOT NULL, PRIMARY KEY(`branchId`, `productId`))"
+                )
+                d.execSQL("CREATE INDEX IF NOT EXISTS `index_branch_stock_productId` ON `branch_stock` (`productId`)")
+                d.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `stock_transfers` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`fromBranchId` INTEGER NOT NULL, `toBranchId` INTEGER NOT NULL, `status` INTEGER NOT NULL, " +
+                        "`sentAt` INTEGER NOT NULL, `receivedAt` INTEGER NOT NULL, `note` TEXT NOT NULL)"
+                )
+                d.execSQL("CREATE INDEX IF NOT EXISTS `index_stock_transfers_status` ON `stock_transfers` (`status`)")
+                d.execSQL("CREATE INDEX IF NOT EXISTS `index_stock_transfers_fromBranchId` ON `stock_transfers` (`fromBranchId`)")
+                d.execSQL("CREATE INDEX IF NOT EXISTS `index_stock_transfers_toBranchId` ON `stock_transfers` (`toBranchId`)")
+                d.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `stock_transfer_lines` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`transferId` INTEGER NOT NULL, `productId` INTEGER NOT NULL, `qty` REAL NOT NULL, " +
+                        "`receivedQty` REAL NOT NULL)"
+                )
+                d.execSQL("CREATE INDEX IF NOT EXISTS `index_stock_transfer_lines_transferId` ON `stock_transfer_lines` (`transferId`)")
+                d.execSQL("CREATE INDEX IF NOT EXISTS `index_stock_transfer_lines_productId` ON `stock_transfer_lines` (`productId`)")
+                // البذر: الفرع الرئيسي (المخزن) ثم مطابقة مخزون مستوى النقل مع الكلي لحظة الترقية
+                // OR IGNORE في البذرين — البذر آمن إعادة التشغيل (مسارات استعادة/فحوص السلسلة
+                // التي تُعيد فتح القاعدة بعقد Callback قديم لا تفشل ولا تكرر صفوفاً)
+                d.execSQL(
+                    "INSERT OR IGNORE INTO `branches` (`name`, `kind`, `active`, `createdAt`) VALUES " +
+                        "('المخزن الرئيسي', 0, 1, ${System.currentTimeMillis()})"
+                )
+                d.execSQL(
+                    "INSERT OR IGNORE INTO `branch_stock` (`branchId`, `productId`, `qty`) " +
+                        "SELECT 1, `id`, `stockQty` FROM `products`"
+                )
+            }
+        }
+
         // قائمة الترقيات مكشوفة للاختبارات (SchemaMigrationTest يشغّل كل ترحيل فعلياً) —
         // تُعرّف بعد الترحيلات لأن تهيئة خصائص Kotlin تتم بترتيب الإعلان
         // [P11-a]: MIGRATION_6_7 أُلحقت بالنهاية — الفهرسة بالموضع في الاختبارات تبقى صحيحة
@@ -993,7 +1039,7 @@ class AppGraph(val context: android.content.Context) {
         // [H4-1]: MIGRATION_14_15 أُلحقت بالنهاية — الفهرس 13 هو ختم الفئة الأصلية
         // [AUD-8]: MIGRATION_16_17 أُلحقت بالنهاية — الفهرس 15 هو فهارس الهوية
         // [RVW-17]: MIGRATION_17_18 أُلحقت بالنهاية — الفهرس 16 هو دفتر استهلاك الكوبونات
-        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18)
+        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19)
 
         /**
          * [H1-3] مزوّد بذرة رمز المالك — يُربط في AppGraph.db قبل بناء القاعدة بقراءة

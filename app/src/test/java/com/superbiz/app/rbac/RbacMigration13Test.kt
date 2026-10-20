@@ -338,14 +338,14 @@ class RbacMigration13Test {
         // عقد التسجيل: الترحيل الأخير في القائمة المكشوفة للاختبارات
         // [H4-1 V 2.5.0]: أُلحق 14→15 بالنهاية — القائمة صارت 14، والفهرس 11 (12→13) سليم مكانه
         // [AUD-8 V 3.2.1]: أُلحق 16→17 (فهارس الهوية) — القائمة صارت 16
-        assertEquals(17, AppGraph.MIGRATIONS.size) // [RVW-17] + MIGRATION_17_18
+        assertEquals(18, AppGraph.MIGRATIONS.size) // [RVW-17] + MIGRATION_17_18 + [E2.1] MIGRATION_18_19
         // [Z2-أ V 1.5.0]: أُلحق 13→14 بالنهاية — مشترك RBAC+ZATCA-2 صار الفهرس 11
         val shared = AppGraph.MIGRATIONS[11]
         assertEquals(12, shared.startVersion)
         assertEquals(13, shared.endVersion)
         val last = AppGraph.MIGRATIONS.last()
-        // [RVW-17 V 3.2.6]: الأخير الآن دفتر استهلاك الكوبونات 17→18
-        assertEquals(17, last.startVersion)
-        assertEquals(18, last.endVersion)
+        // [E2.1 V 3.5.0]: الأخير الآن النواة متعددة الفروع 18→19
+        assertEquals(18, last.startVersion)
+        assertEquals(19, last.endVersion)
     }
 }
