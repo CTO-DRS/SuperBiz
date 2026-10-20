@@ -292,3 +292,20 @@ Discovery reconciled the records before any action: the incoming session summary
 | 9 | Wave secret scan | diff inspection (code + tests + docs) | CLEAN — no credentials, no secrets, no generated artifacts committed |
 
 Honest ledger: the RED→GREEN loop caught two defects in my own test code (an expected-string that forgot RFC4180 quote-wrapping; an assertion that counted the legitimate send of the *present* document instead of proving the *missing* one untouched) before catching anything else — corrected in place, recorded here rather than silently rewritten. The production `ProcessSummary` return initially dropped the new counter; the test caught it before any commit.
+
+## 19. Wave V3.5.1 (2026-10-20) — the Phase-0 Delta: Both Rulings Executed, Biometric Lockout Enforcement (this session's own runs)
+
+Reconciliation wave. The parallel Phase-0/1/2 session (PRs #2/#3/#4, merged) completed E0.4's data-layer parity and published the matrix — but executed **neither §13-ه ruling** and left the biometric path bypassing an active `LockoutPolicy` lock. A second session, working from a stale base (d555c39) without knowledge of those merges, had independently rebuilt E0.4 (PR #5 — closed unmerged with a cross-validation note: both passes identified the same four unenforced rows). This wave re-lands only the genuine delta from current main (`482b970`): E0.2 ruling 2 (webhook fail-closed) + E0.2 ruling 1 record (RVW-21 Option A) + E0.4-b (biometric lockout enforcement).
+
+**Genuine RED-first proof:** 6 tests written first (`WebhookFailClosedTest` 3 + `BiometricLockoutParityTest` 3); the biometric refusal contract observed RED on current main's code (openBiometricSession returned `true` on a locked account — got `true`, expected `false`); the webhook fail-open delivered unsigned pre-fix. One test-harness order-dependency (in-process DataStore lockout persistence across methods) was rewritten order-independent via the real `resetPin` path before any production change.
+
+| # | Check | Method | Result |
+|---|---|---|---|
+| 1 | Wave tests | filtered 2 classes | **6/6 GREEN** after fixes |
+| 2 | Full suite | forced full re-run | **1844/0/0/0 across 175 files** (main's 1838 + 6 delta tests, zero regressions incl. the parallel waves' 22 data-layer guard tests) |
+| 3 | Quality gates | 4 Python gates | **4/4 PASS** |
+| 4 | Identity | `assembleDebug` + aapt | **`versionCode='22' versionName='3.5.1'`** |
+| 5 | Lint | `lintRelease` cold after orphan clear | **GREEN 5m20s** — real analysis (OOM ledger entry 11: one daemon death recovered) |
+| 6 | Secret scan | wave diff | CLEAN |
+
+Scope honesty: E0.1/E0.3 remain owner-blocked; the delta touches no schema (stays at 19); the `openConnection` seam is behavior-neutral in production; the on-device delivery proof remains E0.3's NOT-VERIFIED item.
