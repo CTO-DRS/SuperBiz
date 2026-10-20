@@ -60,6 +60,18 @@ class WebhookStore(private val context: Context) {
         }
     }.getOrDefault("")
 
+    /**
+     * [E0.2 V3.3.0] هل سر التوقيع مُعدٌّ في المخزن؟ — قراءة تخطيطية صِرفة تفصل
+     * حالتين كانتا تندمجان في "" : «لم يُعدِ المالك سراً أصلاً» (التوقيع اختياري
+     * بالتصميم — التسليم غير الموقَّع اختيار صريح) و«سر مُعدٌّ لكن غير مقروء»
+     * (بصمة ks حاضرة والفك فاشل — استعادة جهاز مثلاً). الثانية هي الفشل الصامت
+     * الذي أغلق حسم المالك (FINDINGS §13-ه الخيار أ): لا تسليم غير موقَّع.
+     */
+    suspend fun secretConfiguredOnce(): Boolean = runCatching {
+        val prefs = context.webhookDataStore.data.first()
+        !prefs[kSecretVault].isNullOrEmpty() || !prefs[kSecret].isNullOrEmpty()
+    }.getOrDefault(false)
+
     // [RVW-13 V 3.2.4] العنوان/التفعيل/السر ملك المالك حصراً (Op.BACKUP_RESTORE — عقد البوابة نفسه
     // المطبق على مفتاح التفعيل في البطاقة). البوابة هنا في طبقة البيانات لا الواجهة:
     // إعادة توجيه عنوان HTTPS مفعّل تُخرج الأحداث الموقّعة بسر المالك إلى مستلم غريب.

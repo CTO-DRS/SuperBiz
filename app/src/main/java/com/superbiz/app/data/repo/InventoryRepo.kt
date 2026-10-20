@@ -26,6 +26,12 @@ class InventoryRepo(private val db: AppDatabase, private val ledger: LedgerRepo)
     // [P5-H10 إصلاح]: أرشفة/استرجاع صريحان — كان archive() يستدعى من حذف بلا واجهة
     // والمؤرشف بلا أي سبيل للاسترجاع
     suspend fun setArchived(id: Long, value: Boolean) {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 6: إدارة المخزون
+        // (أرشفة/استرجاع صنف = تعديل حالته) — المالك والمدير.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.INVENTORY_MANAGE
+        )
         val p = db.products().byId(id) ?: return
         if (p.archived == value) return
         db.products().upsert(p.copy(archived = value))
@@ -33,6 +39,13 @@ class InventoryRepo(private val db: AppDatabase, private val ledger: LedgerRepo)
     }
     suspend fun product(id: Long): Product? = db.products().byId(id)
     suspend fun saveProduct(p: Product): Long {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 4 بعقده الحرفي:
+        // تعديل منتج قائم (id != 0) يتطلب PARTY_PRODUCT_EDIT و«الإنشاء الجديد
+        // بلا بوابة» حرفياً كما في saveParty.
+        if (p.id != 0L) com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.PARTY_PRODUCT_EDIT
+        )
         // رفض الباركود المكرر — كان يُقبل بلا فحص فيلتقط POS أول مطابقة
         // LIMIT 1 فيُباع منتج غير المقصود. الباركود الفارغ مستثنى (غير مفهرس للبحث).
         if (p.barcode.isNotBlank()) {
@@ -47,6 +60,12 @@ class InventoryRepo(private val db: AppDatabase, private val ledger: LedgerRepo)
     }
 
     suspend fun deleteProduct(id: Long) {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 5: الحذف النهائي
+        // المالك وحده (نفس بوابة deleteParty حرفياً).
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.HARD_DELETE
+        )
         db.products().archive(id)
         onMutate?.invoke()
     }
@@ -59,6 +78,13 @@ class InventoryRepo(private val db: AppDatabase, private val ledger: LedgerRepo)
         product: Product, qty: Double, reason: String,
         date: Long, note: String, postJournal: Boolean
     ): Long {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 6: حركات المخزون
+        // والجرد — المالك والمدير (حركة يدوية غير مبيعة لا يدخلها الكاشير
+        // ولا المحاسب؛ بيع الفواتير يمر بمسارها الخاص داخل save فلا ازدواج بوابة).
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.INVENTORY_MANAGE
+        )
         // رفض الكميات غير المنتهية — NaN/∞ عبر addQty كانت تُفسد
         // stockQty نهائياً بلا أثر يمكن تتبّعه في حركات المخزون
         require(qty.isFinite()) { "qty must be finite" }

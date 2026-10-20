@@ -58,9 +58,26 @@ class LoyaltyRepo(private val db: AppDatabase) {
     // ── الكتابة الإدارية ───────────────────────────────────────────────
 
     /** حفظ كوبون (جديد أو تعديل) — الكود فريد بمستوى القاعدة، التعارض يرمي للمستدعي */
-    suspend fun saveCoupon(c: CouponEntity): Long = db.coupons().upsert(c)
+    suspend fun saveCoupon(c: CouponEntity): Long {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 14: إنشاء/تعديل قواعد
+        // الولاء والكوبونات — المالك والمدير (توازياً مع بوابة الVM الموثقة
+        // في FeatureVMs LOYALTY_MANAGE). مسارات التطبيق على البيع (LOYALTY_APPLY)
+        // لا تمس هنا — تمر عبر بوابة POS_SELL داخل save.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.LOYALTY_MANAGE
+        )
+        return db.coupons().upsert(c)
+    }
 
-    suspend fun deleteCoupon(id: Long) = db.coupons().delete(id)
+    suspend fun deleteCoupon(id: Long) {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 14 نفسه.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.LOYALTY_MANAGE
+        )
+        db.coupons().delete(id)
+    }
 
     /** منح/خصم يدوي إداري (بلا فاتورة) — يُلحق بالدفتر كأي صف */
     suspend fun manualAdjust(partyId: Long, delta: Long, note: String): Unit {

@@ -26,6 +26,13 @@ class LedgerRepo(private val db: AppDatabase) {
     suspend fun party(id: Long): Party? = db.parties().byId(id)
     suspend fun partyFlow(id: Long): Flow<Party?> = db.parties().byIdFlow(id)
     suspend fun saveParty(p: Party): Long {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 4 بعقده الحرفي:
+        // تعديل طرف قائم (id != 0) يتطلب PARTY_PRODUCT_EDIT، و«الإنشاء الجديد
+        // بلا بوابة» يبقى حراً كما توثق المصفوفة حرفياً (تصميم §3 سطر 4).
+        if (p.id != 0L) com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.PARTY_PRODUCT_EDIT
+        )
         // رفض الاسم الفارغ — كان يُقبل ويكسر كشف الحساب والبحث والفهرسة بالاسم
         require(p.name.isNotBlank()) { "party name required" }
         // @Upsert في مسار التحديث يعيد -1 — نجيب معرّف الكيان الصريح عند التعديل
@@ -33,6 +40,12 @@ class LedgerRepo(private val db: AppDatabase) {
         return if (id == -1L && p.id != 0L) p.id else id
     }
     suspend fun deleteParty(id: Long) {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 5: الحذف النهائي
+        // لمنتج/طرف المالك وحده (تصميم §3 سطر 5 حرفياً).
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.HARD_DELETE
+        )
         db.parties().archive(id)
     }
 
@@ -303,6 +316,12 @@ class LedgerRepo(private val db: AppDatabase) {
         walkInPartyId: Long = 0L,
         onWalkInRemap: (suspend (Long) -> Unit)? = null
     ): Boolean {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — دمج أطراف يعدّل بيانات أطراف
+        // قائمة بعمق مالي: بوابة سطر المصفوفة 4 (المالك والمدير).
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.PARTY_PRODUCT_EDIT
+        )
         if (keepId == dupId) return false
         val merged = db.withTransaction {
             val keep = db.parties().byId(keepId) ?: return@withTransaction false

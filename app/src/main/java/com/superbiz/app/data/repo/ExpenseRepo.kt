@@ -43,6 +43,13 @@ class ExpenseRepo(private val db: AppDatabase, private val ledger: LedgerRepo) {
         note: String,
         date: Long = System.currentTimeMillis()
     ): Long {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 9: المصروفات بلا
+        // كاشير (البوابة كانت غائبة في الطبقتين — add يفوض هنا فتغطي البوابةُ
+        // المدخلين كليهما).
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS
+        )
         // [P33-P8] عتبة 0.005/isFinite حُذفتا — مقارنة صحيحة تامة (Long لا يكون NaN)
         require(amount > 0L) { "amount must be positive" }
         var id = 0L
@@ -65,6 +72,11 @@ class ExpenseRepo(private val db: AppDatabase, private val ledger: LedgerRepo) {
 
     /** حذف مصروف مع عكس قيده — ذرّي */
     suspend fun delete(expense: Expense) {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 9: بلا كاشير.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS
+        )
         db.withTransaction {
             ledger.unpostInternal(REF, expense.id)
             db.expenses().delete(expense.id)

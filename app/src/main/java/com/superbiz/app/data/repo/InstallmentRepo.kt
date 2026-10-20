@@ -46,6 +46,11 @@ class InstallmentRepo(private val db: AppDatabase, private val ledger: LedgerRep
         note: String,
         today: Long = System.currentTimeMillis()
     ): Long {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 9: الأقساط بلا كاشير.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS
+        )
         val t = total
         require(t > 0L) { "total must be positive" }
         // المقدمة ≥ الإجمالي كانت تصنع خطة بأقساط صفرية صامتة — تُرفض
@@ -108,6 +113,12 @@ class InstallmentRepo(private val db: AppDatabase, private val ledger: LedgerRep
         amount: Long? = null,
         today: Long = System.currentTimeMillis()
     ): Long {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 9: سداد الأقساط
+        // بلا كاشير (قرار مالي مُقيَّد).
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS
+        )
         var paidNow = 0L
         db.withTransaction {
             val p = db.installments().planById(inst.planId) ?: return@withTransaction
@@ -153,6 +164,11 @@ class InstallmentRepo(private val db: AppDatabase, private val ledger: LedgerRep
 */
     // [P33-P8] قروش Long — EarlyPay يعمل على قروش (DebtPlanP4 مُرحّل بنفس الموجة P33)
     suspend fun payEarlySettlement(inst: Installment, today: Long = System.currentTimeMillis()): Long {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 9: التسوية المبكرة.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS
+        )
         var paidNow = 0L
         db.withTransaction {
             val p = db.installments().planById(inst.planId) ?: return@withTransaction
@@ -206,6 +222,11 @@ class InstallmentRepo(private val db: AppDatabase, private val ledger: LedgerRep
         newDueDate: Long,
         today: Long = System.currentTimeMillis()
     ): Boolean {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 9: إعادة الجدولة.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS
+        )
         // التاريخ الجديد لا يسبق بداية اليوم
         if (newDueDate < com.superbiz.app.domain.algo.TimeMath.startOfDay(today)) return false
         var ok = false
@@ -260,6 +281,12 @@ class InstallmentRepo(private val db: AppDatabase, private val ledger: LedgerRep
 
     /** حذف خطة مع عكس قيودها بالكامل وتنظيف دفعاتها — ذرّي */
     suspend fun deletePlan(plan: InstallmentPlan) {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 9: حذف خطة
+        // يقلب قيوداً ودفعات — بلا كاشير.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS
+        )
         db.withTransaction {
             ledger.unpostInternal(REF, plan.id)
             // (M-4.9 توحيد): مع عمود payments.planId أصبح حذف دفعات الخطة دقيقاً

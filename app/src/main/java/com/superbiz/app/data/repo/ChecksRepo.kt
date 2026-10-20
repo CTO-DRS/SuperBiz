@@ -15,6 +15,11 @@ class ChecksRepo(private val db: AppDatabase, private val ledger: LedgerRepo) {
     fun checks(): Flow<List<CheckEntity>> = db.checks().all()
     suspend fun check(id: Long): CheckEntity? = db.checks().byId(id)
     suspend fun save(c: CheckEntity): Long {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 9: الشيكات بلا كاشير.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS
+        )
         // حراسة طبقة المستودع — مبلغ موجب واستحقاق بعد الإصدار ورقم غير فارغ
         // فحص isFinite — كان Infinity يعبر فحص amount > 0 ثم يُرحّل قيداً لانهائياً عند التحصيل
         // [P33-P8] amount قروش Long — isFinite ساق (Long لا يكون NaN) ومقارنة صحيحة تامة
@@ -33,6 +38,11 @@ class ChecksRepo(private val db: AppDatabase, private val ledger: LedgerRepo) {
  * في كل الحالات. إلغاء الترحيل وحذف الدفعات قبل حذف صف الشيك نفسه.
 */
     suspend fun delete(id: Long) {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 9: بلا كاشير.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS
+        )
         db.withTransaction {
             db.checks().byId(id) ?: return@withTransaction
             ledger.unpostInternal("check", id)
@@ -49,6 +59,12 @@ class ChecksRepo(private val db: AppDatabase, private val ledger: LedgerRepo) {
      * صادر + محصّل  → ذمم المورد / نقد
      */
     suspend fun setStatus(c: CheckEntity, newStatus: Int, today: Long = System.currentTimeMillis()) {
+        // [E0.4 V3.3.0] توازي طبقة البيانات — سطر المصفوفة 9: تحولات الشيك
+        // (تحصيل/إيداع/ارتداد) ترحّل قيوداً — بلا كاشير.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS
+        )
         if (c.status == newStatus) return
         val party = ledger.party(c.partyId) ?: return
         db.withTransaction {
