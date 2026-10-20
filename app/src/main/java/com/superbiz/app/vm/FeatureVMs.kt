@@ -2732,7 +2732,8 @@ class GlobalSearchVM(app: Application) : AndroidViewModel(app) {
         out.sortedByDescending { it.score }.take(24)
     }
         // التقييم الضبابي كله خارج الخيط الرئيسي — كان على Main لكل ضغطة
-        .flowOn(kotlinx.coroutines.Dispatchers.Default)
+        // [E1.5] المُجدّد من نقطة الحقن — الإنتاج Default حرفياً، والاختبار يحكمه
+        .flowOn(com.superbiz.app.vm.VMScheduling.compute)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /** توثيق الاستعلام في آخر عمليات البحث عند اختيار نتيجة */
@@ -2775,8 +2776,8 @@ class DataHealthVM(app: Application) : AndroidViewModel(app) {
         try {
             // الفحص (بنفورد + مقارنات ثنائية O(n²) + تجميعات كاملة)
             // كان كله على الخيط الرئيسي فيجمّد الواجهة ثوانياً مع آلاف السجلات —
-            // الحساب كله الآن على Dispatchers.Default (قراءات Room آمنة من أي خيط)
-            withContext(Dispatchers.Default) {
+            // الحساب كله الآن على مجدّد الحساب المحقون [E1.5] (قراءات Room آمنة من أي خيط)
+            withContext(com.superbiz.app.vm.VMScheduling.compute) {
             val invoices = g.db.invoices().allOnce()
             val parties = g.db.parties().allOnce()
             // [P37-فحص-الصحة]: يشمل المؤرشف — فحص arch_stock كان ميتاً على allOnce
@@ -2920,12 +2921,12 @@ class FavoritesVM(app: Application) : AndroidViewModel(app) {
     // [P20-FIX agent9]: launch(IO) خام بلا try/catch — فشل Room غير متوقع (قرص ممتلئ…)
     // كان يهرب غير معالج فيُسقط العملية؛ كل مسارات الكتابة الأخرى عبر launchSafe
     fun toggleFavorite(id: Long, fav: Boolean) = launchSafe {
-        kotlinx.coroutines.withContext(Dispatchers.IO) { g.db.parties().setFavorite(id, fav) }
+        kotlinx.coroutines.withContext(com.superbiz.app.vm.VMScheduling.background) { g.db.parties().setFavorite(id, fav) }
     }
 
     /** [P11-a] حفظ الإحداثيات — تمرير null للاثنين يزيل الموقع من البطاقة */
     fun setLocation(id: Long, lat: Double?, lng: Double?) = launchSafe {
-        kotlinx.coroutines.withContext(Dispatchers.IO) { g.db.parties().setLocation(id, lat, lng) }
+        kotlinx.coroutines.withContext(com.superbiz.app.vm.VMScheduling.background) { g.db.parties().setLocation(id, lat, lng) }
     }
 
     // ═══ [P13-a] ترتيب «الأقرب أولاً» ═══
