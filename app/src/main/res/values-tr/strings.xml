@@ -1610,7 +1610,7 @@
     <string name="inv_delete_confirm">Ürün %1$s arşivlenecek ve satış, listeler ve analizlerden kaybolacak — Daha sonra arşivlenmiş karttan geri getirebilirsiniz. Devam etmek istiyor musunuz?</string>
     <string name="err_product_name_blank">Ürün adı zorunludur — Kaydetmeden önce bir ad yazın</string>
     <string name="err_values_non_negative">Sayısal değerler negatif olamaz — Maliyeti, fiyatı veya miktarı düzeltin</string>
-    <string name="err_items_required">En az bir adet açıklama ve sıfırdan büyük miktar içeren madde ekleyin</string>
+    <string name="err_items_required">En az bir adet sıfırdan büyük miktar içeren madde ekleyin</string>
     <string name="rep_aging_empty">Şu an için ödenmemek üzere borç yok</string>
     <string name="set_backup_folder_title">Yedekleme Klasörü</string>
     <string name="set_backup_folder_sub">Seçtiğiniz klasörde her otomatik yedeğin bir kopyasını saklayın, uygulama silindikten sonra bile yedekleriniz kalsın</string>

@@ -449,7 +449,19 @@ class InvoicesVM(app: Application) : AndroidViewModel(app) {
         if (saveBusy) return@launchSafe
         saveBusy = true
         val party = editorParty.value ?: return@launchSafe
-        val items = editorItems.value.filter { it.desc.isNotBlank() && parseNum(it.qty) > 0 }
+        // [V3.5.2 إصلاح بلاغ المالك] السطر اليدوي (كمية وسعر بلا صنف مختار) كان يُسقط
+        // صامتاً هنا ويُرفض في بوابة الواجهة برسالة تطلب «وصفاً» لا سبيل لإدخاله أصلاً —
+        // الوصف كان يُضبط من منتقي الأصناف حصراً. العقد الجديد: الكمية > 0 هي شرط
+        // الصلاحية الوحيد، والوصف الفارغ يُسمّى تلقائياً عند الحفظ بنفس تسمية العرض
+        // الاحتياطية في المحرّر (الصنف N) فلا يهبط اسم فارغ للمستودع ولا للـPDF ولا
+        // لـXML زاتكا — والمعاينة بنفس المرشّح فمساواة تامة بين المعروض والمحفوظ.
+        val items = editorItems.value
+            .filter { parseNum(it.qty) > 0 }
+            .mapIndexed { i, e ->
+                if (e.desc.isBlank()) {
+                    e.copy(desc = getApplication<Application>().getString(com.superbiz.app.R.string.item) + " ${i + 1}")
+                } else e
+            }
         if (items.isEmpty()) return@launchSafe
         // [P5-H11 إصلاح]: توحيد الدلالة مع POS — رفض صريح بدل الصمت:
         // (1) خصم بند سالب أو أكبر من قيمة بند كان يُحصر بصمت coerceIn فيُخفي الخطأ

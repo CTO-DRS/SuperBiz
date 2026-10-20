@@ -1698,7 +1698,7 @@
     <string name="inv_delete_confirm">سيُؤرشف المنتج %1$s ويختفي من البيع والقوائم والتحليلات — يمكنك استرجاعه لاحقاً من رقاقة المؤرشفة. هل تريد المتابعة؟</string>
     <string name="err_product_name_blank">اسم المنتج مطلوب — اكتب اسماً قبل الحفظ</string>
     <string name="err_values_non_negative">القيم الرقمية لا تقبل سالباً — صحّح التكلفة أو السعر أو الكميات</string>
-    <string name="err_items_required">أضف بنداً واحداً على الأقل بوصف وكمية أكبر من صفر</string>
+    <string name="err_items_required">أضف بنداً واحداً على الأقل بكمية أكبر من صفر</string>
     <string name="rep_aging_empty">لا ذمم مستحقة حالياً</string>
     <string name="set_backup_folder_title">مجلد النسخ الاحتياطي</string>
     <string name="set_backup_folder_sub">تحفظ مرآة من كل نسخة تلقائية في مجلد تختاره لتبقى نسخك حتى بعد حذف التطبيق</string>

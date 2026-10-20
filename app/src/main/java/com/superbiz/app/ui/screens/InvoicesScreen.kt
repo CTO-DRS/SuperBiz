@@ -690,12 +690,13 @@ fun InvoiceEditor(vm: InvoicesVM, appVM: AppVM) {
     val taxRate by vm.editorTaxRate.collectAsState()
     val type by vm.editorType.collectAsState()
     val symbol by appVM.symbol.collectAsState()
-    // كانت المعاينة تحسب كل الأسطر بينما الحفظ يُسقط الأسطر بلا وصف أو بكمية ≤0 —
-    // الإجمالي المعروض كان أكبر من المحفوظ. نفس مرشّح الحفظ الآن في المعاينة
+    // [V3.5.2 إصلاح بلاغ المالك] المعاينة بنفس مرشّح الحفظ حرفياً — الكمية > 0 هي
+    // شرط الصلاحية الوحيد؛ الوصف الفارغ يُسمّى تلقائياً عند الحفظ فلا انحراف بين
+    // المعروض والمحفوظ (سطر 22×600 بلا وصف كان يعرض صفراً ويُرفض حفظه)
     // [P41-L1]: المعاينة نفسها تدخل مسار السطر الصريح (v11) كي تطابق الحفظ دائماً
     // [P42-R3]: علم الوعي بالسطر يُحفظ من الحساب نفسه كي يعرض الصف عنوان الضريبة
     // الصادق (حسب السطور) بدل نسبة الرأس المضللة حين تختلف نسب السطر عنها
-    val validPreview = items.filter { it.desc.isNotBlank() && parseNum(it.qty) > 0.0 }
+    val validPreview = items.filter { parseNum(it.qty) > 0.0 }
     val lineAwareTotals = vm.totalsLineAware(validPreview, taxRate)
     val (sub, tax, total) = lineAwareTotals ?: vm.totals(validPreview, taxRate)
     val lineAware = lineAwareTotals != null
@@ -822,6 +823,17 @@ fun InvoiceEditor(vm: InvoicesVM, appVM: AppVM) {
                                         }
                                     }
                                 }
+                                // [V3.5.2 إصلاح بلاغ المالك] حقل الوصف الحر — كان الوصف يُضبط
+                                // من منتقي الأصناف حصراً فسطر يدوي (كمية وسعر بلا صنف محفوظ)
+                                // لا سبيل لتسميته ولا يُقبل حفظه أصلاً. النص الحر قابل للتعديل
+                                // حتى بعد اختيار صنف، والنقر على العنوان يفتح المنتقي كما هو
+                                BizField(
+                                    item.desc, { v ->
+                                        vm.editorItems.value = items.mapIndexed { idx, e ->
+                                            if (idx == i) e.copy(desc = v) else e
+                                        }
+                                    }, stringResourceCompat(R.string.item)
+                                )
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     BizField(
                                         item.qty, { v ->
@@ -1000,11 +1012,12 @@ fun InvoiceEditor(vm: InvoicesVM, appVM: AppVM) {
                             .clip(RoundedCornerShape(14.dp))
                             .background(g.heroBrush)
                             .clickable {
-                                // [P7-L11 إصلاح]: تحقق قبل الحفظ — الطرف مطلوب وبند صالح واحد على الأقل
-                                // (نفس شرطي return@launchSafe الصامتَين في InvoicesVM.saveInvoice)
+                                // [V3.5.2 إصلاح بلاغ المالك] الطرف مطلوب وبند صالح واحد على الأقل
+                                // (نفس شرطي return@launchSafe في InvoicesVM.saveInvoice) — صلاحية
+                                // البند الآن بالكمية > 0 حصراً؛ الوصف الفارغ يُسمّى تلقائياً عند الحفظ
                                 val e = when {
                                     editorParty == null -> R.string.err_party_required
-                                    items.none { it.desc.isNotBlank() && parseNum(it.qty) > 0.0 } -> R.string.err_items_required
+                                    items.none { parseNum(it.qty) > 0.0 } -> R.string.err_items_required
                                     else -> null
                                 }
                                 saveErrRes = e
