@@ -272,12 +272,26 @@ class SettingsRepo(private val context: Context) {
     }
     suspend fun setLanguage(v: String) = context.dataStore.edit { it[K.lang] = v }
     suspend fun setTheme(v: String) = context.dataStore.edit { it[K.theme] = v }
-    suspend fun setBaseCurrency(code: String) = context.dataStore.edit { it[K.cur] = code }
-    suspend fun setTaxRate(v: Double) = context.dataStore.edit {
-        // تثبيت النسبة في 0..100 ورفض NaN — كان يُخزَّن كما هو
-        // فتُفسد نسبة سالبة أو هائلة حسابات الضريبة في كل الفواتير الجديدة
-        val safe = if (!v.isFinite()) 0.0 else v.coerceIn(0.0, 100.0)
-        it[K.tax] = safe
+    suspend fun setBaseCurrency(code: String) {
+        // [E0.4 V 3.3.0] الإعدادات العامة (عملة) = GENERAL_SETTINGS (سطر 10)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
+        context.dataStore.edit { it[K.cur] = code }
+    }
+    suspend fun setTaxRate(v: Double) {
+        // [E0.4 V 3.3.0] الإعدادات العامة (ضريبة) = GENERAL_SETTINGS (سطر 10)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
+        context.dataStore.edit {
+            // تثبيت النسبة في 0..100 ورفض NaN — كان يُخزَّن كما هو
+            // فتُفسد نسبة سالبة أو هائلة حسابات الضريبة في كل الفواتير الجديدة
+            val safe = if (!v.isFinite()) 0.0 else v.coerceIn(0.0, 100.0)
+            it[K.tax] = safe
+        }
     }
     suspend fun setPin(hash: String?, salt: String?) = context.dataStore.edit {
         if (hash == null || salt == null) { it.remove(K.pinHash); it.remove(K.pinSalt) }
@@ -313,21 +327,68 @@ class SettingsRepo(private val context: Context) {
     suspend fun setOwnerName(v: String) = context.dataStore.edit { it[K.owner] = v }
     suspend fun setPhone(v: String) = context.dataStore.edit { it[K.phone] = v }
     suspend fun setEmail(v: String) = context.dataStore.edit { it[K.email] = v }
-    suspend fun setAddress(v: String) = context.dataStore.edit { it[K.address] = v }
-    suspend fun setTaxNumber(v: String) = context.dataStore.edit { it[K.taxNum] = v }
+    suspend fun setAddress(v: String) {
+        // [E0.4 V 3.3.0] توازي بوابة SettingsVM (RVW-13) على طبقة البيانات —
+        // الهوية الضريبية للمنشأة = TAX_OWNER_DATA (سطر 8-ب)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.TAX_OWNER_DATA
+        )
+        context.dataStore.edit { it[K.address] = v }
+    }
+
+    suspend fun setTaxNumber(v: String) {
+        // [E0.4 V 3.3.0] نفس باب 8-ب — انعكاس بوابة setTaxNumber القائمة
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.TAX_OWNER_DATA
+        )
+        context.dataStore.edit { it[K.taxNum] = v }
+    }
     suspend fun setBiometric(v: Boolean) = context.dataStore.edit { it[K.biometric] = v }
     suspend fun setWelcomeSeen() = context.dataStore.edit { it[K.welcomeSeen] = true }
     suspend fun setPermissionsSeen() = context.dataStore.edit { it[K.permsSeen] = true }
-    suspend fun setAutoBackupDays(v: Int) = context.dataStore.edit { it[K.autoBackup] = v.coerceIn(0, 365) }
+    suspend fun setAutoBackupDays(v: Int) {
+        // [E0.4 V 3.3.0] الإعدادات العامة (أتمتة) = GENERAL_SETTINGS (سطر 10)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
+        context.dataStore.edit { it[K.autoBackup] = v.coerceIn(0, 365) }
+    }
 
     /** [P36-BK] تضمين ملفات PDFs الكشوف في مرآة النسخ الاحتياطي */
     suspend fun setBackupIncludePdfs(v: Boolean) = context.dataStore.edit { it[K.backupPdfs] = v }
 
     // جدولة إرسال التقرير A4
-    suspend fun setReportScheduleDays(v: Int) = context.dataStore.edit { it[K.rptDays] = v.coerceIn(0, 365) }
-    suspend fun setReportScheduleHour(v: Int) = context.dataStore.edit { it[K.rptHour] = v.coerceIn(0, 23) }
-    suspend fun setReportScheduleChannel(v: String) = context.dataStore.edit {
-        it[K.rptChannel] = if (v == "email") "email" else "whatsapp"
+    // مجدول التقارير — قرارات أتمتة (سطر 10)؛ ختم العامل setLastScheduledReport بلا بوابة عمداً
+    suspend fun setReportScheduleDays(v: Int) {
+        // [E0.4 V 3.3.0] أتمتة التقارير = GENERAL_SETTINGS (سطر 10)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
+        context.dataStore.edit { it[K.rptDays] = v.coerceIn(0, 365) }
+    }
+
+    suspend fun setReportScheduleHour(v: Int) {
+        // [E0.4 V 3.3.0] أتمتة التقارير = GENERAL_SETTINGS (سطر 10)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
+        context.dataStore.edit { it[K.rptHour] = v.coerceIn(0, 23) }
+    }
+
+    suspend fun setReportScheduleChannel(v: String) {
+        // [E0.4 V 3.3.0] أتمتة التقارير = GENERAL_SETTINGS (سطر 10)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.GENERAL_SETTINGS
+        )
+        context.dataStore.edit {
+            it[K.rptChannel] = if (v == "email") "email" else "whatsapp"
+        }
     }
     suspend fun setLastScheduledReport(ts: Long) = context.dataStore.edit { it[K.rptLast] = ts }
 

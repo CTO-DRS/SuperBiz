@@ -25,8 +25,14 @@ class ExpenseRepo(private val db: AppDatabase, private val ledger: LedgerRepo) {
     fun all(): Flow<List<Expense>> = db.expenses().all()
 
     /** إضافة مصروف حقيقي: سجل + قيد مزدوج ذرّي — [P33-P8] amount قروش */
-    suspend fun add(amount: Long, category: String, note: String, date: Long = System.currentTimeMillis()): Long =
-        addStamped(amount, "", 0L, 0L, category, note, date)
+    suspend fun add(amount: Long, category: String, note: String, date: Long = System.currentTimeMillis()): Long {
+        // [E0.4 V 3.3.0] كتابات المصروفات = EXPENSES_CHECKS_INSTALLMENTS (سطر 9)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS
+        )
+        return addStamped(amount, "", 0L, 0L, category, note, date)
+    }
 
     /**
      * [H4-1 V 2.5.0] إضافة بفئة أصلية مختومة — العملة الأجنبية تُحوَّل قروش أساس عند
@@ -43,6 +49,12 @@ class ExpenseRepo(private val db: AppDatabase, private val ledger: LedgerRepo) {
         note: String,
         date: Long = System.currentTimeMillis()
     ): Long {
+        // [E0.4 V 3.3.0] كتابات المصروفات = EXPENSES_CHECKS_INSTALLMENTS (سطر 9)
+        // — بوابة واحدة هنا تغطي add() وaddStamped() معاً (add يفوّض إلى هذا).
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS
+        )
         // [P33-P8] عتبة 0.005/isFinite حُذفتا — مقارنة صحيحة تامة (Long لا يكون NaN)
         require(amount > 0L) { "amount must be positive" }
         var id = 0L
@@ -65,6 +77,11 @@ class ExpenseRepo(private val db: AppDatabase, private val ledger: LedgerRepo) {
 
     /** حذف مصروف مع عكس قيده — ذرّي */
     suspend fun delete(expense: Expense) {
+        // [E0.4 V 3.3.0] كتابات المصروفات = EXPENSES_CHECKS_INSTALLMENTS (سطر 9)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.EXPENSES_CHECKS_INSTALLMENTS
+        )
         db.withTransaction {
             ledger.unpostInternal(REF, expense.id)
             db.expenses().delete(expense.id)

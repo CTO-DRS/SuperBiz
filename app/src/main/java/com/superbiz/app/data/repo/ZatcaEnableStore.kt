@@ -47,10 +47,21 @@ class ZatcaEnableStore(private val context: Context) {
 
     /** التفعيل يتطلب تأكيداً صريحاً — يُستدعى من شاشة ZATCA بعد تحذير D5 */
     suspend fun setEnabled(value: Boolean) {
+        // [E0.4 V 3.3.0] إعدادات ZATCA الرسمية = TAX_OWNER_DATA — المالك وحده
+        // (مصفوفة §3 سطر 8-ب حرفياً: «بيانات المالك الضريبية وإعدادات ZATCA الرسمية»)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.TAX_OWNER_DATA
+        )
         context.zatcaLinkDataStore.edit { it[kEnabled] = value }
     }
 
     suspend fun setProduction(value: Boolean) {
+        // [E0.4 V 3.3.0] نفس باب 8-ب — الانتقال للإنتاج أخطر من التفعيل نفسه
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.TAX_OWNER_DATA
+        )
         context.zatcaLinkDataStore.edit { it[kProduction] = value }
     }
 }
