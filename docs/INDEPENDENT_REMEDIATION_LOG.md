@@ -245,3 +245,13 @@ Commits: (code fix + tests + version) and (docs) — nothing pushed; remote unto
 - **Version**: V3.2.9 / versionCode 18 (production code changed; R8 precedent).
 - **Verification**: RED(3)→GREEN(57) filtered; gates 4/4 + self-tests 4/4; forced full suite 1797/0/0/0 (168 files; 2 load-flakes isolated-green ×2); assembleDebug aapt `18`/`3.2.9`; lintRelease GREEN 5m21s fresh; secret scan CLEAN.
 - **Verdict-solid (no change)**: Installments (bounds at repo layer, overpay-clamped pay, engine fallbacks unreachable), Checks (whitelist transitions, fresh-read posting, ghost-free delete), ZATCA reboot-stall (production passes `lastAttemptElapsedMs=0` — immune), callback-crash at-least-once (idempotent AUD-4 transactions).
+
+## Wave V3.5.1 (2026-10-20) — the Phase-0 delta: E0.2 (both rulings) + E0.4-b (biometric lockout) on branch `roadmap/p0-delta-v351`
+
+- **Reconciliation**: PRs #2/#3/#4 (parallel session) merged E0.4 parity + P1 + P2-wave-1; PR #5 (this pipeline, stale base) closed unmerged with cross-validation note; delta re-founded on `482b970`.
+- **[E0.2-a] fix(webhook): unsigned-fallback fail-closed (Ruling 2, Option A)** — `WebhookStore.secretConfiguredOnce()` + pre-socket gate in `WebhookClient.send`; `WebhookFailClosedTest` (3 contracts; production failure simulated by PinVault key rotation).
+- **[E0.2-b] docs(loyalty): RVW-21 Ruling 1 recorded as Option A** — FINDINGS §13-و (date, rationale, override path); behavior untouched.
+- **[E0.4-b] fix(lock): biometric path respects active lockout** — `openBiometricSession` refuses locked accounts with `USER_LOGIN_FAIL`/`lockout` audit and preserves the counter; `BiometricLockoutParityTest` (3 contracts incl. order-independent positive control via real `resetPin`).
+- **Version**: V3.5.1 / versionCode 22 (no schema change).
+- **Verification**: RED-first (6 tests written first; refusal contract observed failing on main's code) → GREEN 6/6; full suite + gates + aapt + lint numbers recorded in the wave commit; secret scan CLEAN.
+- **Owner-blocked, honestly not simulated**: E0.1 (release-keystore ceremony, Play Console), E0.3 (instrumented farm on three real targets).

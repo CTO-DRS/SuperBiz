@@ -152,8 +152,29 @@ class UsersVM(app: Application) : AndroidViewModel(app) {
     /**
      * فتح جلسة بالبصمة لمستخدم مسموح له فقط (biometricAllowed — المالك
      * افتراضاً بالعقد) — تُستدعى بعد نجاح BiometricGate النظامية.
+     *
+     * [E0.4 V3.3.0] تكافؤ القفل بين مساري المصادقة (سياسة الرمز البديل —
+     * القرار الموثق RVW-11/FINDINGS §2/§5): قفل السياسة النشط (خمس رموز
+     * فاشلة = قفل تصاعدي) يحجب كل مسارات الفتح لا مسار الرمز وحده —
+     * كان مسار البصمة يتجاوز القفل ويصفّر العدّاد، فيصير القفل التصاعدي
+     * للحماية من القسر قابلاً للتحايل بلحظة تسليم الجهاز لصاحب بصمة مسجلة.
+     * الرفض مُسند بالتدقيق (USER_LOGIN_FAIL بتفصيل lockout) وعدّاد المستهدف
+     * يبقى كما هو حتى انقضاء القفل بالزمن الأحادي.
      */
     fun openBiometricSession(userId: Long, onDone: (Boolean) -> Unit) = launchSafe {
+        val st = guardFor(userId).status()
+        if (st.isLocked(android.os.SystemClock.elapsedRealtime())) {
+            _lockout.value = st
+            audit(
+                actor = "#$userId",
+                actorId = userId,
+                actorRole = null,
+                action = "USER_LOGIN_FAIL",
+                details = "lockout active biometric user=#$userId"
+            )
+            onDone(false)
+            return@launchSafe
+        }
         val user = g.db.users().byId(userId)
         val secret = g.db.userSecrets().byUser(userId)
         val allowed = user != null && user.active == 1 && UserAuth.biometricAllowed(secret)
