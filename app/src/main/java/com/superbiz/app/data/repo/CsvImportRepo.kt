@@ -34,6 +34,12 @@ class CsvImportRepo(private val db: AppDatabase) {
         supplierWord: String,
         bothWord: String
     ): Stats {
+        // [E0.4 V 3.3.0] انعكاس بوابة importCsv الموثقة أعلاه على حد المستودع —
+        // الإدخال الجماعي المتغيّر للبيانات = باب الاستعادة (BACKUP_RESTORE — المالك وحده).
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.BACKUP_RESTORE
+        )
         val csv = CsvImportKit.parse(text)
             ?: return Stats("unknown", 0, listOf("الملف فارغ أو بلا رأس صالح"))
         return when (CsvImportKit.detectKind(csv.header)) {

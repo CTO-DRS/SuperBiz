@@ -78,6 +78,14 @@ class InvoiceRepo(
         loyaltyRedeem: Long = 0L,
         couponId: Long = 0L
     ): Long {
+        // [E0.4 V 3.3.0] بوابة طبقة البيانات — إنشاء فاتورة بيع = POS_SELL (سطر 1)
+        // وشراء = INVENTORY_MANAGE (سطر 6-ب: رفع المخزون). الضمني/SYSTEM يمران
+        // حرفياً (§4.3 وعقد الأتمتة) — دفاع عميق خلف بوابات الواجهة لا بديل عنها.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            if (invoice.type == 1) com.superbiz.app.domain.rbac.Op.INVENTORY_MANAGE
+            else com.superbiz.app.domain.rbac.Op.POS_SELL
+        )
         require(items.isNotEmpty()) { "no items" }
         // حراسة القيم على مستوى المستودع — فاتورة سالبة
         // كانت تُرحّل قيوداً سامة تفسد الخزنة والتقارير، وبند بكمية NaN يفسد COGS
@@ -256,6 +264,12 @@ class InvoiceRepo(
 
     /** حذف (إلغاء) فاتورة: عكس القيد + عكس المخزون — ذرّي بالكامل */
     suspend fun voidInvoice(inv: Invoice) {
+        // [E0.4 V 3.3.0] بوابة طبقة البيانات — الإلغاء INVOICE_CANCEL (سطر 3)
+        // — انعكاس بوابة InvoicesVM القائمة، والضمني/SYSTEM يمران حرفياً.
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.INVOICE_CANCEL
+        )
         db.withTransaction {
             // حرس إعادة الإلغاء — قراءة حديثة داخل المعاملة؛
             // فاتورة ملغاة سابقاً أو غير موجودة لا تُعكس مرتين (كان الإلغاء

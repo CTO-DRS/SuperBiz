@@ -151,6 +151,14 @@ class UsersVMGateTest {
         awaitUsers(1)
         vm.addUser("سالم", Role.CASHIER, "123456")
         val cashier = awaitUsers(2).first { it.name == "سالم" }
+        // [E0.4 V 3.3.0] عزل عدّاد القفل — مخزن "superbiz_lockout" كائن عملي واحد
+        // يشارَك عبر طرق الاختبار (مفرد الـdelegate) ومعرّف "u<id>" حتمي بعد ترقيم
+        // الإدراج، فعدّاد طريقة سابقة (نفس المعرّف في قاعدة نظيفة أخرى) كان يتسرب
+        // لهذه الخلية حسب ترتيب التنفيذ. التصفير الصريح يجعل العقد محلياً بلا
+        // إضعاف أي تأكيد — نفس نمط تصفير setUp في PinFallbackAuditTest.
+        runBlocking {
+            com.superbiz.app.security.LockoutGuard(app, "u${cashier.id}").onSuccess()
+        }
 
         // رمز خاطئ: يرفع عدّاد مستهدفه فقط ولا يفتح جلسة
         // الكولباك غير متزامن (قراءة DataStore داخل launchSafe) — CompletableDeferred
