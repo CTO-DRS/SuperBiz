@@ -92,10 +92,30 @@ class SearchHealthVMTest {
         return vm
     }
 
+    // [E1.5 V 3.4.0] إقامة Main بصبر — نماذج Unconfined المتبقية على خيوط Default
+    // (استكمالات في منتصف التنفيذ بعد cancel التعاوني) كانت تصطدم بـsetMain التالي
+    // برمي «used concurrently with setting it» — نفس صنف التذبذب الموثق R10/R11
+    // الذي تضاعف ظهوره مع تسريع التشغيل بذاكرة مقيدة. إعادة المحاولة المحدودة
+    // (10×100ms) تُقفل السباق من جهة الاختبار؛ علاج الجذر المعماري هو نقطة
+    // حقن VMScheduling نفسها (إخراج الزمن من تصلّب Main) وتعميمها تدريجياً.
+    private fun setMainWithRetry(attempts: Int = 10) {
+        var last: IllegalStateException? = null
+        repeat(attempts) {
+            try {
+                Dispatchers.setMain(testMain)
+                return
+            } catch (e: IllegalStateException) {
+                last = e
+                Thread.sleep(100)
+            }
+        }
+        throw last!!
+    }
+
     @Before
     fun setUp() {
         resetGraph()
-        Dispatchers.setMain(testMain)
+        setMainWithRetry()
         app = ApplicationProvider.getApplicationContext<Application>()
         g = AppGraph.from(app)
     }
