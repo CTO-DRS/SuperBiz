@@ -1609,7 +1609,7 @@
     <string name="inv_delete_confirm">Le produit %1$s sera archivé et masqué des ventes, des listes et des analyses — vous pourrez le restaurer plus tard depuis la puce « Archivés ». Continuer ?</string>
     <string name="err_product_name_blank">Le nom du produit est requis — saisissez un nom avant d\'enregistrer</string>
     <string name="err_values_non_negative">Les valeurs numériques ne peuvent pas être négatives — corrigez le coût, le prix ou les quantités</string>
-    <string name="err_items_required">Ajoutez au moins une ligne avec une description et une quantité supérieure à zéro</string>
+    <string name="err_items_required">Ajoutez au moins une ligne avec une quantité supérieure à zéro</string>
     <string name="rep_aging_empty">Aucune créance en souffrance pour le moment</string>
     <string name="set_backup_folder_title">Dossier de sauvegarde</string>
     <string name="set_backup_folder_sub">Un miroir de chaque sauvegarde automatique est enregistré dans un dossier de votre choix, afin que vos sauvegardes survivent à la désinstallation de l\'application</string>

@@ -1610,7 +1610,7 @@
     <string name="inv_delete_confirm">سيُؤرشف المنتج %1$s ويختفي من البيع والقوائم والتحليلات — يمكنك استرجاعه لاحقاً من رقاقة المؤرشفة. هل تريد المتابعة؟</string>
     <string name="err_product_name_blank">اسم المنتج مطلوب — اكتب اسماً قبل الحفظ</string>
     <string name="err_values_non_negative">القيم الرقمية لا تقبل سالباً — صحّح التكلفة أو السعر أو الكميات</string>
-    <string name="err_items_required">أضف بنداً واحداً على الأقل بوصف وكمية أكبر من صفر</string>
+    <string name="err_items_required">کم از کم ایک آئٹم شامل کریں جس کی مقدار صفر سے زیادہ ہو</string>
     <string name="rep_aging_empty">فی الحال کوئی قرض نہیں</string>
     <string name="set_backup_folder_title">بیک فولڈر</string>
     <string name="set_backup_folder_sub">اپنی منتخب فولڈر میں ہر آٹومیک بیک اپ کا ایک میرر محفوظ کریں تاکہ آپ ایپ ڈیلیٹ کرنے کے بعد بھی اپنی بیک اپس کو برقرار رکھ سکیں</string>
