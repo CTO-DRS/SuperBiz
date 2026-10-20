@@ -335,3 +335,31 @@ L-5 (V3.0.2 era) unified the export guard to `= + @ TAB CR` and removed `-`, on 
 | **B. Keep as-is** | Unreadable secret → delivered unsigned, silently | Zero | Receivers accepting unsigned events lose integrity verification without anyone noticing — a silent security downgrade |
 
 Both rulings are pure owner decisions; nothing was implemented beyond the lock/tests that make either choice safe to take later.
+
+### 13-و. Rulings executed (V 3.5.1 — Phase-0 delta after the parallel-wave reconciliation): safe defaults implemented test-first, overridable
+
+Reconciliation note: the parallel Phase-0/1/2 waves (PRs #2/#3/#4) landed E0.4's data-layer guard
+parity and the matrix publication, but neither ruling was executed there. The delta wave below
+lands both, on top of current main, with the same discipline ordered by E0.2.
+
+**Ruling 1 — RVW-21 coupon-void semantics: Option A (keep-as-is) — RECORDED, behavior untouched.**
+- Decision date: 2026-10-20. Rationale: option B re-opens financial-ledger semantics and, per the
+  §13-ه table itself, "needs its own adversarial pass" — not something engineering adopts
+  unilaterally; option A is the financial-conservative status quo already locked by
+  `CouponVoidSemanticsTest` (3 contracts: counter stands, no revival, multi-use burn order).
+- What shipped: this record plus the pre-existing test lock; zero behavior change. Override path:
+  owner picks B → compensating VOID witness (`qty = −1`) + `COUNT(*) → SUM(qty)` gate change +
+  fresh adversarial pass, RED-first.
+
+**Ruling 2 — webhook unsigned-fallback: Option A (fail-closed) — IMPLEMENTED test-first.**
+- Decision date: 2026-10-20. Rationale: option B is "a silent security downgrade" per the table;
+  option A is small, visible (honest `lastResult`), and reversible. A configured-but-unreadable
+  secret is a real production failure mode (Keystore invalidated by device restore).
+- What shipped: `WebhookStore.secretConfiguredOnce()` (separates *no secret configured* — signing
+  is optional by the H4-6 contract, unsigned delivery stays the owner's explicit choice — from
+  *configured but unreadable*), and a pre-socket gate in `WebhookClient.send`: configured-and-
+  unreadable → no connection attempt at all, `send = false`, `lastResult` written honestly.
+  Locked by `WebhookFailClosedTest` (3 contracts). The production failure mode is simulated by
+  rotating the injected PinVault key between store and read — precisely what a device restore
+  does to the Keystore. Race note (in-code): the worst concurrent case with `setSecret` lands
+  toward fail-closed refusal, never toward a silently-unsigned delivery of a configured secret.
