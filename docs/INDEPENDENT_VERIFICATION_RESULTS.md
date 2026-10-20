@@ -292,3 +292,24 @@ Discovery reconciled the records before any action: the incoming session summary
 | 9 | Wave secret scan | diff inspection (code + tests + docs) | CLEAN — no credentials, no secrets, no generated artifacts committed |
 
 Honest ledger: the RED→GREEN loop caught two defects in my own test code (an expected-string that forgot RFC4180 quote-wrapping; an assertion that counted the legitimate send of the *present* document instead of proving the *missing* one untouched) before catching anything else — corrected in place, recorded here rather than silently rewritten. The production `ProcessSummary` return initially dropped the new counter; the test caught it before any commit.
+
+## 18. Wave V3.3.0 (2026-10-20) — Phase 0 Executed: E0.5 Publish, Both Owner Rulings Landed Test-First, Data-Layer RBAC Parity (this session's own runs)
+
+The Phase-0 engineering wave. E0.5: v3.2.9 published live (tag `v3.2.9` → `d6f498a`, release id 417918737, APK asset byte-verified 26,718,476 B; the pre-existing release body was identified as the CHANGELOG.md dump by char-count 55,707≈55,705 and replaced with the curated bilingual notes — nothing unique lost). E0.2: both §13-ه rulings landed per the roadmap order — RVW-21 recorded as Option A (behavior untouched, pre-locked), unsigned-fallback implemented fail-closed (`secretConfiguredOnce` + pre-socket gate). E0.4: data-layer guard parity across seven repos covering the four matrix rows that had no enforcement in any layer (POS_SELL, PARTY_PRODUCT_EDIT, INVENTORY_MANAGE, EXPENSES_CHECKS_INSTALLMENTS) + the biometric-path lockout parity + `docs/RBAC_MATRIX.md` published.
+
+**Genuine RED-first proof:** 15 new tests written first; filtered run observed **11 behavioral failures** — exactly the production gaps (fail-open unsigned delivery; biometric opening a locked account returning `true`; all 8 matrix doors open for denied roles). 4 contracts passed immediately (no-secret unsigned delivery, readable-secret signing, PIN-during-lock refused, counter preserved) — those lock pre-existing correct behavior. The positive-control biometric case failed initially on **cross-test DataStore leakage** (the lockout delegate persists in-process — same class as ConfigRbacGateTest's documented discovery); rewritten order-independent via the real `resetPin` path before any production change. The RED→GREEN loop caught one test-harness defect of my own (a `mergeParties` gate initially written inside the parameter list — caught by the compiler, not shipped) — recorded here honestly.
+
+**Independent verification (all numbers this session's own runs):**
+
+| # | Check | Method | Result |
+|---|---|---|---|
+| 1 | Wave tests | `testDebugUnitTest --tests` filtered (3 classes) | **15/15 GREEN** after fixes (was 11-fail RED) |
+| 2 | Full suite | forced `testDebugUnitTest` full re-run | **1812/0/0/0 across 171 files** (+15 tests, +3 files) |
+| 3 | Quality gates | 4 Python gates | **4/4 PASS** (2441×6 parity, boundary 3 sites, CI:OK) |
+| 4 | Identity | `assembleDebug` + aapt | **`versionCode='19' versionName='3.3.0'`** confirmed |
+| 5 | Lint | `lintRelease` cold after orphan-kill | **GREEN 5m21s** — real analysis |
+| 6 | Secret scan | wave diff inspection | CLEAN — no credentials/secrets |
+
+Environment ledger additions (9th/10th documented entries): one `assembleDebug` gradle-daemon disappearance (infra class; full rerun green 24s no-daemon) and one `lintRelease` daemon death with a **1.57 GB orphaned Kotlin daemon squatter found and killed** (`-Xmx3g` keepalive — the documented squatter class); cold retry green 5m21s. Suite invocation #1 in this wave also died on infra before completing; the forced rerun executed everything and is the recorded number.
+
+Honest scope record: E0.1 (release-keystore offline ceremony + Play Console) and E0.3 (instrumented farm on three real targets) remain **owner-blocked** — hardware and store credentials exist only on the owner side; nothing was simulated or claimed. The `openConnection` seam in `WebhookClient` is behavior-neutral in production (identical URL → HTTPS-only path); it exists so the fail-closed gate is observable on the JVM, and the on-device delivery proof remains E0.3's NOT-VERIFIED item.
