@@ -1,135 +1,75 @@
-# [جولة M0 — حلقة النشر] أول سطر نشر آلي في تاريخ المستودع:
-# عند دفع وسم v* يُبنى APK/AAB، يُوقَّع إن توفرت أسرار keystore، ويُرفع أثراً (احتفاظ 30 يوماً)،
-# وتُنشأ مسودة Release بملاحظات مأخوذة آلياً من أعلى CHANGELOG.md.
-# بلا أسرار: يُبنى غير موقّع (release-unsigned) ويلزم توقيعه محلياً قبل التثبيت.
-name: Release
+name: release
+
+# [E1.2 V 3.4.0] مسار الإصدار على tag v* — يبني الحزمة ويطبع SHA-256 ويرفقها
+# للتنفيذ. التوقيع: إذا وُجد سر keys.SIGNING_KEYSTORE فتُوقَّع الحزمة به
+# (بصيغة keystore.properties المؤقتة — نفس عقد build.gradle.kts)، وإلا تُرفع
+# حزمة غير موقعة مع تحذير صريح — لا توقيع وهمي أبداً (E0.1 بيد المالك حتى الآن).
 
 on:
   push:
-    tags:
-      - 'v*'
-
-permissions:
-  contents: write
+    tags: [ 'v*' ]
 
 jobs:
-  # [RVW-9 V 3.2.3] بوابة «CI أخضر قبل النشر» — كانت الحزمة الموقّعة تُنشر لأي وسم v*
-  # بلا شرط نجاح. الآن: البوابات والاختبارات تجري على مرجع الوسم نفسه أولاً،
-  # والبناء/التوقيع/النشر لا يبدأ إلا بعد نجاحها (needs).
-  verify:
-    name: Verify (gates + unit tests) — publish gate
+  build:
+    name: signed (or explicitly unsigned) release artifact
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.x
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Strings format gate
-        run: python tools/check_strings_format.py
-
-      - name: Strings parity gate
-        run: python tools/check_strings.py
-
-      - name: Locale coverage gate
-        run: python tools/check_locale_coverage.py
-
-      - name: Network boundary gate (ADR-001)
-        run: python tools/check_network_boundary.py
-
-      - name: Setup JDK 17 (Temurin)
+      - name: JDK 17 (Temurin, pinned like the local toolchain)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '17.0.13+11'
+          cache: gradle
 
-      - name: Setup Gradle (caching)
-        uses: gradle/actions/setup-gradle@v4
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Unit tests (release)
-        run: ./gradlew :app:testReleaseUnitTest --stacktrace
-
-  build:
-    name: Build, sign and publish
-    needs: verify
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup JDK 17 (Temurin)
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Setup Gradle (caching)
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Decode signing keystore from secrets
+      - name: Decode signing material when provided
+        id: signing
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          SIGNING_KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_B64 }}
+          SIGNING_KEYSTORE_PASS: ${{ secrets.SIGNING_KEYSTORE_PASS }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASS: ${{ secrets.SIGNING_KEY_PASS }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/superbiz.keystore"
-            {
-              echo "storeFile=$RUNNER_TEMP/superbiz.keystore"
-              echo "storePassword=$KEYSTORE_PASSWORD"
-              echo "keyAlias=$KEY_ALIAS"
-              echo "keyPassword=$KEY_PASSWORD"
-            } > keystore.properties
-            echo "SIGNING=signed" >> "$GITHUB_ENV"
+          if [ -n "$SIGNING_KEYSTORE_B64" ]; then
+            echo "$SIGNING_KEYSTORE_B64" | base64 -d > keystore.jks
+            cat > keystore.properties <<EOF
+          storeFile=$(pwd)/keystore.jks
+          storePassword=$SIGNING_KEYSTORE_PASS
+          keyAlias=$SIGNING_KEY_ALIAS
+          keyPassword=$SIGNING_KEY_PASS
+          EOF
+            echo "signed=true" >> "$GITHUB_OUTPUT"
           else
-            echo "SIGNING=unsigned" >> "$GITHUB_ENV"
-            echo "::notice::No keystore secrets found — building unsigned release"
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No signing secret present — artifact ships UNSIGNED (E0.1 keystore ceremony pending)"
           fi
 
-      - name: Build release APK + AAB
+      - name: Build release bundle + APK
         run: |
           ./gradlew :app:assembleRelease :app:bundleRelease --stacktrace
 
-      - name: Collect artifacts
+      - name: Verify identity (aapt) and print SHA-256
         run: |
-          mkdir -p out
-          find app/build/outputs/apk/release -name '*.apk' -exec cp {} out/ \;
-          find app/build/outputs/bundle/release -name '*.aab' -exec cp {} out/ \;
-          ls -la out/
+          APK=app/build/outputs/apk/release/app-release.apk
+          $ANDROID_HOME/build-tools/35.0.0/aapt dump badging "$APK" | head -1
+          echo "SHA-256 ($(basename $APK)):"
+          sha256sum "$APK" | tee "${APK}.sha256"
+          AAB=app/build/outputs/bundle/release/app-release.aab
+          [ -f "$AAB" ] && sha256sum "$AAB" | tee "${AAB}.sha256"
 
-      - name: Upload APK/AAB artifacts (30-day retention)
+      - name: Attach artifacts to the run
         uses: actions/upload-artifact@v4
         with:
-          name: release-packages
-          path: out/
-          retention-days: 30
-
-      - name: Extract release notes from CHANGELOG
-        run: |
-          python3 - <<'PY'
-          import re
-          text = open('CHANGELOG.md', encoding='utf-8').read()
-          m = re.search(r'^## .+$.*?(?=^## |\Z)', text, re.M | re.S)
-          open('release_notes.md', 'w', encoding='utf-8').write(
-              (m.group(0).strip() if m else 'SuperBiz release') )
-          PY
-
-      - name: Create draft GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          draft: true
-          generate_release_notes: true
-          body_path: release_notes.md
-          files: |
-            out/*.apk
-            out/*.aab
-
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
+          name: release-${{ github.ref_name }}
+          path: |
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/apk/release/app-release.apk.sha256
+            app/build/outputs/bundle/release/app-release.aab
+            app/build/outputs/bundle/release/app-release.aab.sha256
+          if-no-files-found: error

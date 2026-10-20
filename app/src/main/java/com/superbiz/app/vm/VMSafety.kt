@@ -56,3 +56,31 @@ fun ViewModel.launchSafe(
         }
     }
 }
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * [E1.5 V 3.4.0] نقطة حقن المُجدّدات — علاج جذر صنف التذبذب الموثق (R10/R11)
+ * ═══════════════════════════════════════════════════════════════════════════
+ * الجذر: VMs الحساسة (GlobalSearch/DataHealth/Favorites) كانت تُصلب
+ * `Dispatchers.Default/IO` داخل أجسامها — فلا يمكن للاختبار التحكم بزمنها،
+ * وكل انتظاراتها انتظارات زمن حقيقي تنهار تحت حمل الجناح الكامل (تذبذب
+ * SearchHealthVMTest الموثق مرتين على الأقل).
+ *
+ * العقد:
+ *  • الإنتاج: القيم الافتراضية هي نفسها المصلَّبة سابقاً حرفياً — سلوك بايتي
+ *    بلا تغيير (نمط كل موجات الحقن: loyalty/zatca/deviceIdProvider).
+ *  • الاختبار: `compute`/`background` تُستبدل بمُجدّد اختبار في @Before ويُعاد
+ *    الأصلي في @After (نمط Dispatchers.setMain/resetMain نفسه) — فيصبح زمن
+ *    الـVM زمن الاختبار متى أريد، والانتظارات حتمية لا رهانات توقيت.
+ *  • الحقل @Volatile — الكتابة مرة عند الإقلاع/الاختبار والقراءة في كل نداء.
+ */
+object VMScheduling {
+
+    /** مُجدّد الحساب الثقيل (تقييم ضبابي، مسح سلامة، إحصاءات) */
+    @Volatile
+    var compute: kotlinx.coroutines.CoroutineDispatcher = kotlinx.coroutines.Dispatchers.Default
+
+    /** مُجدّد الخلفية الخفيفة (كتابات DAO الصغيرة) */
+    @Volatile
+    var background: kotlinx.coroutines.CoroutineDispatcher = kotlinx.coroutines.Dispatchers.IO
+}
