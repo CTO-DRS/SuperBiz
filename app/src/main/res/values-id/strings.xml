@@ -1610,7 +1610,7 @@
     <string name="inv_delete_confirm">Produk %1$s akan diarsipkan dan akan menghilang dari penjualan, daftar, dan analisis — Anda dapat memulihkannya nanti dari tab terarsip. Lanjutkan?</string>
     <string name="err_product_name_blank">Nama produk diperlukan — Tulis nama sebelum menyimpan</string>
     <string name="err_values_non_negative">Nilai numerik tidak boleh negatif — Perbaiki biaya, harga, atau kuantitas</string>
-    <string name="err_items_required">Tambahkan setidaknya satu item dengan deskripsi dan kuantitas lebih dari nol</string>
+    <string name="err_items_required">Tambahkan setidaknya satu item dengan kuantitas lebih dari nol</string>
     <string name="rep_aging_empty">Tidak ada piutang yang jatuh tempo saat ini</string>
     <string name="set_backup_folder_title">Folder Cadangan</string>
     <string name="set_backup_folder_sub">Simpan salinan setiap cadangan otomatis di folder yang Anda pilih agar cadangan tetap ada bahkan setelah menghapus aplikasi</string>
