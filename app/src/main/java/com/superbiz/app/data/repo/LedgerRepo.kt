@@ -26,6 +26,14 @@ class LedgerRepo(private val db: AppDatabase) {
     suspend fun party(id: Long): Party? = db.parties().byId(id)
     suspend fun partyFlow(id: Long): Flow<Party?> = db.parties().byIdFlow(id)
     suspend fun saveParty(p: Party): Long {
+        // [E0.4 V 3.3.0] تعديل طرف قائم = PARTY_PRODUCT_EDIT (سطر 4) — الإنشاء
+        // الجديد (id=0) بلا بوابة بعقد السطر 4 حرفياً.
+        if (p.id != 0L) {
+            com.superbiz.app.domain.rbac.RoleGate.require(
+                com.superbiz.app.domain.rbac.SessionState.effective(),
+                com.superbiz.app.domain.rbac.Op.PARTY_PRODUCT_EDIT
+            )
+        }
         // رفض الاسم الفارغ — كان يُقبل ويكسر كشف الحساب والبحث والفهرسة بالاسم
         require(p.name.isNotBlank()) { "party name required" }
         // @Upsert في مسار التحديث يعيد -1 — نجيب معرّف الكيان الصريح عند التعديل
@@ -33,6 +41,11 @@ class LedgerRepo(private val db: AppDatabase) {
         return if (id == -1L && p.id != 0L) p.id else id
     }
     suspend fun deleteParty(id: Long) {
+        // [E0.4 V 3.3.0] الحذف النهائي HARD_DELETE — المالك وحده (سطر 5)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.HARD_DELETE
+        )
         db.parties().archive(id)
     }
 

@@ -2088,7 +2088,22 @@ class SettingsVM(app: Application) : AndroidViewModel(app) {
         } catch (e: Exception) {
             false
         }
-        if (ok) lockoutGuard.onSuccess() else lockoutGuard.onFailed()
+        if (ok) {
+            lockoutGuard.onSuccess()
+        } else {
+            lockoutGuard.onFailed()
+            // [E0.4 V 3.3.0] مسار ارتداد رمز الجهاز يُدوَّن — إسناد ما قبل المصادقة
+            // الصادق (actor="device"، بلا هوية جلسة بعد — الجلسة لم تولد؛ نمط
+            // USER_LOGIN_FAIL للمسار المتعدد نفسه). النجاح جلسة لا حدث فلا يُدوَّن،
+            // والرفض أثناء قفل سارٍ ليس محاولة تحقق فلا يُدوَّن ولا يزيد العدّاد.
+            g.db.auditLog().insert(
+                com.superbiz.app.data.db.AuditLogEntity(
+                    actor = "device",
+                    action = "DEVICE_PIN_FAIL",
+                    details = "device-pin verify failed"
+                )
+            )
+        }
         lockout.value = lockoutGuard.status()
         onResult(ok)
     }
