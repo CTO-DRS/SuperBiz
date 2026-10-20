@@ -166,7 +166,7 @@ class MigrationChainCompositionTest {
                     assertEquals("الإصدار $v: $table.$name عدم-الإتاحة",
                         if (want.second) 1 else 0, got.second)
                     assertEquals("الإصدار $v: $table.$name عضوية المفتاح الأساسي",
-                        if (want.third) 1 else 0, got.third)
+                        if (want.third) 1 else 0, if (got.third > 0) 1 else 0)
                 }
             }
 

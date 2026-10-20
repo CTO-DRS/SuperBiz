@@ -1465,6 +1465,11 @@ interface SyncLogDao {
         // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — جدول إلحاقي بإنشاء فقط
         // (ترحيل 17→18 في SuperBizApp — CREATE TABLE/INDEX فقط، لا جدول قائم يُلمس)
         CouponRedemptionEntity::class,
+        // [E2.1 V 3.5.0] النواة متعددة الفروع
+        BranchEntity::class,
+        BranchStockEntity::class,
+        StockTransferEntity::class,
+        StockTransferLineEntity::class,
         // [H4-3][v16] دفتر المزامنة
         SyncLogEntity::class,
         // [H1-3][H1-4] هوية المستخدمين والأدوار — جدولان بإنشاء فقط + عمودا إسناد التدقيق
@@ -1496,7 +1501,7 @@ interface SyncLogDao {
     // (ترحيل 16→17 في SuperBizApp — إنشاء فهارس فقط، لا أعمدة ولا جداول)
     // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — جدول بإنشاء فقط
     // (ترحيل 17→18 في SuperBizApp — CREATE TABLE/INDEX/مشغّلات مزامنة فقط، إلحاقي خالص)
-    version = 18,
+    version = 19,
     exportSchema = true
 )
 
@@ -1530,9 +1535,97 @@ abstract class AppDatabase : androidx.room.RoomDatabase() {
     abstract fun coupons(): CouponDao
     // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — أحداث إلحاقية موزّعة
     abstract fun couponRedemptions(): CouponRedemptionDao
+    // [E2.1 V 3.5.0] النواة متعددة الفروع
+    abstract fun branches(): BranchDao
+    abstract fun branchStock(): BranchStockDao
+    abstract fun stockTransfers(): StockTransferDao
+    abstract fun stockTransferLines(): StockTransferLineDao
     // [H1-3][H1-4] هوية المستخدمين والأدوار
     abstract fun users(): UserDao
     abstract fun userSecrets(): UserSecretDao
     abstract fun zatcaDocs(): ZatcaDocDao
     abstract fun syncLog(): SyncLogDao
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// [E2.1 V 3.5.0] DAOs النواة متعددة الفروع — بنية قراءة + كتابات محرك النقل
+// ═══════════════════════════════════════════════════════════════════════════
+
+@androidx.room.Dao
+interface BranchDao {
+
+    @androidx.room.Insert
+    suspend fun insert(b: BranchEntity): Long
+
+    @Query("SELECT * FROM branches ORDER BY id")
+    fun all(): kotlinx.coroutines.flow.Flow<List<BranchEntity>>
+
+    @Query("SELECT * FROM branches WHERE active = 1 ORDER BY id")
+    suspend fun activeOnce(): List<BranchEntity>
+
+    @Query("SELECT * FROM branches WHERE id = :id LIMIT 1")
+    suspend fun byId(id: Long): BranchEntity?
+
+    @Query("UPDATE branches SET active = :active WHERE id = :id")
+    suspend fun setActive(id: Long, active: Boolean)
+}
+
+@androidx.room.Dao
+interface BranchStockDao {
+
+    /** الكمية الحالية لخلية (فرع، صنف) — صفر إن لا صف (فشل محافظ: غياب = صفر لا خطأ) */
+    @Query("SELECT qty FROM branch_stock WHERE branchId = :branchId AND productId = :productId LIMIT 1")
+    suspend fun qtyAt(branchId: Long, productId: Long): Double?
+
+    @Query("SELECT COALESCE(SUM(qty), 0.0) FROM branch_stock WHERE productId = :productId")
+    suspend fun totalFor(productId: Long): Double
+
+    @Query("SELECT * FROM branch_stock WHERE branchId = :branchId")
+    suspend fun ofBranch(branchId: Long): List<BranchStockEntity>
+
+    /** دفعة كمية موجبة أو سالبة داخل معاملة المستدعي — تُنشئ الصف عند حاجته */
+    @androidx.room.Query(
+        "INSERT INTO branch_stock (branchId, productId, qty) VALUES (:branchId, :productId, :delta) " +
+            "ON CONFLICT(branchId, productId) DO UPDATE SET qty = qty + :delta"
+    )
+    suspend fun addQty(branchId: Long, productId: Long, delta: Double)
+
+    /** بذر الترحيل — يكتب القيمة المطلقة حصراً من الترحيل 18→19 */
+    @androidx.room.Query(
+        "INSERT INTO branch_stock (branchId, productId, qty) VALUES (:branchId, :productId, :qty) " +
+            "ON CONFLICT(branchId, productId) DO UPDATE SET qty = :qty"
+    )
+    suspend fun seed(branchId: Long, productId: Long, qty: Double)
+}
+
+@androidx.room.Dao
+interface StockTransferDao {
+
+    @androidx.room.Insert
+    suspend fun insert(t: StockTransferEntity): Long
+
+    @androidx.room.Update
+    suspend fun update(t: StockTransferEntity)
+
+    @Query("SELECT * FROM stock_transfers ORDER BY id DESC")
+    fun all(): kotlinx.coroutines.flow.Flow<List<StockTransferEntity>>
+
+    @Query("SELECT * FROM stock_transfers WHERE id = :id LIMIT 1")
+    suspend fun byId(id: Long): StockTransferEntity?
+
+    @Query("SELECT * FROM stock_transfers WHERE status = 0")
+    suspend fun inTransitOnce(): List<StockTransferEntity>
+}
+
+@androidx.room.Dao
+interface StockTransferLineDao {
+
+    @androidx.room.Insert
+    suspend fun insertAll(lines: List<StockTransferLineEntity>)
+
+    @androidx.room.Update
+    suspend fun update(l: StockTransferLineEntity)
+
+    @Query("SELECT * FROM stock_transfer_lines WHERE transferId = :transferId")
+    suspend fun forTransfer(transferId: Long): List<StockTransferLineEntity>
 }
