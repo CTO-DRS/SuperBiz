@@ -905,3 +905,35 @@ data class StockTransferLineEntity(
     val qty: Double,
     val receivedQty: Double = 0.0
 )
+
+// [E2.2 V3.6.0] سجل معاملات الدفع — نقد وبطاقة على POS وتوسعات لاحقة.
+// [SAQ-A] موقف الامتثال بنيوياً: لا حقل بيانات بطاقة هنا إطلاقاً (لا رقم ولا CVV
+// ولا انتهاء) — ما يُخزَّن هو المبلغ ومرجع اعتماد عائد من البوابة واسمها فقط.
+// المبالغ INTEGER قروش (عقد P33-P8) — التحويل من عقد النطاق الحقيقي عبر Money.toPiasters.
+@Entity(tableName = "payment_tx", indices = [Index("invoiceId"), Index("createdAt")])
+data class PaymentTxEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val invoiceId: Long?,           // مرجع الفاتورة الحاملة — فراغ مشروع لمعاملة غير مرتبطة
+    val amountPiasters: Long,
+    val method: String,             // CASH | CARD
+    val status: String,             // CAPTURED | DECLINED_OFFLINE | FAILED
+    val psp: String?,               // اسم مقدم الخدمة — null للنقد
+    val authRef: String?,           // مرجع الاعتماد من البوابة — null للنقد والمرفوض
+    val createdAt: Long
+)
+
+// [E2.2 V3.6.0] دفتر تعريف الاسترداد — المفتاح الفريد = at-most-once على مستوى
+// القاعدة نفسها لا الكود فقط: المفتاح الواحد يستدعي بوابة المسترد مرة واحدة بعمر
+// القاعدة، والتكرار يعيد النتيجة الأولى (عقد RefundIdempotencyLedger النقي مُصَلَّداً).
+@Entity(
+    tableName = "refund_ledger",
+    indices = [Index(value = ["idempotencyKey"], unique = true), Index("paymentTxId")]
+)
+data class RefundLedgerEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val idempotencyKey: String,
+    val paymentTxId: Long?,         // المعاملة المستردَّة — فراغ مشروع لاسترداد غير مرتبط
+    val amountPiasters: Long,
+    val refundRef: String,          // مرجع الاسترداد من البوابة
+    val createdAt: Long
+)
