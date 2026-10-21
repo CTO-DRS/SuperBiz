@@ -82,7 +82,31 @@ fun cardAuthPolicy(online: Boolean): AuthDecision =
 /** ثابت السياسة: قائمة انتظار المدفوعات بلا اتصال لا تُحصّل بطاقة تلقائياً — إطلاقاً */
 const val OFFLINE_QUEUE_AUTO_CHARGE = false
 
-// ───────────────── 4) مصفوفة اختيار PSP (مسودة مُحرَّزة) ─────────────────
+// ───────────────── 4) تجريد البوابة (SAQ-A) ─────────────────
+
+/** نتيجة تحصيل من البوابة: مرجع الاعتماد وحالة الإقرار — لا بيانات بطاقة إطلاقاً */
+data class GatewayChargeResult(val authRef: String, val approved: Boolean)
+
+/**
+ * تجريد بوابة الدفع (PSP) — العقد الوحيد الذي تعرفه SuperBiz عن أي مقدم خدمات دفع
+ * (Moyasar/HyperPay/Tap): قابل للتبديل بلا لحام أحدهم في الكود، ويُختبر ببوابة تسجيلية.
+ *
+ * [SAQ-A] موقف الامتثال المُوثَّق: لا رقم بطاقة ولا CVV ولا تاريخ انتهاء يمرّ في أي
+ * توقيع هنا ولا يُخزَّن في أي جدول — ما يعبر هو مبلغ ومفتاح تعريف ومرجع اعتماد عائد
+ * من البوابة. بيانات البطاقة تعيش في عالم البوابة وحده (صفحة البوابة المستضافة).
+ */
+interface PspGateway {
+    /** هوية مقدم الخدمة تُختم على صفوف المعاملات (MOYASAR/HYPERPAY/TAP/…أو FAKE_PSP بالاختبار) */
+    val pspId: String
+
+    /** تحصيل حصة البطاقة — المفتاح يمنع تحصيلاً مزدوجاً للمحاولة نفسها على مستوى البوابة */
+    fun charge(idempotencyKey: String, amount: Double): GatewayChargeResult
+
+    /** استرداد على معاملة سابقة — المفتاح نفسه عقد at-most-once (دفتر المستودع يفرضه محلياً أيضاً) */
+    fun refund(idempotencyKey: String, amount: Double, authRef: String): RefundResult
+}
+
+// ───────────────── 5) مصفوفة اختيار PSP (مسودة مُحرَّزة) ─────────────────
 
 /** المرشحون الثلاثة في سوق السعودية حسب مصفوفة الخارطة (E2.2) */
 enum class PspCandidate { MOYASAR, HYPERPAY, TAP }
