@@ -1,0 +1,130 @@
+// SuperBiz Web Console — Prisma schema
+// عقد SuperBiz الموروث: المال Long قروش (Int هنا — نطاق العرض التجريبي)،
+// صفر Double في المسارات المالية (qty فقط Float تشغيليًا)، قيد مزدوج متوازن إلزاميًا.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// المنتجات — المخزون
+model Product {
+  id           String        @id @default(cuid())
+  name         String
+  sku          String        @unique
+  barcode      String?       @unique
+  unit         String        @default("حبة")
+  costPrice    Int           @default(0) // قروش
+  salePrice    Int           @default(0) // قروش
+  stockQty     Float         @default(0) // تشغيلي فقط — ليس مبلغًا ماليًا
+  reorderLevel Float         @default(5)
+  category     String        @default("عام")
+  archived     Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  invoiceItems InvoiceItem[]
+}
+
+// الأطراف — عملاء/موردون
+model Party {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  type      Int      @default(0) // 0 عميل / 1 مورد / 2 كلاهما
+  taxNumber String?
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  invoices  Invoice[]
+  payments  Payment[]
+}
+
+// الفواتير — بيع/مرتجع + هوية ZATCA مرحلة-1
+model Invoice {
+  id        String        @id @default(cuid())
+  number    String        @unique
+  partyId   String?
+  party     Party?        @relation(fields: [partyId], references: [id])
+  type      String        @default("SALE") // SALE | RETURN
+  credit    Boolean       @default(false) // آجل
+  date      DateTime      @default(now())
+  subtotal  Int           @default(0) // قروش (بعد الخصم قبل الضريبة)
+  discount  Int           @default(0) // قروش
+  taxRate   Int           @default(15) // %
+  taxAmount Int           @default(0) // قروش
+  total     Int           @default(0) // قروش
+  paid      Int           @default(0) // قروش
+  costTotal Int           @default(0) // قروش — تكلفة البضاعة COGS
+  status    String        @default("PAID") // PAID | PARTIAL | UNPAID | VOID
+  currency  String        @default("SAR")
+  uuid      String? // هوية ZATCA
+  icv       Int           @default(0) // العداد التزايدي
+  zatcaQr   String? // TLV base64 مرحلة-1
+  items     InvoiceItem[]
+  payments  Payment[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model InvoiceItem {
+  id        String   @id @default(cuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+  desc      String
+  qty       Float
+  unitPrice Int      // قروش
+  discount  Int      @default(0) // قروش
+  lineTotal Int      // قروش
+}
+
+// السدود — قبض/دفع
+model Payment {
+  id        String   @id @default(cuid())
+  partyId   String?
+  party     Party?   @relation(fields: [partyId], references: [id])
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+  amount    Int // قروش
+  direction String   @default("IN") // IN قبض | OUT دفع
+  method    String   @default("CASH")
+  date      DateTime @default(now())
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+// المصروفات
+model Expense {
+  id        String   @id @default(cuid())
+  title     String
+  category  String   @default("عام")
+  amount    Int // قروش
+  date      DateTime @default(now())
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+// القيد المزدوج — دفتر اليومية
+model JournalEntry {
+  id        String        @id @default(cuid())
+  date      DateTime      @default(now())
+  memo      String?
+  refType   String? // INVOICE | PAYMENT | EXPENSE | VOID
+  refId     String?
+  lines     JournalLine[]
+  createdAt DateTime      @default(now())
+}
+
+model JournalLine {
+  id      String       @id @default(cuid())
+  entryId String
+  entry   JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  account String // 1010 نقدية · 1200 ذمم مدينة · 1300 مخزون · 2200 ضريبة مستحقة · 2100 ذمم دائنة · 4000 مبيعات · 5000 تكلفة بضاعة · 5020 مصروفات
+  debit   Int          @default(0) // قروش
+  credit  Int          @default(0) // قروش
+}
