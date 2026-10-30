@@ -4,6 +4,7 @@ import { ensureSeed } from "@/lib/seed";
 import { postJournal, ACCOUNTS } from "@/lib/journal";
 import { buildZatcaQrBase64, invoiceUuid, qrDataUrl } from "@/lib/zatca";
 import { qirshToNumber } from "@/lib/money";
+import { requireSession } from "@/lib/authGate"; // [W1.5/#39] القفل الثاني — يفرضه فاحص check_auth_gate
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,8 @@ export async function GET(req: NextRequest) {
 
 /** إنشاء فاتورة بيع (نقطة البيع) — ذرّية كاملة: بنود + مخزون + قيد مزدوج + ختم ZATCA */
 export async function POST(req: NextRequest) {
+  const gate = await requireSession(req); // [W1.5/#39] بلا جلسة مالك = 401
+  if (gate) return gate;
   await ensureSeed();
   const body = await req.json().catch(() => null);
   const items: Array<{ productId?: string; desc?: string; qty?: number; unitPrice?: number; discount?: number }> =
@@ -180,6 +183,8 @@ export async function POST(req: NextRequest) {
 
 /** إلغاء آمن — قيد تعويضي + إرجاع المخزون (انعكاس أثره كما في العقد) */
 export async function PATCH(req: NextRequest) {
+  const gate = await requireSession(req); // [W1.5/#39] بلا جلسة مالك = 401
+  if (gate) return gate;
   const body = await req.json().catch(() => null);
   if (!body?.id) return NextResponse.json({ error: "id مطلوب" }, { status: 400 });
 

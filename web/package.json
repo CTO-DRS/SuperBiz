@@ -1,6 +1,6 @@
 {
   "name": "superbiz-web",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
@@ -12,6 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
     "test": "vitest run",
+    "check:auth": "node tools/check_auth_gate.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
