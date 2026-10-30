@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+db/
+*.log
+.env
+.env.local
+.DS_Store
+tscache
+.next-types
