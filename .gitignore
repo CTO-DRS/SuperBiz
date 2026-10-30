@@ -30,3 +30,9 @@ keystore.properties
 *.bak
 *.tmp
 *~
+
+# Web console build artifacts
+web/tsconfig.tsbuildinfo
+web/.next/
+web/*.log
+web/*.db

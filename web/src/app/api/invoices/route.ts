@@ -90,14 +90,15 @@ export async function POST(req: NextRequest) {
   const paid = credit ? 0 : total;
   const status = credit ? "UNPAID" : "PAID";
 
-  const seq = (await db.invoice.count()) + 1;
-  const number = `INV-${1000 + seq}`;
-  const icv = seq;
   const date = new Date();
 
   try {
     const created = await db.$transaction(async (tx) => {
-      // رقم تسلسلي من قاعدة البيانات نفسها داخل المعاملة (عقد الترقيم)
+      // [W1.4 / #38] رقم تسلسلي + ICV **داخل** المعاملة (عقد الترقيم من قاعدة البيانات نفسها)
+      // — كان يُحسب قبلها فينتج طلبان متوازيان ICV مكرراً (كسر عدّاد ZATCA التزايدي).
+      const seq = (await tx.invoice.count()) + 1;
+      const number = `INV-${1000 + seq}`;
+      const icv = seq;
       const clash = await tx.invoice.findUnique({ where: { number } });
       const finalNumber = clash ? `INV-${1000 + seq}-${Date.now().toString(36).slice(-4).toUpperCase()}` : number;
 

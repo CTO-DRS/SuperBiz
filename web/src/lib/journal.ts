@@ -2,8 +2,6 @@
  * القيد المزدوج — الثابت المحاسبي: totalDebit == totalCredit مساواة تامة قبل أي حفظ
  * (موروث من AccountingEngine.kt). أي مسودة غير متوازنة تُرفض — لا حفظ أبدًا.
  */
-import { db } from "@/lib/db";
-
 export const ACCOUNTS = {
   CASH: "1010", // نقدية في الصندوق
   AR: "1200", // ذمم مدينة (عملاء)
@@ -53,5 +51,21 @@ export async function postJournal(tx: PrismaLike, draft: JournalDraft) {
   return entry;
 }
 
-/** واجهة ضيقة لكائن معاملة Prisma (تفادي أي Double) */
-export type PrismaLike = Parameters<Parameters<typeof db.$transaction>[0]>[0];
+/**
+ * واجهة بنيوية ضيقة لكائن معاملة Prisma (تفادي أي Double) —
+ * تفصل المحرك عن قاعدة البيانات ليكون قابلاً للاختبار النقي (نمط G7)،
+ * وكل معاملة Prisma حقيقية تحقق هذا الشكل بنيوياً.
+ */
+export type PrismaLike = {
+  journalEntry: {
+    create: (args: {
+      data: {
+        date: Date;
+        memo: string;
+        refType: string;
+        refId?: string;
+        lines: { create: Array<{ account: string; debit: number; credit: number }> };
+      };
+    }) => Promise<unknown>;
+  };
+};

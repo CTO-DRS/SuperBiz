@@ -34,6 +34,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const result = await db.$transaction(async (tx) => {
+      // [فحص W1 / N1-b] إعادة قراءة الفاتورة **داخل** المعاملة — كان الكود يشير لمتغير
+      // `invoice` خارج نطاق المعاملة (ReferenceError وقت التشغيل لكل سد مرتبط بفاتورة،
+      // مقنّع بـignoreBuildErrors) — والآن القراءة الحديثة تمنع أيضاً سباق السداد المزدوج.
+      const live = invoiceId ? await tx.invoice.findUnique({ where: { id: invoiceId } }) : null;
+      if (invoiceId && !live) throw new Error("الفاتورة غير موجودة أثناء الحفظ");
+
       const payment = await tx.payment.create({
         data: {
           partyId,
@@ -45,15 +51,14 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      if (invoiceId) {
-        const inv = await tx.invoice.update({
+      if (invoiceId && live) {
+        await tx.invoice.update({
           where: { id: invoiceId },
           data: {
             paid: { increment: amount },
-            status: invoice!.paid + amount >= invoice!.total ? "PAID" : "PARTIAL",
+            status: live.paid + amount >= live.total ? "PAID" : "PARTIAL",
           },
         });
-        void inv;
       }
 
       await postJournal(tx, {
