@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 
 type Product = {
   id: string; name: string; sku: string; unit: string; category: string;
-  salePrice: number; stockQty: number; reorderLevel: number;
+  salePrice: number; stockQty: number; reorderLevel: number; archived?: boolean;
 };
 type Party = { id: string; name: string; balanceNum: number };
 type CartLine = { productId: string; name: string; qty: number; unitPrice: number };
