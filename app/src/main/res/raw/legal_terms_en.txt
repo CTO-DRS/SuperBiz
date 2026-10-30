@@ -1,0 +1,49 @@
+# Terms of Use — SuperBiz
+
+Last updated: October 30, 2026 · Applicable version: 3.6.0+
+
+## 1. Acceptance
+
+By installing or using SuperBiz you agree to these terms. If you do not agree, please do not use the app and remove it from your device.
+
+## 2. License
+
+- You are granted a personal, non-exclusive, non-transferable license to use the app on your devices through official distribution stores (Google Play and what it authorizes).
+- **Your data is entirely yours**: everything you enter — invoices, parties, inventory, ledger — belongs to you alone, and you can export or delete it at any time from within the app.
+- Reverse engineering, redistribution, or selling derivatives of the app is prohibited unless your local law or its open-source components' licenses allow it.
+
+## 3. Nature of the service
+
+SuperBiz is an **offline** business management app: POS, invoices, inventory, receivables, checks, installments, expenses, and accounting reports. The app is an administrative aid — it is not a substitute for a licensed accountant or tax advisor.
+
+## 4. Your data and your responsibility
+
+- The app keeps no copy of your data on any server — **you are responsible for regular backups** from the "Data" section in Settings.
+- Losing your device or uninstalling without a backup means permanent data loss; no party can recover it.
+- If you enable a PIN or biometric lock, keep the PIN safe — there is no recovery mechanism for anyone, including the developer.
+
+## 5. Paid services (Pro)
+
+- Pro features are purchased via Google Play Billing and are subject to Google's purchase and refund policies.
+- Restoring on any device uses the same Google account that made the purchase.
+
+## 6. Tax linkage (ZATCA) and your jurisdiction
+
+- E-invoicing (ZATCA) support is optional and only enabled by your explicit action, available per the tax jurisdiction you select in Settings (Saudi Arabia / UAE / Bahrain).
+- **Responsibility for tax compliance and official reporting is yours**: always review invoice and report outputs before adopting them with official bodies in your country.
+
+## 7. Disclaimer of warranty & limitation of liability
+
+- The app is provided "as is", without express or implied warranties to the extent permitted by law.
+- The developer bears no liability for direct or indirect damages arising from use of the app, data loss, or business interruption, to the extent permitted by applicable law.
+
+## 8. Changes to these terms
+
+These terms may be updated with new features; updates are published in the store listing and inside the app with the date above refreshed. Continued use after an update means acceptance.
+
+## 9. Contact the developer
+
+- **WhatsApp (official business account):** https://wa.me/message/MVTVWPOPFOVFF1
+- **Telegram:** https://t.me/CTO_DRS
+- **GitHub (repository & issues):** https://github.com/CTO-DRS
+- **Official website:** https://cto-drs.xo.je

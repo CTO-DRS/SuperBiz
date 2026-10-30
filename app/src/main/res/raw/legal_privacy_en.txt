@@ -1,0 +1,40 @@
+# Privacy Policy — SuperBiz
+
+Last updated: October 30, 2026 · Applicable version: 3.6.0+
+
+## One-line summary
+
+SuperBiz works **100% offline** — your business data lives only on your device; we see none of it and collect virtually nothing.
+
+## 1. What we collect (and don't)
+
+- **We collect no** personal, financial, or usage data on any server of ours — there is no operational server at all.
+- **Your business data** (invoices, inventory, parties, ledger) is stored locally in a database on your device and never leaves it unless *you* export it (PDF/Excel/backup) or send it via your own email/WhatsApp.
+- **Backups** are written to the folder *you* choose (SAF) on your device or your chosen cloud share — we never see them.
+- **Lock PIN/biometrics**: the PIN digest is wrapped by Android Keystore keys on your device; neither we nor anyone else can recover it.
+
+## 2. The only connections the app makes
+
+- **Scheduled email (your SMTP)**: sending account statements — sends the statement data you choose + your mail credentials.
+- **Bluetooth thermal printing**: receipts & documents — sends document content directly to the printer.
+- **Google Play Billing (optional — Pro)**: purchase/restore of Pro features — managed by Google under its policy; the app receives only purchase state, never your personal data.
+- **Fatoora platform (ZATCA) — strictly opt-in**: reporting simplified and clearing standard invoices with the Zakat, Tax and Customs Authority — no connection is made before you explicitly enable tax linking in the in-app ZATCA screen. What is sent, exclusively: the invoice UBL 2.1 document + its digital hash (SHA-256) + its UUID/counter + CSID credentials toward the authority's official domain — **nothing else, ever**: no analytics, no tracking, no crash logs, no update checks.
+
+## 3. Permissions
+
+Camera (barcode scanner) · Contacts (optional import at your command) · Notifications (debts/stock alerts) · Bluetooth (printers) · Location (favorite-customer cards — optional, at your command) — all used for visible in-app functionality only, never for tracking.
+
+## 4. Children, retention & deletion
+
+Not directed at children. Data stays on your device until *you* delete it (uninstalling removes the database; a full export and a data-health check are available beforehand).
+
+## 5. Changes
+
+Material changes will be posted in the store listing and on this page with an updated date above.
+
+## 6. Contact the developer
+
+- **WhatsApp (official business account):** https://wa.me/message/MVTVWPOPFOVFF1
+- **Telegram:** https://t.me/CTO_DRS
+- **GitHub (repository & issues):** https://github.com/CTO-DRS
+- **Official website:** https://cto-drs.xo.je
