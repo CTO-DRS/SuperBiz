@@ -33,6 +33,7 @@ import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.WorkspacePremium // [W1] قسم Pro
 import androidx.compose.material.icons.rounded.ManageAccounts // [H1-5][v13] قسم المستخدمين
 import androidx.compose.material.icons.rounded.CurrencyExchange // [H4-1][v15] قسم العملات
+import androidx.compose.material.icons.rounded.SupportAgent // [V 3.6.0] قسم الدعم والتواصل
 import androidx.compose.foundation.layout.size // [W1] ProSection
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -109,6 +110,9 @@ fun SettingsHubScreen(
     // [H1-5][v13] مدخل إدارة المستخدمين والأدوار — يظهر للمالك حصراً
     // (وضع المالك الضمني يراه دائماً كما قبل v13؛ التعدد يقصّه عن غير المالك)
     onOpenUsers: () -> Unit = {},
+    // [V 3.6.0] مدخلا المستندات القانونية من قسم الدعم والتواصل — عارض داخلي دون إنترنت
+    onOpenPrivacyPolicy: () -> Unit = {},
+    onOpenTerms: () -> Unit = {},
     onBack: () -> Unit
 ) {
     val g = glassColors()
@@ -131,6 +135,8 @@ fun SettingsHubScreen(
         add(HubSection("notifications", Icons.Rounded.Notifications))
         add(HubSection("data", Icons.Rounded.Backup))
         add(HubSection("advanced", Icons.Rounded.Build))
+        // [V 3.6.0] قسم الدعم والتواصل — قنوات المطور + المستندات القانونية
+        add(HubSection("support", Icons.Rounded.SupportAgent))
         add(HubSection("about", Icons.Rounded.Info))
     }
     var selected by androidx.compose.runtime.remember { mutableIntStateOf(0) }
@@ -210,6 +216,8 @@ fun SettingsHubScreen(
             "notifications" -> NotificationsSection(s, settingsVM)
             "data" -> DataSection(s, settingsVM, onOpenSignatures, onOpenStamps)
             "advanced" -> AdvancedSection(s, settingsVM, onOpenErrorLog, onOpenHealth)
+            // [V 3.6.0] قسم الدعم والتواصل
+            "support" -> SupportContactSection(onOpenPrivacyPolicy, onOpenTerms)
             "about" -> AboutSection()
         }
 
@@ -314,6 +322,8 @@ private fun sectionTitle(key: String): String = when (key) {
     "notifications" -> stringResource(R.string.set_section_notifications)
     "data" -> stringResource(R.string.set_section_data)
     "advanced" -> stringResource(R.string.set_section_advanced)
+    // [V 3.6.0] عنوان قسم الدعم والتواصل
+    "support" -> stringResource(R.string.set_section_support)
     else -> stringResource(R.string.set_section_about)
 }
 
@@ -1336,6 +1346,12 @@ private fun AboutSection() {
             Text(
                 stringResource(R.string.set_about_components),
                 style = MaterialTheme.typography.bodySmall, color = g.textSecondary
+            )
+            Spacer(Modifier.height(8.dp))
+            // [V 3.6.0] فضل التطوير + مؤشر إلى قسم الدعم والتواصل
+            Text(
+                stringResource(R.string.set_about_dev_credit),
+                style = MaterialTheme.typography.bodySmall, color = g.accent
             )
         }
     }

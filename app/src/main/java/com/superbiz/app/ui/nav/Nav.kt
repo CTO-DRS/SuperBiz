@@ -91,6 +91,8 @@ import com.superbiz.app.ui.screens.InstallmentsScreen
 import com.superbiz.app.ui.screens.InvoicesScreen
 import com.superbiz.app.ui.screens.InventoryScreen
 import com.superbiz.app.ui.screens.settings.ErrorLogScreen
+import com.superbiz.app.ui.screens.settings.PrivacyPolicyScreen
+import com.superbiz.app.ui.screens.settings.TermsOfUseScreen
 import com.superbiz.app.ui.screens.settings.SettingsHubScreen
 import com.superbiz.app.ui.screens.SearchScreen
 import com.superbiz.app.ui.screens.DataHealthScreen
@@ -186,6 +188,11 @@ object Routes {
     const val KPI_BOARD = "kpi_board"
     // [H3-6] المنسّق الذكي — دردشة محلية والتنبؤ على الجهاز
     const val SMART = "smart"
+
+    // [V 3.6.0] المستندات القانونية داخل التطبيق — سياسة الخصوصية وشروط
+    // الاستخدام تُقرآن دون إنترنت من مركز الإعدادات ← الدعم والتواصل
+    const val LEGAL_PRIVACY = "legal_privacy"
+    const val LEGAL_TERMS = "legal_terms"
 }
 
 private data class DockItem(val route: String, val icon: ImageVector, val labelRes: Int)
@@ -357,11 +364,21 @@ fun SuperBizRoot(
                         onOpenPro = { nav.navigate(Routes.PRO) { launchSingleTop = true } },
                         // [H1-5][v13] إدارة المستخدمين والأدوار — باب المالك وحده
                         onOpenUsers = { nav.navigate(Routes.USERS) { launchSingleTop = true } },
+                        // [V 3.6.0] المستندات القانونية — عارض داخلي دون إنترنت
+                        onOpenPrivacyPolicy = { nav.navigate(Routes.LEGAL_PRIVACY) },
+                        onOpenTerms = { nav.navigate(Routes.LEGAL_TERMS) },
                         onBack = { nav.popBackStack() }
                     )
                 }
                 composable(Routes.ERROR_LOG) {
                     ErrorLogScreen(onBack = { nav.popBackStack() })
+                }
+                // [V 3.6.0] عارضا المستندات القانونية — سياسة الخصوصية وشروط الاستخدام
+                composable(Routes.LEGAL_PRIVACY) {
+                    PrivacyPolicyScreen(onBack = { nav.popBackStack() })
+                }
+                composable(Routes.LEGAL_TERMS) {
+                    TermsOfUseScreen(onBack = { nav.popBackStack() })
                 }
                 // البحث الشامل + فحص صحة البيانات
                 composable(Routes.SEARCH) {

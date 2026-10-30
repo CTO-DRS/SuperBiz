@@ -1,6 +1,6 @@
 # سياسة الخصوصية — SuperBiz · Privacy Policy
 
-> **آخر تحديث / Last updated:** 2026-10-03 · **الإصدار المعني / Applicable version:** 1.0.0+
+> **آخر تحديث / Last updated:** 2026-10-30 · **الإصدار المعني / Applicable version:** 3.6.0+
 
 ---
 
@@ -32,7 +32,7 @@ SuperBiz يعمل **دون اتصال بالإنترنت 100٪** — بيانا�
 ### ٥. التعديلات
 أي تغيير جوهري يُنشر في وصف المتجر وفي هذه الصفحة مع تحديث التاريخ أعلاه.
 
-**تواصل:** عبر صفحة المستودع (GitHub Issues) أو بريد الدعم المعلن في متجر Google Play.
+**تواصل:** عبر قنوات المطور الرسمية — واتساب (حساب تجاري): https://wa.me/message/MVTVWPOPFOVFF1 · تيليجرام: https://t.me/CTO_DRS · جيت هب (القضايا): https://github.com/CTO-DRS · الموقع الرسمي: https://cto-drs.xo.je — والنسخة داخل التطبيق تُقرأ من «الإعدادات ← الدعم والتواصل ← سياسة الخصوصية» دون إنترنت.
 
 ---
 
@@ -64,4 +64,4 @@ Not directed at children. Data stays on your device until *you* delete it (unins
 ### 5. Changes
 Material changes will be posted in the store listing and on this page with an updated date above.
 
-**Contact:** via the GitHub repository issues page, or the support email listed on Google Play.
+**Contact:** via the developer's official channels — WhatsApp (business account): https://wa.me/message/MVTVWPOPFOVFF1 · Telegram: https://t.me/CTO_DRS · GitHub (issues): https://github.com/CTO-DRS · Official website: https://cto-drs.xo.je — the in-app copy is readable from «Settings → Support & Contact → Privacy Policy» offline.
