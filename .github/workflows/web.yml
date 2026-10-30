@@ -1,0 +1,52 @@
+name: web-ci
+
+# [W1.4 / Issue #38] أول حلقة جودة آلية لوحدة web/ — البوابة الويب كانت خارج أي CI قبلها.
+# install (frozen) → prisma generate → lint → typecheck (مفروض) → جناح العقود → بناء إنتاج كامل.
+# بلا أسرار هنا حصراً — لا توقيع ولا نشر.
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths: [ 'web/**', '.github/workflows/web.yml' ]
+  push:
+    branches: [ main ]
+    paths: [ 'web/**', '.github/workflows/web.yml' ]
+
+jobs:
+  web:
+    name: lint + typecheck + contracts suite + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Bun (pinned like the local toolchain)
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.14'
+
+      - name: Install (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: Prisma client generate
+        run: bunx prisma generate
+        env:
+          DATABASE_URL: 'file:./ci.db'
+
+      - name: Lint (zero warnings)
+        run: bun run lint
+
+      - name: Typecheck (enforced — ignoreBuildErrors: false)
+        run: bun run typecheck
+
+      - name: Contracts suite (vitest — golden vectors from ZatcaQrTest.kt)
+        run: bun run test
+
+      - name: Production build (standalone, types enforced)
+        run: bun run build
+        env:
+          DATABASE_URL: 'file:./ci.db'
