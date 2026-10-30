@@ -3,11 +3,14 @@ import { db } from "@/lib/db";
 import { ensureSeed } from "@/lib/seed";
 import { postJournal, ACCOUNTS } from "@/lib/journal";
 import { qirshToNumber } from "@/lib/money";
+import { requireSession } from "@/lib/authGate"; // [W1.5/#39] القفل الثاني — يفرضه فاحص check_auth_gate
 
 export const dynamic = "force-dynamic";
 
 /** سدادات — قبض ذمم (مرتبط بفاتورة أو عام لطرف) */
 export async function POST(req: NextRequest) {
+  const gate = await requireSession(req); // [W1.5/#39] بلا جلسة مالك = 401
+  if (gate) return gate;
   await ensureSeed();
   const body = await req.json().catch(() => null);
   const invoiceId = body?.invoiceId ? String(body.invoiceId) : null;

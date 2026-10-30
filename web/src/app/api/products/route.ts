@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ensureSeed } from "@/lib/seed";
 import { sarToQirsh } from "@/lib/money";
+import { requireSession } from "@/lib/authGate"; // [W1.5/#39] القفل الثاني — يفرضه فاحص check_auth_gate
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,8 @@ export async function GET(req: NextRequest) {
 
 /** إضافة منتج */
 export async function POST(req: NextRequest) {
+  const gate = await requireSession(req); // [W1.5/#39] بلا جلسة مالك = 401
+  if (gate) return gate;
   const body = await req.json().catch(() => null);
   if (!body?.name || typeof body.name !== "string") {
     return NextResponse.json({ error: "اسم المنتج مطلوب" }, { status: 400 });
@@ -53,6 +56,8 @@ export async function POST(req: NextRequest) {
 
 /** تعديل/أرشفة منتج */
 export async function PATCH(req: NextRequest) {
+  const gate = await requireSession(req); // [W1.5/#39] بلا جلسة مالك = 401
+  if (gate) return gate;
   const body = await req.json().catch(() => null);
   if (!body?.id) return NextResponse.json({ error: "id مطلوب" }, { status: 400 });
 

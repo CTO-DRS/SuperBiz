@@ -40,10 +40,13 @@ jobs:
       - name: Lint (zero warnings)
         run: bun run lint
 
+      - name: Auth gate checker [W1.5/#39] — أي handler كتابة بلا بوابة مصادقة = أحمر
+        run: bun run check:auth
+
       - name: Typecheck (enforced — ignoreBuildErrors: false)
         run: bun run typecheck
 
-      - name: Contracts suite (vitest — golden vectors from ZatcaQrTest.kt)
+      - name: Contracts suite (vitest — golden vectors + W1.5 auth contracts)
         run: bun run test
 
       - name: Production build (standalone, types enforced)

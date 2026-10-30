@@ -31,18 +31,35 @@
 ```bash
 cd web
 bun install                 # أو npm install
-cp .env.example .env        # DATABASE_URL="file:../db/custom.db" أو أي مسار SQLite
+cp .env.example .env        # DATABASE_URL + كلمة مرور المالك (انظر المصادقة أدناه)
 bun run db:push             # إنشاء الجداول
 bun run dev                 # http://localhost:3000
 ```
 
-البذر التلقائي: أول استدعاء لأي API يزرع بيانات تجريبية حتمية (12 منتجًا، 6 أطراف، ~53 فاتورة موزعة على 30 يومًا، سدود جزئية، مصروفات) — **لا مخزون سالب أبدًا** والتوازن المحاسبي تام.
+البذر التلقائي: أول استدعاء لأي API يزرع بيانات تجريبية حتمية (12 منتجًا، 6 أطراف، ~53 فاتورة موزعة على 30 يومًا، سدود جزئية، مصروفات) — **لا مخزون سالب أبدًا** والتوازن المحاسبي تام — **ويحدث حصراً بعد جلسة صالحة** (الطلبات المجهولة تُمنع قبل لمس القاعدة).
 
-## حلقة الجودة (موجة W1.4 — Issue #38)
+## المصادقة (موجة W1.5 — Issue #39 · قرار ADR-004)
+
+البوابة **مقفولة افتراضيًا (G5)**: كل مسارات الكتابة والقراءات المالية خلف جلسة مالك، والقراءة العامة الوحيدة `GET /api/roadmap`.
+
+```bash
+# في web/.env — بلا هذا السطر: البوابة مغلقة كلها (الدخول يعيد 503 AUTH_NOT_CONFIGURED)
+SUPERBIZ_OWNER_PASSWORD="pin-قوي-جداً"     # أو SUPERBIZ_OWNER_PASSWORD_HASH بصمة PBKDF2 جاهزة
+SUPERBIZ_SESSION_SECRET="سر-عشوائي-طويل"  # اختياري — يُشتق من الاعتماد إن تُرك فارغاً
+```
+
+- **الدخول:** `/login` (ثيم Glass الماركة) — جلسة HMAC-SHA256 لمدة 12 ساعة بكوكة `httpOnly + SameSite=Strict + Secure` في الإنتاج.
+- **الأقفال الثلاثة على كل كتابة:** حد معدل (429) ← فحص CSRF بـOrigin (403) ← الجلسة (401) — في `src/proxy.ts` مركزياً، **مع حرس ثانٍ** `requireSession` داخل كل handler كتابة.
+- **حد المعدل:** دخول 5 محاولات/5 دقائق لكل IP (تشمل الناجحة) · كتابة 120/دقيقة.
+- **فاحص CI:** `bun run check:auth` — أي handler كتابة جديد بلا بوابة = أحمر يكسر CI.
+- **تفاصيل القرار والبدائل المرفوضة والعواقب:** [`docs/ADR-004_WEB_AUTH.md`](../docs/ADR-004_WEB_AUTH.md).
+
+## حلقة الجودة (موجة W1.4 — Issue #38 · موسَّعة W1.5 — Issue #39)
 
 ```bash
 bun install            # أو npm install
-bun run test           # جناح العقود النقية (vitest — 17 اختبارًا بلا قاعدة بيانات، نمط G7)
+bun run test           # جناح العقود + المصادقة (vitest — 42 اختبارًا نقياً، نمط G7)
+bun run check:auth     # فاحص بوابة المصادقة — أي handler كتابة بلا requireSession = أحمر
 bun run typecheck      # tsc --noEmit — مفروض: next.config لا يخفي أخطاء الأنواع (ignoreBuildErrors: false)
 bun run lint           # eslint — نظيف إجباري
 DATABASE_URL="file:./ci-check.db" bun run build   # بناء إنتاج كامل بأنواع مفروضة
