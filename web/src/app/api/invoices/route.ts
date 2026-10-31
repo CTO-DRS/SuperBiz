@@ -4,6 +4,7 @@ import { ensureSeed } from "@/lib/seed";
 import { postJournal, ACCOUNTS } from "@/lib/journal";
 import { buildZatcaQrBase64, invoiceUuid, qrDataUrl } from "@/lib/zatca";
 import { qirshToNumber } from "@/lib/money";
+import { invoiceCancelSchema, invoiceCreateSchema, parseJsonWith } from "@/lib/schemas"; // [W1.7/#41] تحقق موحد
 import { requireSession } from "@/lib/authGate"; // [W1.5/#39] القفل الثاني — يفرضه فاحص check_auth_gate
 
 export const dynamic = "force-dynamic";
@@ -37,27 +38,22 @@ export async function POST(req: NextRequest) {
   const gate = await requireSession(req); // [W1.5/#39] بلا جلسة مالك = 401
   if (gate) return gate;
   await ensureSeed();
-  const body = await req.json().catch(() => null);
-  const items: Array<{ productId?: string; desc?: string; qty?: number; unitPrice?: number; discount?: number }> =
-    Array.isArray(body?.items) ? body.items : [];
+  const raw = await req.json().catch(() => null);
+  const parsed = parseJsonWith(invoiceCreateSchema, raw); // [W1.7/#41] عقد المدخلات الوحيد
+  if (!parsed.ok) return parsed.res;
+  const body = parsed.data;
 
-  const clean = items
-    .map((it) => ({
-      productId: it.productId ? String(it.productId) : null,
-      desc: String(it.desc ?? "").trim() || "بند",
-      qty: Math.max(0, Number(it.qty) || 0),
-      unitPrice: Math.max(0, Math.round(Number(it.unitPrice) || 0)),
-      discount: Math.max(0, Math.round(Number(it.discount) || 0)),
-    }))
-    .filter((it) => it.qty > 0);
+  const clean = body.items.map((it) => ({
+    productId: it.productId ? String(it.productId) : null,
+    desc: String(it.desc ?? "").trim() || "بند",
+    qty: it.qty, // >0 مضمون بالمخطط
+    unitPrice: Math.max(0, Math.round(it.unitPrice ?? 0)),
+    discount: Math.max(0, Math.round(it.discount ?? 0)),
+  }));
 
-  if (clean.length === 0) {
-    return NextResponse.json({ error: "أضف بندًا واحدًا على الأقل بكمية أكبر من صفر" }, { status: 400 });
-  }
-
-  const credit = Boolean(body?.credit);
-  const taxRate = Math.min(100, Math.max(0, Number(body?.taxRate ?? 15)));
-  const partyId = body?.partyId ? String(body.partyId) : null;
+  const credit = Boolean(body.credit);
+  const taxRate = body.taxRate ?? 15;
+  const partyId = body.partyId ?? null;
 
   if (credit && !partyId) {
     return NextResponse.json({ error: "البيع الآجل يتطلب اختيار العميل (ذمم مدينة)" }, { status: 400 });
@@ -185,10 +181,11 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const gate = await requireSession(req); // [W1.5/#39] بلا جلسة مالك = 401
   if (gate) return gate;
-  const body = await req.json().catch(() => null);
-  if (!body?.id) return NextResponse.json({ error: "id مطلوب" }, { status: 400 });
+  const raw = await req.json().catch(() => null);
+  const parsed = parseJsonWith(invoiceCancelSchema, raw); // [W1.7/#41]
+  if (!parsed.ok) return parsed.res;
 
-  const invoice = await db.invoice.findUnique({ where: { id: String(body.id) }, include: { items: true } });
+  const invoice = await db.invoice.findUnique({ where: { id: parsed.data.id }, include: { items: true } });
   if (!invoice) return NextResponse.json({ error: "الفاتورة غير موجودة" }, { status: 404 });
   if (invoice.status === "VOID") return NextResponse.json({ error: "الفاتورة ملغاة مسبقًا" }, { status: 409 });
 
