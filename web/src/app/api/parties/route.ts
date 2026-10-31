@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ensureSeed } from "@/lib/seed";
 import { qirshToNumber } from "@/lib/money";
+import { parseJsonWith, partyCreateSchema } from "@/lib/schemas"; // [W1.7/#41]
 import { requireSession } from "@/lib/authGate"; // [W1.5/#39] القفل الثاني — يفرضه فاحص check_auth_gate
 
 export const dynamic = "force-dynamic";
@@ -39,16 +40,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const gate = await requireSession(req); // [W1.5/#39] بلا جلسة مالك = 401
   if (gate) return gate;
-  const body = await req.json().catch(() => null);
-  if (!body?.name || typeof body.name !== "string") {
-    return NextResponse.json({ error: "اسم الطرف مطلوب" }, { status: 400 });
-  }
+  const raw = await req.json().catch(() => null);
+  const parsed = parseJsonWith(partyCreateSchema, raw); // [W1.7/#41]
+  if (!parsed.ok) return parsed.res;
+  const b = parsed.data;
+
   const party = await db.party.create({
     data: {
-      name: String(body.name).trim().slice(0, 120),
-      phone: body.phone ? String(body.phone).trim().slice(0, 30) : null,
-      type: Number.isInteger(body.type) ? body.type : 0,
-      taxNumber: body.taxNumber ? String(body.taxNumber).trim().slice(0, 20) : null,
+      name: b.name.trim().slice(0, 120),
+      phone: b.phone ? String(b.phone).trim().slice(0, 30) : null,
+      type: b.type ?? 0,
+      taxNumber: b.taxNumber ? String(b.taxNumber).trim().slice(0, 20) : null,
     },
   });
   return NextResponse.json({ party }, { status: 201 });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ensureSeed } from "@/lib/seed";
 import { sarToQirsh } from "@/lib/money";
+import { parseJsonWith, productCreateSchema, productPatchSchema } from "@/lib/schemas"; // [W1.7/#41]
 import { requireSession } from "@/lib/authGate"; // [W1.5/#39] القفل الثاني — يفرضه فاحص check_auth_gate
 
 export const dynamic = "force-dynamic";
@@ -24,16 +25,17 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ products: rows, stockValue, stockValueNum: stockValue / 100 });
 }
 
-/** إضافة منتج */
+/** إضافة منتج — العقد: الأسعار تُستقبل ريالاً وتُخزَّن قروشاً (sarToQirsh) */
 export async function POST(req: NextRequest) {
   const gate = await requireSession(req); // [W1.5/#39] بلا جلسة مالك = 401
   if (gate) return gate;
-  const body = await req.json().catch(() => null);
-  if (!body?.name || typeof body.name !== "string") {
-    return NextResponse.json({ error: "اسم المنتج مطلوب" }, { status: 400 });
-  }
-  const name = String(body.name).trim().slice(0, 120);
-  const sku = String(body.sku ?? "").trim() || `SKU-${Date.now().toString(36).toUpperCase()}`;
+  const raw = await req.json().catch(() => null);
+  const parsed = parseJsonWith(productCreateSchema, raw); // [W1.7/#41]
+  if (!parsed.ok) return parsed.res;
+  const b = parsed.data;
+
+  const name = b.name.trim().slice(0, 120);
+  const sku = (b.sku ?? "").trim() || `SKU-${Date.now().toString(36).toUpperCase()}`;
 
   const exists = await db.product.findUnique({ where: { sku } });
   if (exists) return NextResponse.json({ error: `رمز SKU مستخدم مسبقًا: ${sku}` }, { status: 409 });
@@ -42,13 +44,13 @@ export async function POST(req: NextRequest) {
     data: {
       name,
       sku,
-      barcode: body.barcode ? String(body.barcode).trim() : null,
-      unit: String(body.unit ?? "حبة").slice(0, 20) || "حبة",
-      category: String(body.category ?? "عام").slice(0, 40) || "عام",
-      costPrice: sarToQirsh(Number(body.costPrice) || 0),
-      salePrice: sarToQirsh(Number(body.salePrice) || 0),
-      stockQty: Math.max(0, Number(body.stockQty) || 0),
-      reorderLevel: Math.max(0, Number(body.reorderLevel) || 5),
+      barcode: b.barcode ? String(b.barcode).trim() : null,
+      unit: (b.unit ?? "حبة").trim().slice(0, 20) || "حبة",
+      category: (b.category ?? "عام").trim().slice(0, 40) || "عام",
+      costPrice: sarToQirsh(b.costPrice ?? 0),
+      salePrice: sarToQirsh(b.salePrice ?? 0),
+      stockQty: b.stockQty ?? 0,
+      reorderLevel: b.reorderLevel ?? 5,
     },
   });
   return NextResponse.json({ product }, { status: 201 });
@@ -58,22 +60,24 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const gate = await requireSession(req); // [W1.5/#39] بلا جلسة مالك = 401
   if (gate) return gate;
-  const body = await req.json().catch(() => null);
-  if (!body?.id) return NextResponse.json({ error: "id مطلوب" }, { status: 400 });
+  const raw = await req.json().catch(() => null);
+  const parsed = parseJsonWith(productPatchSchema, raw); // [W1.7/#41]
+  if (!parsed.ok) return parsed.res;
+  const b = parsed.data;
 
   const data: Record<string, unknown> = {};
-  if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim().slice(0, 120);
-  if (typeof body.category === "string" && body.category.trim()) data.category = body.category.trim().slice(0, 40);
-  if (typeof body.unit === "string" && body.unit.trim()) data.unit = body.unit.trim().slice(0, 20);
-  if (body.costPrice !== undefined) data.costPrice = sarToQirsh(Number(body.costPrice) || 0);
-  if (body.salePrice !== undefined) data.salePrice = sarToQirsh(Number(body.salePrice) || 0);
-  if (body.reorderLevel !== undefined) data.reorderLevel = Math.max(0, Number(body.reorderLevel) || 0);
-  if (body.archived !== undefined) data.archived = Boolean(body.archived);
+  if (b.name !== undefined) data.name = b.name.trim().slice(0, 120);
+  if (b.category !== undefined) data.category = b.category.trim().slice(0, 40);
+  if (b.unit !== undefined) data.unit = b.unit.trim().slice(0, 20);
+  if (b.costPrice !== undefined) data.costPrice = sarToQirsh(b.costPrice);
+  if (b.salePrice !== undefined) data.salePrice = sarToQirsh(b.salePrice);
+  if (b.reorderLevel !== undefined) data.reorderLevel = b.reorderLevel;
+  if (b.archived !== undefined) data.archived = b.archived;
   // تعديل الجرد يدويًا (تسوية بالجرد — المسار A3 مستقبلًا على مستوى الفرع)
-  if (body.stockQty !== undefined) data.stockQty = Math.max(0, Number(body.stockQty) || 0);
+  if (b.stockQty !== undefined) data.stockQty = b.stockQty;
 
   try {
-    const product = await db.product.update({ where: { id: String(body.id) }, data });
+    const product = await db.product.update({ where: { id: b.id }, data });
     return NextResponse.json({ product });
   } catch {
     return NextResponse.json({ error: "المنتج غير موجود" }, { status: 404 });

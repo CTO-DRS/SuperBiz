@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ensureSeed } from "@/lib/seed";
 import { postJournal, ACCOUNTS } from "@/lib/journal";
+import { parseJsonWith, paymentCreateSchema } from "@/lib/schemas"; // [W1.7/#41]
 import { qirshToNumber } from "@/lib/money";
 import { requireSession } from "@/lib/authGate"; // [W1.5/#39] القفل الثاني — يفرضه فاحص check_auth_gate
 
@@ -12,12 +13,13 @@ export async function POST(req: NextRequest) {
   const gate = await requireSession(req); // [W1.5/#39] بلا جلسة مالك = 401
   if (gate) return gate;
   await ensureSeed();
-  const body = await req.json().catch(() => null);
-  const invoiceId = body?.invoiceId ? String(body.invoiceId) : null;
-  const partyId = body?.partyId ? String(body.partyId) : null;
-  const amount = Math.round(Number(body?.amount) || 0);
-
-  if (amount <= 0) return NextResponse.json({ error: "المبلغ يجب أن يكون أكبر من صفر" }, { status: 400 });
+  const raw = await req.json().catch(() => null);
+  const parsed = parseJsonWith(paymentCreateSchema, raw); // [W1.7/#41] المبلغ قروش Int (G2)
+  if (!parsed.ok) return parsed.res;
+  const b = parsed.data;
+  const invoiceId = b.invoiceId ?? null;
+  const partyId = b.partyId ?? null;
+  const amount = b.amount; // >0 عدد صحيح — مضمون بالمخطط
 
   if (invoiceId) {
     const invoice = await db.invoice.findUnique({ where: { id: invoiceId } });
@@ -49,8 +51,8 @@ export async function POST(req: NextRequest) {
           invoiceId,
           amount,
           direction: "IN",
-          method: String(body?.method ?? "CASH").slice(0, 12) || "CASH",
-          note: body?.note ? String(body.note).slice(0, 200) : null,
+          method: (b.method ?? "CASH").trim().slice(0, 12) || "CASH",
+          note: b.note ? String(b.note).slice(0, 200) : null,
         },
       });
 

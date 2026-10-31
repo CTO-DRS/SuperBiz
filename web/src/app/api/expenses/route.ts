@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ensureSeed } from "@/lib/seed";
 import { postJournal, ACCOUNTS } from "@/lib/journal";
+import { expenseCreateSchema, parseJsonWith } from "@/lib/schemas"; // [W1.7/#41]
 import { qirshToNumber, sarToQirsh } from "@/lib/money";
 import { requireSession } from "@/lib/authGate"; // [W1.5/#39] القفل الثاني — يفرضه فاحص check_auth_gate
 
@@ -39,21 +40,22 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const gate = await requireSession(req); // [W1.5/#39] بلا جلسة مالك = 401
   if (gate) return gate;
-  const body = await req.json().catch(() => null);
-  const title = String(body?.title ?? "").trim();
-  const amount = sarToQirsh(Number(body?.amount) || 0);
-  if (!title) return NextResponse.json({ error: "عنوان المصروف مطلوب" }, { status: 400 });
-  if (amount <= 0) return NextResponse.json({ error: "المبلغ يجب أن يكون أكبر من صفر" }, { status: 400 });
+  const raw = await req.json().catch(() => null);
+  const parsed = parseJsonWith(expenseCreateSchema, raw); // [W1.7/#41]
+  if (!parsed.ok) return parsed.res;
+  const b = parsed.data;
+  const title = b.title.trim();
+  const amount = sarToQirsh(b.amount); // المبلغ ريال عشري → قروش
 
   try {
     const expense = await db.$transaction(async (tx) => {
       const created = await tx.expense.create({
         data: {
           title: title.slice(0, 120),
-          category: String(body?.category ?? "عام").trim().slice(0, 40) || "عام",
+          category: (b.category ?? "عام").trim().slice(0, 40) || "عام",
           amount,
           date: new Date(),
-          note: body?.note ? String(body.note).slice(0, 200) : null,
+          note: b.note ? String(b.note).slice(0, 200) : null,
         },
       });
       await postJournal(tx, {
