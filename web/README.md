@@ -54,12 +54,13 @@ SUPERBIZ_SESSION_SECRET="سر-عشوائي-طويل"  # اختياري — يُ�
 - **فاحص CI:** `bun run check:auth` — أي handler كتابة جديد بلا بوابة = أحمر يكسر CI.
 - **تفاصيل القرار والبدائل المرفوضة والعواقب:** [`docs/ADR-004_WEB_AUTH.md`](../docs/ADR-004_WEB_AUTH.md).
 
-## حلقة الجودة (موجة W1.4 — Issue #38 · موسَّعة W1.5 — Issue #39)
+## حلقة الجودة (موجة W1.4 — Issue #38 · موسَّعة W1.5 — Issue #39 · W1.6 — Issue #40)
 
 ```bash
-bun install            # أو npm install
+bun install --frozen-lockfile   # تثبيت قابل للتكرار — bun.lock متزامن إجبارياً (CI مجمد)
 bun run test           # جناح العقود + المصادقة (vitest — 42 اختبارًا نقياً، نمط G7)
 bun run check:auth     # فاحص بوابة المصادقة — أي handler كتابة بلا requireSession = أحمر
+bun run check:deps     # فاحص الاعتماديات [W1.6] — أي حزمة إنتاج بلا استيراد = أحمر
 bun run typecheck      # tsc --noEmit — مفروض: next.config لا يخفي أخطاء الأنواع (ignoreBuildErrors: false)
 bun run lint           # eslint — نظيف إجباري
 DATABASE_URL="file:./ci-check.db" bun run build   # بناء إنتاج كامل بأنواع مفروضة
@@ -67,6 +68,7 @@ DATABASE_URL="file:./ci-check.db" bun run build   # بناء إنتاج كامل
 
 - **الناقلات الذهبية المُرحَّلة حرفيًا من `ZatcaQrTest.kt`** (عينة Bunnia المرجعية + حدود TLV + طابع 20 بايت) تضمن تطابق بايتي بين محرك الويب ومحرك الأندرويد — أي انحراف مستقبلي = أحمر في الجهتين.
 - **القيد المزدوج مختبر نقيًا:** مسودة غير متوازنة بفرق قروش واحد تُرفض بلا أي كتابة.
+- **تقليم الاعتماديات [W1.6]:** 21 حزمة إنتاج ميتة أُزيلت — كل حزمة معلنة إما مستوردة فعلاً أو موثقة بقائمة سماح (`react-dom` إطاري، `prisma` CLI) — والفاحص `check:deps` يمنع رجوع أي حزمة ميتة.
 - تقرير الفحص المولِّد لهذه الحلقة: [`docs/INSPECTION_REPORT_W1_WEB.md`](../docs/INSPECTION_REPORT_W1_WEB.md) — وCI يشغّل الحلقة كاملة على كل تعديل `web/**` (`.github/workflows/web.yml`).
 
 ## البنية
