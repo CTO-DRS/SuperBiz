@@ -2,6 +2,28 @@
 
 كل التغييرات الملحوظة في إصدارات SuperBiz تُوثَّق في هذه الوثيقة.
 
+## بوابة الويب W1.6 — «تقليم الاعتماديات: لا حزمة ميتة تعيش في البوابة» (المسار W)
+
+**التاريخ:** 2026-10-31 · **المسار:** W1.6 من خارطة الطريق الذكية ([`docs/ROADMAP_SMART_2026.md`](docs/ROADMAP_SMART_2026.md)) · **الـIssue:** [#40](https://github.com/CTO-DRS/SuperBiz/issues/40) · **الفحص المولِّد:** [`docs/INSPECTION_REPORT_W1_WEB.md`](docs/INSPECTION_REPORT_W1_WEB.md) (ملاحظة N8)
+
+ملاحظة N8 من فحص W1 كاملة أخيراً: ما بدأ «11 حزمة ثقيلة غير مستوردة» انتهى فحصاً آلياً كشف **21 حزمة إنتاج ميتة** — بينها `next-auth` التي أعلنتها موجة W1 منذ التأسيس ولم يستوردها سطر واحد، وثقيلة حقيقية (`@mdxeditor/editor`، `react-syntax-highlighter`، `z-ai-web-dev-sdk`) كانت تُحمَّل في كل تثبيت وتُبنى في كل خريطة وحدات بلا أي مستفيد. الحزمة الوحيدة المعلنة منذ اليوم الأول والمستوردة صفراً — لم تعد موجودة، **والفاحص الجديد يمنع عودتها**.
+
+### ما أُنجز
+- **[فاحص اعتماديات] `tools/check_deps.mjs` + `check:deps`:** يبني خريطة استيراد كاملة من `src/` + `tests/` + `tools/` + ملفات التهيئة (استيرادات ثابتة وديناميكية و`@plugin/@import` في CSS)، ويُحمرّ على أي حزمة إنتاج معلنة بلا أي استيراد — بنمط `check_network_boundary.py` و`check_auth_gate.mjs`. قائمة سماح موثقة سببها: `react-dom` (نظير إطار Next.js تستهلكه مداخل البناء ضمنياً) و`prisma` (واجهة CLI لـdb:push/migrate و`bunx prisma generate` في CI) — أي توسعة للقائمة تتطلب سطر توثيق.
+- **[21 حزمة أُزيلت من dependencies — 67→46]:** `next-auth` (أعلنت W1، استبدلتها موجة W1.5 بجلسة HMAC — قرار التأجيل الموثق عندها نُفِّذ الآن) · `next-intl` · `z-ai-web-dev-sdk` · `@mdxeditor/editor` · `react-syntax-highlighter` · `react-markdown` · `@dnd-kit/core/sortable/utilities` (×3) · `@tanstack/react-query` · `@tanstack/react-table` · `react-day-picker` · `@hookform/resolvers` · `date-fns` · `framer-motion` · `@reactuses/core` · `zustand` · `zod` · `uuid` (استبدلها W1.4 بـ`crypto.randomUUID`) · `sharp` (لا `next/image` في البوابة إطلاقاً) · `tailwindcss-animate` (استبدلتها `tw-animate-css` في مسار Tailwind v4).
+- **[كود ميت مرافق] حذف `ui/calendar.tsx`:** كان المستورد الوحيد لـ`react-day-picker` من عارضات shadcn المهملة (صفر استخدام في الشاشات) — حذفه هو ما أجاز حذف الحزمة دون كسر typecheck.
+- **[قابلية التكرار مثبتة]:** `bun.lock` أُعيد توليده بعد التقليم (580 حزمة بعد «Removed: 21»)، و`bun install --frozen-lockfile` أخضر — والـCI (`web.yml`) كان يجمد التثبيت منذ W1.4؛ أُضيفت خطوة `check:deps` إلى الحلقة بين `check:auth` وtypecheck ليصبح منع رجوع الحزم الميتة بوابة مفروضة لا عادة يدوية.
+- **[الحلقة موثقة]:** `web/README.md` — قسم حلقة الجودة حُدث بالخطوة الجديدة وشرط التثبيت المجمد.
+
+### ما لم يُنفَّذ (موثق بقرار)
+- إزالة `react-hook-form` (مستورد من `ui/form.tsx` — قالب shadcn المرشح لواجهات تحقق W1.7) وحذف بقية عارضات shadcn غير المصلولة (`carousel`/`input-otp`/`command`…) — تقليم بنيوي أوسع بلا حاجة قائمة؛ يُعاد تقييمه مع W1.7.
+- إعادة إضافة `zod` مسبقاً لوحدة التحقق القادمة — G8: لا اعتمادية قبل وجود كودها واختباراتها؛ تُضاف مع W1.7/#41 نفسها.
+
+### التحقق
+حلقة CI كاملة محلياً بترتيبها الحرفي: تثبيت مجمد ✓ (580 حزمة) · prisma generate ✓ · lint ✓ صفر تحذيرات · check:auth ✓ (12 ملفاً) · **check:deps ✓ (46 حزمة، لا ميتة)** · typecheck ✓ صفر أخطاء · الاختبارات **42/42** ✓ · بناء إنتاج standalone ✓.
+
+---
+
 ## V 3.6.0 (24) — «الدعم والتوثيق: قنوات المطور الرسمية + المستندات القانونية داخل التطبيق»
 
 **التاريخ:** 2026-10-30 · **المصدر:** بطاقة التواصل الرسمية لـCTO.DRS (PDF) · **المسار:** جاهزية النشر (متجر Google Play)

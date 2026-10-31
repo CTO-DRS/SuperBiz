@@ -43,6 +43,9 @@ jobs:
       - name: Auth gate checker [W1.5/#39] — أي handler كتابة بلا بوابة مصادقة = أحمر
         run: bun run check:auth
 
+      - name: Deps checker [W1.6/#40] — أي حزمة إنتاج بلا استيراد = أحمر (منع رجوع التقليم)
+        run: bun run check:deps
+
       - name: Typecheck (enforced — ignoreBuildErrors: false)
         run: bun run typecheck
 
