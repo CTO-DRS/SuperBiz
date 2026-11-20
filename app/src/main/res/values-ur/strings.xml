@@ -2473,4 +2473,27 @@
     <string name="jurisdiction_zatca_note">ZATCA (Fatoora) ربط صرف سعودی دائرے میں دستیاب ہے — باہر فعال لنک خاموش رہتا ہے۔</string>
     <string name="jurisdiction_apply_rate">دائرے کی ڈیفالٹ شرح لاگو کریں</string>
     <string name="jurisdiction_note_history">محفوظ شدہ انوائس اپنی شرح کا اسنیپ شاٹ رکھتی ہیں — دائرہ تبدیل کرنا تاریخ کو دوبارہ نہیں لکھتا۔ دائرے کی کرنسی اسی کرنسی منتخب کنندہ سے بدلیں۔</string>
+
+    <!-- [F1 - ADR-005] القراءة الذكية للفواتير — OCR محلي دون إنترنت -->
+    <string name="ocr_title">سمارٹ بلو اسکین</string>
+    <string name="ocr_hint">کاغذی بلو کی تصویر لیں یا تصویر منتخب کریں — ایپ آپ کے ڈیوائس پر بغیر انٹرنیٹ پڑھتی ہے اور اشیاء و مجاميع نکالتی ہے</string>
+    <string name="ocr_take_photo">کیمرے سے تصویر لیں</string>
+    <string name="ocr_pick_image">تصویر منتخب کریں</string>
+    <string name="ocr_working">ڈیوائس پر پڑھا جا رہا ہے…</string>
+    <string name="ocr_failed">پڑھائی ناکام: %1$s</string>
+    <string name="ocr_try_again">دوبارہ کوشش کریں</string>
+    <string name="ocr_nothing_found">کوئی قابل استعمال شے یا رقم نہیں ملی — واضح تصویر آزمائیں</string>
+    <string name="ocr_unknown_merchant">نامعلوم دکاندار</string>
+    <string name="ocr_inconsistent">چھپی ہوئی مجاميع باہم متوافق نہیں — اشیاء جانچ لیں</string>
+    <string name="ocr_line_qty_price">مقدار %1$s · قیمت %2$s</string>
+    <string name="ocr_matched">آپ کے کیٹلاگ میں ملا: %1$s</string>
+    <string name="ocr_subtotal">ٹیکس سے پہلے کل</string>
+    <string name="ocr_vat">ویلیو ایڈڈ ٹیکس (شرح %1$s)</string>
+    <string name="ocr_vat_plain">ٹیکس</string>
+    <string name="ocr_total">کل</string>
+    <string name="ocr_confidence">اعتماد %1$s</string>
+    <string name="ocr_copy">خلاصہ کاپی کریں</string>
+    <string name="ocr_share">اشتراک</string>
+    <string name="ocr_raw_toggle">خام پڑھا گیا متن</string>
+    <string name="ocr_open_invoices">انوائسز پر واپس</string>
 </resources>

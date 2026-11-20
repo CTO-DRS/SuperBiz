@@ -90,6 +90,7 @@ import com.superbiz.app.ui.screens.HomeScreen
 import com.superbiz.app.ui.screens.InstallmentsScreen
 import com.superbiz.app.ui.screens.InvoicesScreen
 import com.superbiz.app.ui.screens.InventoryScreen
+import com.superbiz.app.ui.screens.ocr.OcrScanScreen
 import com.superbiz.app.ui.screens.settings.ErrorLogScreen
 import com.superbiz.app.ui.screens.settings.PrivacyPolicyScreen
 import com.superbiz.app.ui.screens.settings.TermsOfUseScreen
@@ -193,6 +194,11 @@ object Routes {
     // الاستخدام تُقرآن دون إنترنت من مركز الإعدادات ← الدعم والتواصل
     const val LEGAL_PRIVACY = "legal_privacy"
     const val LEGAL_TERMS = "legal_terms"
+
+    // [F1 - ADR-005] القراءة الذكية للفواتير — مسح/اختيار صورة فاتورة وتحليلها محليًا
+    // (ML Kit على الجهاز). مسار داخل التطبيق فقط — ليس عضوًا في StartRouteWhitelist
+    // (لا إشعار ولا ويدجت يفتحه، ولا بيانات حساسة تتعرض من خارج القفل)
+    const val OCR_SCAN = "ocr_scan"
 }
 
 private data class DockItem(val route: String, val icon: ImageVector, val labelRes: Int)
@@ -318,6 +324,9 @@ fun SuperBizRoot(
                     }
                     InvoicesScreen(appVM, nav)
                 }
+                // [F1 - ADR-005] القراءة الذكية للفواتير — محلي 100% بلا شبكة؛
+                // البوابة RBAC موروثة من نقطة الدخول في شاشة الفواتير نفسها
+                composable(Routes.OCR_SCAN) { OcrScanScreen(appVM, nav) }
                 // [P36-M4-7] المخزون بالنمط نفسه — focusProduct = اسم المنتج: يُضبط vm.search
                 // مسبقاً فتُرشَّح القائمة إلى المنتج، وبطاقته تفتح ProductEditor للتعديل بلمسة.
                 // غياب المعامِل = السلوك القائم تماماً (بلا إنشاء مبكر للـVM).

@@ -2596,4 +2596,27 @@
     <string name="jurisdiction_zatca_note">ربط منصة فاتورة (ZATCA) متاح حصراً في الولاية السعودية — الربط المفعّل يبقى صامتاً خارجها.</string>
     <string name="jurisdiction_apply_rate">تطبيق نسبة الولاية الافتراضية</string>
     <string name="jurisdiction_note_history">الفواتير المحفوظة تحمل نسبتها اللحظية — تغيير الولاية لا يعيد كتابة التاريخ. تبديل عملة الولاية من منتقي العملة نفسه.</string>
+
+    <!-- [F1 - ADR-005] القراءة الذكية للفواتير — OCR محلي دون إنترنت -->
+    <string name="ocr_title">قراءة فاتورة بالذكاء</string>
+    <string name="ocr_hint">صوّر فاتورة ورقية أو اختر صورة منها — يقرأها التطبيق على جهازك دون إنترنت ويستخرج البنود والمجاميع للمراجعة</string>
+    <string name="ocr_take_photo">التقاط بالكاميرا</string>
+    <string name="ocr_pick_image">اختيار صورة من الجهاز</string>
+    <string name="ocr_working">جارٍ القراءة على الجهاز…</string>
+    <string name="ocr_failed">تعذّرت القراءة: %1$s</string>
+    <string name="ocr_try_again">محاولة أخرى</string>
+    <string name="ocr_nothing_found">لم يُكتشف أي بند أو مبلغ قابل للاستخدام — جرّب صورة أوضح</string>
+    <string name="ocr_unknown_merchant">جهة غير معروفة</string>
+    <string name="ocr_inconsistent">المجاميع المطبوعة غير متسقة — راجع البنود قبل الاعتماد عليها</string>
+    <string name="ocr_line_qty_price">الكمية %1$s · السعر %2$s</string>
+    <string name="ocr_matched">مطابق في كتالوجك: %1$s</string>
+    <string name="ocr_subtotal">المجموع قبل الضريبة</string>
+    <string name="ocr_vat">الضريبة على القيمة المضافة (النسبة %1$s)</string>
+    <string name="ocr_vat_plain">الضريبة</string>
+    <string name="ocr_total">الإجمالي</string>
+    <string name="ocr_confidence">الثقة %1$s</string>
+    <string name="ocr_copy">نسخ الملخص</string>
+    <string name="ocr_share">مشاركة</string>
+    <string name="ocr_raw_toggle">النص الخام المُقرأ</string>
+    <string name="ocr_open_invoices">عودة إلى الفواتير</string>
 </resources>

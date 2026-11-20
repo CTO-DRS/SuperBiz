@@ -28,16 +28,15 @@ android {
         // بلا خيار الاستبعاد: windowOptOutEdgeToEdgeEnforcement مُهمَل عند استهداف 36 —
         // المعالج القائم enableEdgeToEdge() في MainActivity + الحشوات في الشاشات يغطي ذلك)
         targetSdk = 36
-        // ─── SuperBiz V 1.1.0 — Audit Remediation Release ─────────────────────────
-        // موجة إصلاح التدقيق الكامل (25 ملاحظة: 7 HIGH و10 MEDIUM و8 LOW — كلها مغلقة):
-        // دمج يحفظ الولاء والكشوف، نسخ احتياطي بلقطة متسقة، رابط تحقق QR حي،
-        // تصدير XLSX وحدات موحدة، خزنة SMTP بمفتاح Keystore، TLS بهوية نقطة نهاية،
-        // ذرية إصدار/تسليم الكشوف، تراجع أُسّي مجدول، اتجاه دين صريح للأدوار المزدوجة،
-        // سياسة يتامى موثقة، بيومتريا CryptoObject وقفل زمن أحادي — 1471 اختبار وحدة أخضر.
+        // ─── SuperBiz V 3.7.0 — A1 «القراءة الذكية للفواتير» ────────────────────
+        // الموجة F1 من المسار F (الذكاء الهجين — ADR-005): OCR على الجهاز عبر ML Kit
+        // (نماذج عربية ولاتينية مدمجة — صفر شبكة، صفر مفاتيح API)، محرك تحليل نقي
+        // OcrInvoiceParser بمال قروش و18 اختبارًا، مطابق منتجات OcrProductMatcher،
+        // شاشة مسح كاملة مدخولة من الفواتير — RED-first موثق في CHANGELOG.
         // الإصدار يُعرض للمستخدم حصريًا من
         // BuildConfig.VERSION_NAME / VERSION_CODE (الإعدادات + تذييل PDF).
-        versionCode = 24
-        versionName = "3.6.0"
+        versionCode = 25
+        versionName = "3.7.0"
         vectorDrawables { useSupportLibrary = true }
     }
 
@@ -136,6 +135,13 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("com.google.zxing:core:3.5.3")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    // [F1 - ADR-005] الذكاء المحلي — ML Kit OCR على الجهاز: نماذج عربية ولاتينية
+    // مضمنة في الحزمة (bundled) — صفر طلب شبكي صفر مفاتيح API؛ يعمل دون اتصال
+    // كاملًا فلا يلمس التزام ADR-001 إطلاقًا (لا socket في ملفات الموجة A1)
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("com.google.mlkit:text-recognition-arabic:16.0.1")
+    // جسر coroutines لمهام ML Kit (ListenableTask.await) — بإصدار coroutines المعتمد نفسه
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
     // [W1] Play Billing v7 — فريميوم Pro بلا خادم (شراء لمرة واحدة + استعادة)
     implementation("com.android.billingclient:billing-ktx:7.1.1")
 

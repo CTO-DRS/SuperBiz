@@ -2479,4 +2479,27 @@
         <item quantity="many">%1$d articles sous le seuil de réapprovisionnement</item>
         <item quantity="other">%1$d articles sous le seuil de réapprovisionnement</item>
     </plurals>
+
+    <!-- [F1 - ADR-005] القراءة الذكية للفواتير — OCR محلي دون إنترنت -->
+    <string name="ocr_title">Numérisation intelligente de facture</string>
+    <string name="ocr_hint">Photographiez une facture papier ou choisissez une image - la lecture se fait sur votre appareil sans internet, et les articles et les totaux sont extraits pour vérification</string>
+    <string name="ocr_take_photo">Capturer avec la caméra</string>
+    <string name="ocr_pick_image">Choisir une image</string>
+    <string name="ocr_working">Lecture sur votre appareil…</string>
+    <string name="ocr_failed">Échec de la lecture : %1$s</string>
+    <string name="ocr_try_again">Réessayer</string>
+    <string name="ocr_nothing_found">Aucun article ni montant exploitable détecté - essayez une photo plus nette</string>
+    <string name="ocr_unknown_merchant">Commerçant inconnu</string>
+    <string name="ocr_inconsistent">Les totaux imprimés sont incohérents - vérifiez les articles avant de vous y fier</string>
+    <string name="ocr_line_qty_price">Qté %1$s · Prix %2$s</string>
+    <string name="ocr_matched">Correspond à votre catalogue : %1$s</string>
+    <string name="ocr_subtotal">Sous-total avant taxe</string>
+    <string name="ocr_vat">TVA (taux %1$s)</string>
+    <string name="ocr_vat_plain">Taxe</string>
+    <string name="ocr_total">Total</string>
+    <string name="ocr_confidence">Confiance %1$s</string>
+    <string name="ocr_copy">Copier le résumé</string>
+    <string name="ocr_share">Partager</string>
+    <string name="ocr_raw_toggle">Texte brut reconnu</string>
+    <string name="ocr_open_invoices">Retour aux factures</string>
 </resources>

@@ -2596,4 +2596,27 @@
     <string name="jurisdiction_zatca_note">ZATCA (Fatoora) linking is available in the Saudi jurisdiction only — an enabled link stays silent elsewhere.</string>
     <string name="jurisdiction_apply_rate">Apply jurisdiction default rate</string>
     <string name="jurisdiction_note_history">Saved invoices keep their own rate snapshot — changing jurisdiction never rewrites history. Switch the jurisdiction currency with the same currency picker.</string>
+
+    <!-- [F1 - ADR-005] القراءة الذكية للفواتير — OCR محلي دون إنترنت -->
+    <string name="ocr_title">Smart Invoice Scan</string>
+    <string name="ocr_hint">Photograph a paper invoice or pick an image - the app reads it on-device, fully offline, and extracts items and totals for review</string>
+    <string name="ocr_take_photo">Capture with camera</string>
+    <string name="ocr_pick_image">Pick an image</string>
+    <string name="ocr_working">Reading on-device…</string>
+    <string name="ocr_failed">Recognition failed: %1$s</string>
+    <string name="ocr_try_again">Try again</string>
+    <string name="ocr_nothing_found">No usable items or amounts detected - try a clearer photo</string>
+    <string name="ocr_unknown_merchant">Unknown merchant</string>
+    <string name="ocr_inconsistent">Printed totals are inconsistent - review items before relying on them</string>
+    <string name="ocr_line_qty_price">Qty %1$s · Price %2$s</string>
+    <string name="ocr_matched">Matches your catalog: %1$s</string>
+    <string name="ocr_subtotal">Subtotal before tax</string>
+    <string name="ocr_vat">VAT (rate %1$s)</string>
+    <string name="ocr_vat_plain">Tax</string>
+    <string name="ocr_total">Total</string>
+    <string name="ocr_confidence">Confidence %1$s</string>
+    <string name="ocr_copy">Copy summary</string>
+    <string name="ocr_share">Share</string>
+    <string name="ocr_raw_toggle">Raw recognized text</string>
+    <string name="ocr_open_invoices">Back to invoices</string>
 </resources>

@@ -2473,4 +2473,27 @@
     <string name="jurisdiction_zatca_note">Tautan ZATCA (Fatoora) hanya tersedia di yurisdiksi Saudi — tautan yang aktif tetap senyap di tempat lain.</string>
     <string name="jurisdiction_apply_rate">Terapkan tarif default yurisdiksi</string>
     <string name="jurisdiction_note_history">Faktur tersimpan menyimpan potongan tarifnya sendiri — mengubah yurisdiksi tidak pernah menulis ulang riwayat. Ubah mata uang yurisdiksi lewat pemilih mata uang yang sama.</string>
+
+    <!-- [F1 - ADR-005] القراءة الذكية للفواتير — OCR محلي دون إنترنت -->
+    <string name="ocr_title">Pindai Faktur Pintar</string>
+    <string name="ocr_hint">Foto faktur kertas atau pilih gambar - aplikasi membaca di perangkat tanpa internet dan mengekstrak item serta total untuk ditinjau</string>
+    <string name="ocr_take_photo">Ambil dengan kamera</string>
+    <string name="ocr_pick_image">Pilih gambar</string>
+    <string name="ocr_working">Membaca di perangkat…</string>
+    <string name="ocr_failed">Gagal membaca: %1$s</string>
+    <string name="ocr_try_again">Coba lagi</string>
+    <string name="ocr_nothing_found">Tidak ada item atau jumlah yang dapat digunakan - coba foto lebih jelas</string>
+    <string name="ocr_unknown_merchant">Penjual tidak dikenal</string>
+    <string name="ocr_inconsistent">Total yang tercetak tidak konsisten - periksa item sebelum mengandalkannya</string>
+    <string name="ocr_line_qty_price">Jumlah %1$s · Harga %2$s</string>
+    <string name="ocr_matched">Cocok di katalog Anda: %1$s</string>
+    <string name="ocr_subtotal">Subtotal sebelum pajak</string>
+    <string name="ocr_vat">PPN (tarif %1$s)</string>
+    <string name="ocr_vat_plain">Pajak</string>
+    <string name="ocr_total">Total</string>
+    <string name="ocr_confidence">Keyakinan %1$s</string>
+    <string name="ocr_copy">Salin ringkasan</string>
+    <string name="ocr_share">Bagikan</string>
+    <string name="ocr_raw_toggle">Teks mentah yang dibaca</string>
+    <string name="ocr_open_invoices">Kembali ke faktur</string>
 </resources>

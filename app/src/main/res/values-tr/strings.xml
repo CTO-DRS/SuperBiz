@@ -2473,4 +2473,27 @@
     <string name="jurisdiction_zatca_note">ZATCA (Fatoora) bağlantısı yalnızca Suudi bölgesinde kullanılabilir — etkin bir bağlantı başka bölgelerde sessiz kalır.</string>
     <string name="jurisdiction_apply_rate">Bölgenin varsayılan oranını uygula</string>
     <string name="jurisdiction_note_history">Kayıtlı faturalar kendi oran anlık görüntüsünü taşır — bölge değişikliği geçmişi yeniden yazmaz. Bölge para birimini aynı para birimi seçicisinden değiştirin.</string>
+
+    <!-- [F1 - ADR-005] القراءة الذكية للفواتير — OCR محلي دون إنترنت -->
+    <string name="ocr_title">Akıllı Fatura Taraması</string>
+    <string name="ocr_hint">Kağıt faturanın fotoğrafını çekin veya bir görsel seçin - uygulama cihaz üzerinde internetsiz okur ve kalemleri ve toplamları çıkarır</string>
+    <string name="ocr_take_photo">Kamerayla çek</string>
+    <string name="ocr_pick_image">Görsel seç</string>
+    <string name="ocr_working">Cihazda okunuyor…</string>
+    <string name="ocr_failed">Okuma başarısız: %1$s</string>
+    <string name="ocr_try_again">Tekrar dene</string>
+    <string name="ocr_nothing_found">Kullanılabilir kalem veya tutar bulunamadı - daha net bir fotoğraf deneyin</string>
+    <string name="ocr_unknown_merchant">Bilinmeyen satıcı</string>
+    <string name="ocr_inconsistent">Yazdırılan toplamlar tutarsız - güvenmeden önce kalemleri gözden geçirin</string>
+    <string name="ocr_line_qty_price">Adet %1$s · Fiyat %2$s</string>
+    <string name="ocr_matched">Kataloğunuzda eşleşti: %1$s</string>
+    <string name="ocr_subtotal">Vergi öncesi ara toplam</string>
+    <string name="ocr_vat">KDV (oran %1$s)</string>
+    <string name="ocr_vat_plain">Vergi</string>
+    <string name="ocr_total">Genel toplam</string>
+    <string name="ocr_confidence">Güven %1$s</string>
+    <string name="ocr_copy">Özeti kopyala</string>
+    <string name="ocr_share">Paylaş</string>
+    <string name="ocr_raw_toggle">Okunan ham metin</string>
+    <string name="ocr_open_invoices">Faturalara dön</string>
 </resources>

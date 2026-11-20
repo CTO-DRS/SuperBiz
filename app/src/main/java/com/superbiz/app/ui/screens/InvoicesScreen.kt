@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.BarChart
+import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.GridOn
 import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material.icons.rounded.Payments
@@ -173,6 +174,12 @@ fun InvoicesScreen(appVM: AppVM, nav: NavHostController) {
                         )
                     )
                 }
+                // [F1 - ADR-005] القراءة الذكية للفواتير — مسح فاتورة ورقية وتحليلها
+                // محليًا (ML Kit دون إنترنت) — المسار المسموح فقط من بوابة الشاشة هذه
+                QuickAction(
+                    Icons.Rounded.DocumentScanner, stringResourceCompat(R.string.ocr_title),
+                    Brush.linearGradient(listOf(Cyan, VioDeep))
+                ) { nav.navigate(com.superbiz.app.ui.nav.Routes.OCR_SCAN) }
             }
         }
 

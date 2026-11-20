@@ -114,6 +114,20 @@ export const ROADMAP: RoadmapTrack[] = [
       { code: "E6", title: "توحيد الوثائق — ROADMAP الجذري يشير للخارطة الذكية", acceptance: "صفر انحراف بين الجذر وdocs وCHANGELOG", status: "done", priority: "P1", issue: 37 },
     ],
   },
+  {
+    key: "F",
+    name: "الذكاء الهجين (ADR-005)",
+    tagline: "ذكاء حساسي على الجهاز حصرًا + سحابي مقفول البوابة — لا يلمس التزام «دون اتصال» ولا ADR-001",
+    priority: "P1–P2",
+    window: "بدأ 2026-11-20",
+    status: "active",
+    items: [
+      { code: "F1", title: "القراءة الذكية للفواتير — ML Kit bundled (عربي+لاتيني) على الجهاز + محرك OcrInvoiceParser نقي بمال قروش + مطابق كتالوج + شاشة مسح كاملة مدخولة من الفواتير", acceptance: "30 اختبارًا نقيًا أخضر (RED-first موثق 29/24 → 30/30) · فاحص الشبكة PASS · سلاسل ×6 تغطية 100% · صفر طلب شبكي — V 3.7.0 (25)", status: "done", priority: "P1" },
+      { code: "F2", title: "السحابي المقفول (Gemini) بنمط WebhookClient/ZatcaFatooraGateway — لا socket قبل تفعيل صريح، مفتاح في AndroidKeyStore، قبول المالك قبل كل إرسال + تعبئة محرر الفاتورة من مسودة F1", acceptance: "فشل مغلق بلا مفتاح + جولة RED-first كاملة على عقد الدمج مع InvoiceRepo.save", status: "planned", priority: "P1" },
+      { code: "F3", title: "تنبؤات LiteRT على الجهاز فوق محركات R7–R18 الإحصائية (نماذج محلية بلا شبكة)", acceptance: "مقارنة دقة موثقة مقابل الخط الإحصائي القائم + حد حجم النموذج", status: "planned", priority: "P2" },
+      { code: "F4", title: "مساعد محلي MediaPipe LLM Inference (نموذج يختاره المالك ويحمّله — لا حزمة نموذج في APK افتراضيًا) + معاينة CameraX", acceptance: "استجابة محلية حتمية العرض + ADR مستقل للموجة", status: "planned", priority: "P2" },
+    ],
+  },
 ];
 
 export const INSPECTION = {
