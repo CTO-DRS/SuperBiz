@@ -2619,4 +2619,26 @@
     <string name="ocr_share">مشاركة</string>
     <string name="ocr_raw_toggle">النص الخام المُقرأ</string>
     <string name="ocr_open_invoices">عودة إلى الفواتير</string>
+    <!-- [F2 - ADR-005 D4] تعبئة المحرر من المسودة + التحسين السحابي المقفول -->
+    <string name="ocr_create_invoice">إنشاء فاتورة من المسودة</string>
+    <string name="ocr_skipped_lines">أُسقط %1$d سطرًا خارج العقد المسموح — راجع التحذيرات أعلاه</string>
+    <string name="ocr_cloud_enhance">تحسين سحابي (Gemini)</string>
+    <string name="ocr_cloud_enhanced_note">نص محسَّن سحابيًا — راجع البنود قبل الاعتماد</string>
+    <string name="ocr_cloud_confirm_title">إرسال نص الفاتورة إلى Gemini؟</string>
+    <string name="ocr_cloud_confirm_body">سيُرسل نص OCR الخام فقط (بلا أي بيانات من قاعدة بياناتك) عبر الإنترنت لتحسينه. راجع النص أدناه ثم أكّد — الإرسال يدوي ولا يحدث خلفيًا أبدًا.</string>
+    <string name="ocr_cloud_send">أقر وأرسل</string>
+    <string name="ocr_cloud_cancel">إلغاء</string>
+    <string name="ocr_cloud_failed">فشل التحسين: %1$s</string>
+    <string name="ocr_cloud_disabled_note">التحسين السحابي مقفول — فعّله من الإعدادات ← الذكاء السحابي المقفول وأدخل مفتاح API</string>
+    <string name="gem_title">الذكاء السحابي المقفول (Gemini)</string>
+    <string name="gem_desc">تحسين قراءة الفواتير عبر Gemini API — اختياري بالكامل: بلا تفعيل يبقى التطبيق دون اتصال 100%.</string>
+    <string name="gem_enabled_warn">عند التفعيل: نص OCR الخام فقط يُرسل يدويًا بعد قراءتك وتأكيدك لكل إرسال — لا إرسال خلفي ولا بيانات من قاعدة بياناتك.</string>
+    <string name="gem_key_label">مفتاح API</string>
+    <string name="gem_key_hint">الصق مفتاح Gemini API هنا</string>
+    <string name="gem_key_save">حفظ المفتاح</string>
+    <string name="gem_key_saved">محفوظ مشفَّرًا في خزنة الجهاز</string>
+    <string name="gem_key_clear">مسح</string>
+    <string name="gem_model_label">اسم الموديل (اختياري)</string>
+    <string name="gem_model_hint">gemini-2.5-flash</string>
+    <string name="gem_model_save">حفظ الموديل</string>
 </resources>

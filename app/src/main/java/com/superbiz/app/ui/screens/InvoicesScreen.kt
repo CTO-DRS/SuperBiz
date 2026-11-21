@@ -121,6 +121,14 @@ fun InvoicesScreen(appVM: AppVM, nav: NavHostController) {
     val r14VM: com.superbiz.app.vm.R14InsightsVM = viewModel(viewModelStoreOwner = activity, factory = remember { VMFactory(activity) })
     val r15VM: com.superbiz.app.vm.R15InsightsVM = viewModel(viewModelStoreOwner = activity, factory = remember { VMFactory(activity) })
 
+    // ══ [F2 - ADR-005] استهلاك تعبئة OCR المعلقة (one-shot) — إنشاء فاتورة من مسودة المسح ══
+    // الحزمة تُشتق نقيًا في شاشة المسح (OcrDraftToEditor) وتُستهلك هنا مرة واحدة:
+    // طرف + بنود نصوص عرض + نسبة ضريبية — وما بعد ذلك مسار saveInvoice الذرّي القائم
+    // بكامل حراسه بلا أي لمس (لا شبكة ولا حفظ من هذه الشاشة إلا عبر المحرر).
+    LaunchedEffect(Unit) {
+        com.superbiz.app.domain.ocr.OcrPrefillBus.consume()?.let { vm.prefillFromOcr(it) }
+    }
+
     Column(
         Modifier
             .fillMaxSize()

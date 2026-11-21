@@ -2502,4 +2502,26 @@
     <string name="ocr_share">Partager</string>
     <string name="ocr_raw_toggle">Texte brut reconnu</string>
     <string name="ocr_open_invoices">Retour aux factures</string>
+    <!-- [F2 - ADR-005 D4] تعبئة المحرر من المسودة + التحسين السحابي المقفول -->
+    <string name="ocr_create_invoice">Créer une facture depuis le brouillon</string>
+    <string name="ocr_skipped_lines">%1$d ligne(s) abandonnée(s) hors limites — consultez les avertissements ci-dessus</string>
+    <string name="ocr_cloud_enhance">Amélioration cloud (Gemini)</string>
+    <string name="ocr_cloud_enhanced_note">Texte amélioré via le cloud — vérifiez les lignes avant d\'enregistrer</string>
+    <string name="ocr_cloud_confirm_title">Envoyer le texte du reçu à Gemini ?</string>
+    <string name="ocr_cloud_confirm_body">Seul le texte OCR brut (rien de votre base de données) est envoyé sur Internet pour correction. Vérifiez le texte ci-dessous puis confirmez — l\'envoi est manuel, jamais en arrière-plan.</string>
+    <string name="ocr_cloud_send">J\'accepte — envoyer</string>
+    <string name="ocr_cloud_cancel">Annuler</string>
+    <string name="ocr_cloud_failed">Échec de l\'amélioration : %1$s</string>
+    <string name="ocr_cloud_disabled_note">L\'amélioration cloud est verrouillée — activez-la dans Paramètres → IA cloud verrouillée et ajoutez une clé API</string>
+    <string name="gem_title">IA cloud verrouillée (Gemini)</string>
+    <string name="gem_desc">Améliorez la lecture des reçus via l\'API Gemini — totalement optionnel : sans activation, l\'application reste 100% hors ligne.</string>
+    <string name="gem_enabled_warn">Une fois activé : seul le texte OCR brut est envoyé manuellement, après lecture et confirmation à chaque envoi — aucun envoi en arrière-plan, rien de votre base de données.</string>
+    <string name="gem_key_label">Clé API</string>
+    <string name="gem_key_hint">Collez votre clé API Gemini ici</string>
+    <string name="gem_key_save">Enregistrer la clé</string>
+    <string name="gem_key_saved">enregistrée chiffrée dans le keystore de l\'appareil</string>
+    <string name="gem_key_clear">Effacer</string>
+    <string name="gem_model_label">Nom du modèle (facultatif)</string>
+    <string name="gem_model_hint">gemini-2.5-flash</string>
+    <string name="gem_model_save">Enregistrer le modèle</string>
 </resources>

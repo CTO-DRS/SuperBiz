@@ -2496,4 +2496,26 @@
     <string name="ocr_share">Bagikan</string>
     <string name="ocr_raw_toggle">Teks mentah yang dibaca</string>
     <string name="ocr_open_invoices">Kembali ke faktur</string>
+    <!-- [F2 - ADR-005 D4] تعبئة المحرر من المسودة + التحسين السحابي المقفول -->
+    <string name="ocr_create_invoice">Buat faktur dari draf</string>
+    <string name="ocr_skipped_lines">%1$d baris ditolak di luar batas — periksa peringatan di atas</string>
+    <string name="ocr_cloud_enhance">Peningkatan awan (Gemini)</string>
+    <string name="ocr_cloud_enhanced_note">Teks ditingkatkan via awan — periksa baris sebelum menyimpan</string>
+    <string name="ocr_cloud_confirm_title">Kirim teks struk ke Gemini?</string>
+    <string name="ocr_cloud_confirm_body">Hanya teks OCR mentah (bukan data dari basis data Anda) dikirim lewat internet untuk dikoreksi. Periksa teks di bawah lalu konfirmasi — pengiriman manual, tidak pernah otomatis.</string>
+    <string name="ocr_cloud_send">Saya setuju — kirim</string>
+    <string name="ocr_cloud_cancel">Batal</string>
+    <string name="ocr_cloud_failed">Peningkatan gagal: %1$s</string>
+    <string name="ocr_cloud_disabled_note">Peningkatan awan terkunci — aktifkan di Pengaturan → AI awan terkunci dan tambahkan kunci API</string>
+    <string name="gem_title">AI awan terkunci (Gemini)</string>
+    <string name="gem_desc">Tingkatkan pembacaan struk lewat API Gemini — sepenuhnya opsional: tanpa mengaktifkan, aplikasi tetap 100% offline.</string>
+    <string name="gem_enabled_warn">Saat aktif: hanya teks OCR mentah dikirim secara manual, setelah Anda baca dan konfirmasi setiap pengiriman — tidak ada pengiriman latar belakang dan bukan dari basis data Anda.</string>
+    <string name="gem_key_label">Kunci API</string>
+    <string name="gem_key_hint">Tempel kunci API Gemini di sini</string>
+    <string name="gem_key_save">Simpan kunci</string>
+    <string name="gem_key_saved">tersimpan terenkripsi di keystore perangkat</string>
+    <string name="gem_key_clear">Hapus</string>
+    <string name="gem_model_label">Nama model (opsional)</string>
+    <string name="gem_model_hint">gemini-2.5-flash</string>
+    <string name="gem_model_save">Simpan model</string>
 </resources>

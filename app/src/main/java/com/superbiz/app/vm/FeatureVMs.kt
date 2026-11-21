@@ -442,6 +442,51 @@ class InvoicesVM(app: Application) : AndroidViewModel(app) {
 
     fun closeEditor() { editorOpen.value = false }
 
+    // ══ [F2 - ADR-005 D4/تعبئة المحرر] إنشاء فاتورة من مسودة OCR ══
+
+    /**
+     * تعبئة المحرر من مسودة OCR — الطرف يُطابق بالاسم (تقليم طرفيّ) أو يُنشأ
+     * جديدًا بنوع اتجاه المسح (0 عميل/1 مورد)، والبنود تهبط **نصوص عرض** بنفس
+     * مسار الإدخال اليدوي حرفيًا: السعر قروش → Money.numP (التحليل العكسي
+     * parseToPiasters مطابق تمامًا فلا انحراف)، والكمية نص مقتطع الأصفار
+     * (3.0 → «3»، 1.5 → «1.5»). النسبة الضريبية تُقبل إن وردت بالمسودة ضمن
+     * العقد 0..100 وإلا بقيت الافتراضية (عقد OcrDraftToEditor نفسه).
+     *
+     * لا لمس لمسار الحفظ الذرّي إطلاقًا: ما بعد التعبئة مسار saveInvoice القائم
+     * بكامل حراسه (الخصم/المخزون/العملة/الترقيم) — التعبئة إعداد حالة حصرًا.
+     */
+    fun prefillFromOcr(prefill: com.superbiz.app.domain.ocr.OcrDraftToEditor.OcrEditorPrefill) = launchSafe {
+        editorType.value = prefill.type
+        editorInvoiceId.value = null // إنشاء حصرًا — المسودة لا تعيد فاتورة قائمة
+        val name = prefill.partyName
+        editorParty.value = if (name.isNullOrBlank()) {
+            null
+        } else {
+            val existing = parties.value.firstOrNull { it.name.trim() == name }
+            existing ?: run {
+                val id = g.ledger.saveParty(
+                    Party(name = name, type = if (prefill.type == 0) 0 else 1)
+                )
+                g.ledger.party(id)
+            }
+        }
+        editorItems.value = prefill.items.map { spec ->
+            val qtyText = if (spec.qty == Math.floor(spec.qty) && !spec.qty.isInfinite())
+                spec.qty.toLong().toString() else spec.qty.toString()
+            EditorItem(
+                productId = spec.productId,
+                desc = spec.desc,
+                qty = qtyText,
+                price = com.superbiz.app.util.Money.numP(spec.priceQirush),
+                discount = "0"
+            )
+        }
+        prefill.taxRate?.let { editorTaxRate.value = it }
+        // [H4-1] عملة المحرر تتبع الأساس — نفس سلوك openEditor حرفيًا
+        editorCurrency.value = g.settings.snapshot().baseCurrency
+        editorOpen.value = true
+    }
+
     // علم انشغال يمنع النقر المزدوج على الحفظ فيُنشئ فاتورتين برقمين متتاليين
     private var saveBusy = false
 

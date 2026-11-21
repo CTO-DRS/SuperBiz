@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CloudSync
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.ErrorOutline
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material.icons.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -58,11 +61,15 @@ import androidx.core.content.FileProvider
 import androidx.navigation.NavHostController
 import com.superbiz.app.R
 import com.superbiz.app.SuperBizApp
+import com.superbiz.app.domain.GeminiGateway
+import com.superbiz.app.domain.ocr.OcrDraftToEditor
 import com.superbiz.app.domain.ocr.OcrInvoiceParser
+import com.superbiz.app.domain.ocr.OcrPrefillBus
 import com.superbiz.app.domain.ocr.OcrProductMatcher
 import com.superbiz.app.ui.components.EmptyState
 import com.superbiz.app.ui.components.GlassCard
 import com.superbiz.app.ui.components.SubHeader
+import com.superbiz.app.ui.nav.Routes
 import com.superbiz.app.ui.screens.stringResourceCompat
 import com.superbiz.app.ui.theme.Cyan
 import com.superbiz.app.ui.theme.Green
@@ -79,13 +86,19 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * [F1 - ADR-005] شاشة القراءة الذكية للفواتير — التقاط/اختيار صورة فاتورة
+ * [F1/F2 - ADR-005] شاشة القراءة الذكية للفواتير — التقاط/اختيار صورة فاتورة
  * ورقية، تعرف نصي محلي بـ ML Kit (دون إنترنت)، ثم تحليل نقي عبر
  * OcrInvoiceParser وعرض مسودة قابلة للمراجعة مع مطابقة المنتجات.
  *
- * حدود الموجة A1 (موثقة في ADR-005): المراجعة + النسخ/المشاركة + مطابقة الكتالوج —
- * التعبئة المباشرة لمحرر الفاتورة وإنشاؤها ذريًا هي موجة A2 (عبر ADR منفصل لعقد
- * الدمج مع InvoiceRepo حتى لا تلمس مسار الحفظ الذرّي بدون دورة RED-first كاملة).
+ * [F2] الموجتان الجديدتان فوق مسودة F1:
+ * - **تعبئة المحرر من المسودة**: زر «إنشاء فاتورة من المسودة» يحوّل المسودة عبر
+ *   المحرك النقي OcrDraftToEditor إلى حزمة تعبئة (طرف + بنود نصوص عرض + نسبة)،
+ *   تحال عبر OcrPrefillBus (نمط ReorderBus) إلى شاشة الفواتير فتفتح المحرر —
+ *   وما بعد ذلك مسار الحفظ الذرّي القائم بكامل حراسه، بلا أي لمس هنا.
+ * - **التحسين السحابي المقفول (D4)**: زر التحسين يعرض نص OCR الخام المرسل في
+ *   حوار قراءة صريح ويطلب تأكيد المالك **قبل كل إرسال** — لا إرسال خلفي صامت
+ *   أبدًا؛ المخرج يعود للمحلل النقي المحلي حصرًا (لا اعتماد مالي مباشر).
+ *   الباب مقفول بالكامل خارج تفعيل المالك + مفتاح API (فشل مغلق في GeminiAiStore).
  */
 @Composable
 fun OcrScanScreen(appVM: com.superbiz.app.vm.AppVM, nav: NavHostController) {
@@ -103,6 +116,16 @@ fun OcrScanScreen(appVM: com.superbiz.app.vm.AppVM, nav: NavHostController) {
     // مطابقات المنتجات لكل بند (null = بلا مطابقة فوق حد القرار)
     var matches by remember { mutableStateOf<List<OcrProductMatcher.Match?>>(emptyList()) }
     var pendingCapture by remember { mutableStateOf<Uri?>(null) }
+    // [F2] التحسين السحابي المقفول — حالة الحوار والإرسال (D4: قراءة وتأكيد قبل كل إرسال)
+    var showCloudConfirm by remember { mutableStateOf(false) }
+    var cloudWorking by remember { mutableStateOf(false) }
+    var cloudError by remember { mutableStateOf<String?>(null) }
+    var cloudApplied by remember { mutableStateOf(false) }
+
+    // [F2] حزمة التعبئة تُشتق حتميًا من المسودة والمطابقات الحالية (محرك نقي مختبر)
+    val prefill = remember(draft, matches) {
+        draft?.let { OcrDraftToEditor.toPrefill(it, matches) }
+    }
 
     // ── ملتقطا الصورة: كاميرا النظام عبر FileProvider (الإذن عنده) أو منتقي الوسائط ──
     fun newCaptureUri(): Uri {
@@ -126,6 +149,35 @@ fun OcrScanScreen(appVM: com.superbiz.app.vm.AppVM, nav: NavHostController) {
         raw: String, m: List<OcrProductMatcher.Match?>
     ) {
         phase = p; errorMessage = e; draft = d; rawText = raw; matches = m
+        // كل مسح جديد يُصفّر حالة الموجة السحابية — الملاحظة تخص النص الحالي حصرًا
+        cloudApplied = false
+        cloudError = null
+    }
+
+    /** [F2-D4] نداء التحسين الوحيد — يدوي بعد تأكيد الحوار، والمخرج يعود للمحلل المحلي حصرًا */
+    fun requestCloudEnhance() {
+        val app = context.applicationContext as SuperBizApp
+        val raw = rawText
+        scope.launch {
+            cloudWorking = true
+            cloudError = null
+            try {
+                when (val r = app.graph.geminiEnhancer.enhance(GeminiGateway.EnhanceRequest(raw))) {
+                    is GeminiGateway.GatewayResult.Accepted -> {
+                        val reparsed = OcrInvoiceParser.parse(r.text)
+                        setState("done", null, reparsed, r.text, emptyList())
+                        cloudApplied = true
+                    }
+                    is GeminiGateway.GatewayResult.Rejected -> cloudError = r.reason
+                    is GeminiGateway.GatewayResult.TransientFailure -> cloudError = r.message
+                }
+            } catch (e: Exception) {
+                cloudError = e.message ?: "enhance"
+            } finally {
+                cloudWorking = false
+                showCloudConfirm = false
+            }
+        }
     }
 
     /** دورة المسح كاملة: تعرف محلي ← تحليل نقي ← حالة — الثقيل على IO عبر MlKitOcr */
@@ -368,6 +420,20 @@ fun OcrScanScreen(appVM: com.superbiz.app.vm.AppVM, nav: NavHostController) {
                             }
                         }
 
+                        // [F2] ملاحظات الموجة الجديدة — إسقاطات التعبئة + حال السحابي
+                        if ((prefill?.skippedLines ?: 0) > 0) {
+                            Text(
+                                stringResource(R.string.ocr_skipped_lines, prefill!!.skippedLines),
+                                color = RedDeep, style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        if (cloudApplied) {
+                            Text(
+                                stringResourceCompat(R.string.ocr_cloud_enhanced_note),
+                                color = Green, style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+
                         // النص الخام — طي/فتح
                         Text(
                             (if (showRaw) "▾ " else "▸ ") + stringResourceCompat(R.string.ocr_raw_toggle),
@@ -421,6 +487,53 @@ fun OcrScanScreen(appVM: com.superbiz.app.vm.AppVM, nav: NavHostController) {
                             Text(stringResourceCompat(R.string.ocr_share), color = g.textPrimary, maxLines = 1)
                         }
                     }
+                    // [F2-D4] التحسين السحابي المقفول — قراءة صريحة قبل كل إرسال
+                    OutlinedButton(
+                        onClick = {
+                            val app = context.applicationContext as SuperBizApp
+                            scope.launch {
+                                val gateOk = app.graph.geminiAi.enabledOnce() &&
+                                    app.graph.geminiAi.keyConfiguredOnce()
+                                if (gateOk) showCloudConfirm = true
+                                else android.widget.Toast.makeText(
+                                    context, context.getString(R.string.ocr_cloud_disabled_note),
+                                    android.widget.Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        },
+                        enabled = !cloudWorking,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Rounded.CloudSync, null, tint = g.textPrimary)
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResourceCompat(R.string.ocr_cloud_enhance), color = g.textPrimary)
+                    }
+                    cloudError?.let { err ->
+                        Text(
+                            stringResource(R.string.ocr_cloud_failed, err.take(160)),
+                            color = RedDeep, style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
+                    // [F2] تعبئة المحرر من المسودة — عبر OcrPrefillBus النقية ثم مسار الحفظ الذرّي القائم
+                    Button(
+                        onClick = {
+                            val pf = prefill
+                            if (pf != null && pf.usable) {
+                                OcrPrefillBus.post(pf)
+                                nav.navigate(Routes.INVOICES)
+                            }
+                        },
+                        enabled = prefill?.usable == true,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = GreenDeep, contentColor = androidx.compose.ui.graphics.Color.White
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Rounded.ReceiptLong, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResourceCompat(R.string.ocr_create_invoice))
+                    }
                     Button(
                         onClick = { nav.popBackStack() },
                         colors = ButtonDefaults.buttonColors(
@@ -434,6 +547,49 @@ fun OcrScanScreen(appVM: com.superbiz.app.vm.AppVM, nav: NavHostController) {
                 }
             }
         }
+    }
+
+    // ── [F2-D4] حوار القراءة والتأكيد — النص المرسل يُعرض للمالك قبل كل إرسال ──
+    if (showCloudConfirm) {
+        AlertDialog(
+            onDismissRequest = { if (!cloudWorking) showCloudConfirm = false },
+            title = { Text(stringResourceCompat(R.string.ocr_cloud_confirm_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        stringResourceCompat(R.string.ocr_cloud_confirm_body),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            rawText.take(2000) + if (rawText.length > 2000) "…" else "",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.fillMaxWidth().padding(10.dp)
+                        )
+                    }
+                    if (cloudWorking) {
+                        CircularProgressIndicator(color = g.accent, modifier = Modifier.height(24.dp))
+                    }
+                    cloudError?.let { err ->
+                        Text(
+                            stringResource(R.string.ocr_cloud_failed, err.take(160)),
+                            color = RedDeep, style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { requestCloudEnhance() },
+                    enabled = !cloudWorking && rawText.isNotBlank()
+                ) { Text(stringResourceCompat(R.string.ocr_cloud_send)) }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { if (!cloudWorking) showCloudConfirm = false }
+                ) { Text(stringResourceCompat(R.string.ocr_cloud_cancel)) }
+            }
+        )
     }
 }
 

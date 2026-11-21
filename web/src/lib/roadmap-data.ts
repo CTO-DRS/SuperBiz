@@ -123,7 +123,7 @@ export const ROADMAP: RoadmapTrack[] = [
     status: "active",
     items: [
       { code: "F1", title: "القراءة الذكية للفواتير — ML Kit bundled (عربي+لاتيني) على الجهاز + محرك OcrInvoiceParser نقي بمال قروش + مطابق كتالوج + شاشة مسح كاملة مدخولة من الفواتير", acceptance: "30 اختبارًا نقيًا أخضر (RED-first موثق 29/24 → 30/30) · فاحص الشبكة PASS · سلاسل ×6 تغطية 100% · صفر طلب شبكي — V 3.7.0 (25)", status: "done", priority: "P1" },
-      { code: "F2", title: "السحابي المقفول (Gemini) بنمط WebhookClient/ZatcaFatooraGateway — لا socket قبل تفعيل صريح، مفتاح في AndroidKeyStore، قبول المالك قبل كل إرسال + تعبئة محرر الفاتورة من مسودة F1", acceptance: "فشل مغلق بلا مفتاح + جولة RED-first كاملة على عقد الدمج مع InvoiceRepo.save", status: "planned", priority: "P1" },
+      { code: "F2", title: "السحابي المقفول (Gemini) بنمط WebhookClient/ZatcaFatooraGateway — لا socket قبل تفعيل صريح، مفتاح في AndroidKeyStore، قبول المالك قبل كل إرسال + تعبئة محرر الفاتورة من مسودة F1", acceptance: "28 اختبارًا نقيًا أخضر (RED-first موثق 28/20 → 28/28، والمجموع مع F1 58/58) · فحص فشل مغلق بلا مفتاح مختبر · فاحص الشبكة PASS · سلاسل ×6 تغطية 100% — V 3.8.0 (26)", status: "done", priority: "P1" },
       { code: "F3", title: "تنبؤات LiteRT على الجهاز فوق محركات R7–R18 الإحصائية (نماذج محلية بلا شبكة)", acceptance: "مقارنة دقة موثقة مقابل الخط الإحصائي القائم + حد حجم النموذج", status: "planned", priority: "P2" },
       { code: "F4", title: "مساعد محلي MediaPipe LLM Inference (نموذج يختاره المالك ويحمّله — لا حزمة نموذج في APK افتراضيًا) + معاينة CameraX", acceptance: "استجابة محلية حتمية العرض + ADR مستقل للموجة", status: "planned", priority: "P2" },
     ],

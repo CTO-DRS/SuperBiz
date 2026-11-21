@@ -646,6 +646,8 @@ private fun DataSection(
     Spacer(Modifier.height(8.dp))
     SyncLinkCard()   // [H4-3][V 3.0.0] المزامنة المشفرة — بوابة ADR-002 مزدوجة الأبواب
     Spacer(Modifier.height(8.dp))
+    GeminiAiCard()   // [F2 - ADR-005 D4] الذكاء السحابي المقفول — باب واحد بقراءة وتأكيد قبل كل إرسال
+    Spacer(Modifier.height(8.dp))
     WebhookCard()    // [H4-6][V 3.0.0] تصدير الويب هوك
     Spacer(Modifier.height(8.dp))
     TemplateCard()   // [H4-6][V 3.0.0] قالب الفاتورة المطبوعة

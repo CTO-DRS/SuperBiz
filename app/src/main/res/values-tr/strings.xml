@@ -2496,4 +2496,26 @@
     <string name="ocr_share">Paylaş</string>
     <string name="ocr_raw_toggle">Okunan ham metin</string>
     <string name="ocr_open_invoices">Faturalara dön</string>
+    <!-- [F2 - ADR-005 D4] تعبئة المحرر من المسودة + التحسين السحابي المقفول -->
+    <string name="ocr_create_invoice">Taslaktan fatura oluştur</string>
+    <string name="ocr_skipped_lines">%1$d satır sınırlar dışında bırakıldı — yukarıdaki uyarıları inceleyin</string>
+    <string name="ocr_cloud_enhance">Bulut iyileştirme (Gemini)</string>
+    <string name="ocr_cloud_enhanced_note">Bulutta iyileştirilmiş metin — kaydetmeden önce satırları inceleyin</string>
+    <string name="ocr_cloud_confirm_title">Fiş metni Gemini\'ye gönderilsin mi?</string>
+    <string name="ocr_cloud_confirm_body">Yalnızca ham OCR metni (veritabanınızdan hiçbir veri değil) düzeltme için internete gönderilir. Aşağıdaki metni inceleyip onaylayın — gönderim elle yapılır, arka planda asla olmaz.</string>
+    <string name="ocr_cloud_send">Onaylıyorum — gönder</string>
+    <string name="ocr_cloud_cancel">İptal</string>
+    <string name="ocr_cloud_failed">İyileştirme başarısız: %1$s</string>
+    <string name="ocr_cloud_disabled_note">Bulut iyileştirme kilitli — Ayarlar → Kilitli bulut AI bölümünden etkinleştirin ve API anahtarı ekleyin</string>
+    <string name="gem_title">Kilitli bulut yapay zekâ (Gemini)</string>
+    <string name="gem_desc">Fiş okumayı Gemini API ile iyileştirin — tamamen isteğe bağlı: etkinleştirilmeden uygulama %100 çevrimdışı kalır.</string>
+    <string name="gem_enabled_warn">Etkinleştirildiğinde: yalnızca ham OCR metni, her gönderimi okuyup onayladıktan sonra elle gönderilir — arka planda gönderim yok, veritabanınızdan hiçbir veri çıkmaz.</string>
+    <string name="gem_key_label">API anahtarı</string>
+    <string name="gem_key_hint">Gemini API anahtarınızı buraya yapıştırın</string>
+    <string name="gem_key_save">Anahtarı kaydet</string>
+    <string name="gem_key_saved">cihaz keystore\'unda şifreli kayıtlı</string>
+    <string name="gem_key_clear">Sil</string>
+    <string name="gem_model_label">Model adı (isteğe bağlı)</string>
+    <string name="gem_model_hint">gemini-2.5-flash</string>
+    <string name="gem_model_save">Modeli kaydet</string>
 </resources>

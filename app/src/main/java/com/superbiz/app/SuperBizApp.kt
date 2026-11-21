@@ -146,6 +146,21 @@ class AppGraph(val context: android.content.Context) {
         com.superbiz.app.network.ZatcaFatooraGateway(zatcaLink, credentials = { null })
     }
 
+    // ─── [F2 - ADR-005 D4] المحسّر السحابي المقفول — بوابة الميزة + العميل المعزول ───
+
+    /** بوابة Gemini المقفولة — خارج تفعيل المالك الصريح والمفتاح يبقى العميل فشلًا مغلقًا بلا socket */
+    val geminiAi by lazy { com.superbiz.app.data.repo.GeminiAiStore(context) }
+
+    /**
+     * عميل المحسّر السحابي — يُحقن هنا فقط (سلك التوصيل الجذري المصرَّح به في
+     * فاحص حدود ADR-001): البقية ترى الواجهة النقية GeminiGateway حصرًا.
+     * البوابة المزدوجة (تفعيل + مفتاح) تمنع أي socket قبله — والاستدعاء يدوي
+     * أحادي بعد قراءة المالك وتأكيده في شاشة المسح، لا خلفية ولا قائمة انتظار.
+     */
+    val geminiEnhancer: com.superbiz.app.domain.GeminiGateway by lazy {
+        com.superbiz.app.network.GeminiOcrClient(geminiAi)
+    }
+
     /** تهيئة أولية/إعادة بناء: عملات + قواعد افتراضية — آمنة للتكرار (idempotent) */
     suspend fun seedIfFirstRun() {
         val s = settings.snapshot()

@@ -2619,4 +2619,26 @@
     <string name="ocr_share">Share</string>
     <string name="ocr_raw_toggle">Raw recognized text</string>
     <string name="ocr_open_invoices">Back to invoices</string>
+    <!-- [F2 - ADR-005 D4] تعبئة المحرر من المسودة + التحسين السحابي المقفول -->
+    <string name="ocr_create_invoice">Create invoice from draft</string>
+    <string name="ocr_skipped_lines">%1$d line(s) dropped as out-of-contract — review the warnings above</string>
+    <string name="ocr_cloud_enhance">Cloud enhance (Gemini)</string>
+    <string name="ocr_cloud_enhanced_note">Cloud-enhanced text — review the lines before saving</string>
+    <string name="ocr_cloud_confirm_title">Send receipt text to Gemini?</string>
+    <string name="ocr_cloud_confirm_body">Only the raw OCR text (nothing from your database) is sent over the internet for correction. Review the text below then confirm — sending is manual and never happens in the background.</string>
+    <string name="ocr_cloud_send">I consent — send</string>
+    <string name="ocr_cloud_cancel">Cancel</string>
+    <string name="ocr_cloud_failed">Enhancement failed: %1$s</string>
+    <string name="ocr_cloud_disabled_note">Cloud enhance is locked — enable it in Settings → Locked cloud AI and add an API key</string>
+    <string name="gem_title">Locked cloud AI (Gemini)</string>
+    <string name="gem_desc">Improve receipt reading via the Gemini API — fully optional: without enabling, the app stays 100% offline.</string>
+    <string name="gem_enabled_warn">When enabled: only the raw OCR text is sent manually, after you read and confirm each send — no background sending and nothing from your database.</string>
+    <string name="gem_key_label">API key</string>
+    <string name="gem_key_hint">Paste your Gemini API key here</string>
+    <string name="gem_key_save">Save key</string>
+    <string name="gem_key_saved">saved encrypted in the device keystore</string>
+    <string name="gem_key_clear">Clear</string>
+    <string name="gem_model_label">Model name (optional)</string>
+    <string name="gem_model_hint">gemini-2.5-flash</string>
+    <string name="gem_model_save">Save model</string>
 </resources>

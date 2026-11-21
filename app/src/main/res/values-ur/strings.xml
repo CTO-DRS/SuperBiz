@@ -2496,4 +2496,26 @@
     <string name="ocr_share">اشتراک</string>
     <string name="ocr_raw_toggle">خام پڑھا گیا متن</string>
     <string name="ocr_open_invoices">انوائسز پر واپس</string>
+    <!-- [F2 - ADR-005 D4] تعبئة المحرر من المسودة + التحسين السحابي المقفول -->
+    <string name="ocr_create_invoice">ڈرافٹ سے انوائس بنائیں</string>
+    <string name="ocr_skipped_lines">%1$d لائنیں حدود سے باہر تھیں — اوپر کی وارننگز دیکھیں</string>
+    <string name="ocr_cloud_enhance">کلاؤڈ بہتری (Gemini)</string>
+    <string name="ocr_cloud_enhanced_note">کلاؤڈ سے بہتر کیا گیا متن — محفوظ کرنے سے پہلے لائنیں دیکھ لیں</string>
+    <string name="ocr_cloud_confirm_title">رسید کا متن Gemini کو بھیجیں؟</string>
+    <string name="ocr_cloud_confirm_body">صرف خام OCR متن (آپ کے ڈیٹا بیس سے کچھ نہیں) درستگی کے لیے انٹرنیٹ پر بھیجا جاتا ہے۔ نیچے دیا متن دیکھ کر تصدیق کریں — بھیجنا دستی ہے، پس منظر میں کبھی نہیں۔</string>
+    <string name="ocr_cloud_send">میں منظور کرتا ہوں — بھیجیں</string>
+    <string name="ocr_cloud_cancel">منسوخ</string>
+    <string name="ocr_cloud_failed">بہتری ناکام: %1$s</string>
+    <string name="ocr_cloud_disabled_note">کلاؤڈ بہتری مقفل ہے — ترتیبات → مقفل کلاؤڈ AI میں فعال کریں اور API کی شامل کریں</string>
+    <string name="gem_title">مقفل کلاؤڈ AI (Gemini)</string>
+    <string name="gem_desc">رسید کی پڑھائی Gemini API سے بہتر بنائیں — مکمل اختیاری: فعال نہ کرنے پر ایپ 100% آف لائن رہتی ہے۔</string>
+    <string name="gem_enabled_warn">فعال ہونے پر: صرف خام OCR متن ہر بھیجنے سے پہلے آپ کی پڑھائی اور تصدیق سے دستی بھیجا جاتا ہے — پس منظر میں بھیجنا نہیں اور آپ کے ڈیٹا بیس سے کچھ نہیں۔</string>
+    <string name="gem_key_label">API کی</string>
+    <string name="gem_key_hint">اپنی Gemini API کی یہاں پیسٹ کریں</string>
+    <string name="gem_key_save">کی محفوظ کریں</string>
+    <string name="gem_key_saved">ڈیوائس کی اسٹور میں مرموز محفوظ</string>
+    <string name="gem_key_clear">صاف کریں</string>
+    <string name="gem_model_label">ماڈل کا نام (اختیاری)</string>
+    <string name="gem_model_hint">gemini-2.5-flash</string>
+    <string name="gem_model_save">ماڈل محفوظ کریں</string>
 </resources>
