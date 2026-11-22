@@ -10,6 +10,9 @@ import com.superbiz.app.domain.algo.EwmaAlertMath
 import com.superbiz.app.domain.algo.NarrativeMath
 import com.superbiz.app.domain.algo.QueryParseMath
 import com.superbiz.app.domain.algo.ReorderPointMath
+import com.superbiz.app.domain.ml.ForecastDuel
+import com.superbiz.app.domain.ml.ForecastGateway
+import com.superbiz.app.domain.ml.LearnedForecastGateway
 import com.superbiz.app.util.Money // [P33-P8] نقطة التحويل الوحيدة ريال ↔ قروش
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -76,7 +79,8 @@ class SmartCoordinatorVM(app: Application) : AndroidViewModel(app) {
         val reorders: List<ReorderItem> = emptyList(),   // مجاني
         val alerts: List<AlertItem> = emptyList(),       // مجاني
         val stories: List<NarrativeMath.Story> = emptyList(), // Pro (لوحة KPI)
-        val storyProvenance: List<String> = emptyList()       // Pro
+        val storyProvenance: List<String> = emptyList(),      // Pro
+        val duel: ForecastDuel.DuelReport? = null             // Pro — المبارزة التنبؤية (F3)
     )
 
     private val _home = MutableStateFlow(HomeCards())
@@ -279,6 +283,33 @@ class SmartCoordinatorVM(app: Application) : AndroidViewModel(app) {
                     _home.value = _home.value.copy(
                         stories = NarrativeMath.narrate(f),
                         storyProvenance = NarrativeMath.provenance(f))
+                }
+            } catch (e: Exception) { Error(e) }
+
+            // ═══ (هـ) المبارزة التنبؤية F3 — Pro: مقارنة دقة متجذرة بين الخط الإحصائي
+            // القائم (بداية CashFlow90 نفسها) وخط التعلّم على الجهاز — فوق محركات
+            // R7–R18 بلا لمسها: نفس أحداث R16 هي ساحة المبارزة، والفراغ صادق. ═══
+            try {
+                val paymentsF3 = g.db.payments().since(start56)
+                val inflowDaily = dailySeries(
+                    paymentsF3.filter { it.direction == 0 }
+                        .map { it.date to Money.fromPiasters(it.amount) }, start56, 56)
+                val outflowDaily = dailySeries(
+                    paymentsF3.filter { it.direction == 1 }
+                        .map { it.date to Money.fromPiasters(it.amount) } +
+                        g.db.expenses().between(start56, today)
+                            .map { it.date to Money.fromPiasters(it.amount) }, start56, 56)
+                val netSeries = inflowDaily.zip(outflowDaily) { i, o -> i - o }
+                val report = ForecastDuel.duel(
+                    netSeries,
+                    LearnedForecastGateway(),
+                    horizon = ForecastGateway.DEFAULT_HORIZON,
+                    minTrain = 28,
+                    maxCuts = 6,
+                    baselineWindow = ForecastDuel.BASELINE_WINDOW
+                )
+                if (report != null) {
+                    _home.value = _home.value.copy(duel = report)
                 }
             } catch (e: Exception) { Error(e) }
         } catch (e: Exception) {

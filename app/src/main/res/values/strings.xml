@@ -2641,4 +2641,21 @@
     <string name="gem_model_label">اسم الموديل (اختياري)</string>
     <string name="gem_model_hint">gemini-2.5-flash</string>
     <string name="gem_model_save">حفظ الموديل</string>
+    <!-- [F3 - ADR-005 D6] المبارزة التنبؤية فوق R7-R18 -->
+    <string name="f3_duel_title">مبارزة التنبؤ</string>
+    <string name="f3_duel_note">مقارنة دقة متجذرة: الخط الإحصائي القائم (متوسط آخر نافذة) مقابل خط تعلّم يُدرَّب على جهازك — يفوز الأدق، والمزج عكسي الخطأ، وكلها بلا أي شبكة</string>
+    <string name="f3_duel_locked_note">مقارنة الدقة بين الخط الإحصائي القائم وخط التعلّم على الجهاز — كلها داخل جهازك بلا أي شبكة</string>
+    <string name="f3_duel_locked_cta">افتح Pro لعرض المبارزة</string>
+    <string name="f3_duel_winner_learned">خط التعلّم أدق — فاز بالمبارزة</string>
+    <string name="f3_duel_winner_baseline">الخط الإحصائي الأدق — حافظ على خطّه</string>
+    <string name="f3_duel_winner_tie">تعادل في الدقة</string>
+    <string name="f3_duel_winner_none">الخط الإحصائي معتمدًا</string>
+    <string name="f3_duel_baseline_mae">متوسط خطأ الخط الإحصائي: %1$s</string>
+    <string name="f3_duel_learned_mae">متوسط خطأ خط التعلّم: %1$s</string>
+    <string name="f3_duel_improvement">تحسن الدقة مقابل الخط القائم: %1$s%%</string>
+    <string name="f3_duel_blend">وزن خط التعلّم في المزج: %1$s%%</string>
+    <string name="f3_duel_adopted_title">التوقعات المعتمدة بعد المبارزة</string>
+    <string name="f3_duel_step">بعد %1$d يوم</string>
+    <string name="f3_duel_cuts">نقاط قص المبارزة: %1$d</string>
+    <string name="f3_duel_statistical_only">لم يُقيَّم خط التعلّم في هذه المبارزة — المعتمد هو الخط الإحصائي القائم</string>
 </resources>

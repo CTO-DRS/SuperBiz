@@ -136,6 +136,9 @@ fun HomeR16Card(app: AppVM, vm: SmartCoordinatorVM, nav: androidx.navigation.Nav
         // ── مسار النقد 90 يوماً (Pro) — قفل صادق يشرح ما خلفه ──
         Cash90Card(st, ::m, onOpenPro = { nav.navigate(com.superbiz.app.ui.nav.Routes.PRO) { launchSingleTop = true } })
 
+        // ── المبارزة التنبؤية F3 (Pro) — من يدق؟ الخط الإحصائي القائم أم خط التعلّم ──
+        ForecastDuelCard(st, ::m, onOpenPro = { nav.navigate(com.superbiz.app.ui.nav.Routes.PRO) { launchSingleTop = true } })
+
         // ── مدخل الدردشة المحلية ──
         ChatEntryPill(onOpen = { nav.navigate(com.superbiz.app.ui.nav.Routes.SMART) { launchSingleTop = true } })
     }
@@ -190,6 +193,91 @@ private fun Cash90Card(
                 fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Red
             )
         }
+    }
+}
+
+// ═══════════ بطاقة المبارزة التنبؤية F3 (باب Pro) ═══════════
+
+/**
+ * [F3 - ADR-005 D6] بطاقة «مبارزة التنبؤ»: تعرض نتيجة المقارنة المتجذرة بين
+ * الخط الإحصائي القائم وخط التعلّم على الجهاز، والخط المعتمد بعد المبارزة.
+ * عقد العرض نفسه (R9..R16): تختفي كليًا بلا بيانات (صدق الفراغ)، والقفل الصادق
+ * حين يكون المالك خارج Pro، وكل رقم يحمل سطر أساسه.
+ */
+@Composable
+private fun ForecastDuelCard(
+    st: SmartCoordinatorVM.HomeCards,
+    m: (Double) -> String,
+    onOpenPro: () -> Unit
+) {
+    val proVM: ProVM = viewModel()
+    val pro by proVM.pro.collectAsState()
+
+    if (!pro) {
+        SmartCardShell(
+            stringResource(R.string.f3_duel_title),
+            stringResource(R.string.f3_duel_locked_note), Vio
+        ) {
+            Text(
+                stringResource(R.string.f3_duel_locked_cta),
+                fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Vio,
+                modifier = Modifier.clickable { onOpenPro() }
+            )
+        }
+        return
+    }
+
+    val duel = st.duel ?: return // بلا بيانات كافية للمبارزة ⇒ تختفي (صدق الفراغ)
+    val accent = when (duel.winner) {
+        com.superbiz.app.domain.ml.ForecastDuel.WINNER_LEARNED -> Green
+        com.superbiz.app.domain.ml.ForecastDuel.WINNER_BASELINE -> Vio
+        else -> Cyan
+    }
+    SmartCardShell(
+        stringResource(R.string.f3_duel_title),
+        stringResource(R.string.f3_duel_note), accent
+    ) {
+        Text(
+            stringResource(when (duel.winner) {
+                com.superbiz.app.domain.ml.ForecastDuel.WINNER_LEARNED -> R.string.f3_duel_winner_learned
+                com.superbiz.app.domain.ml.ForecastDuel.WINNER_BASELINE -> R.string.f3_duel_winner_baseline
+                com.superbiz.app.domain.ml.ForecastDuel.WINNER_TIE -> R.string.f3_duel_winner_tie
+                else -> R.string.f3_duel_winner_none
+            }),
+            fontSize = 13.sp, fontWeight = FontWeight.Bold, color = accent
+        )
+        Spacer(Modifier.height(4.dp))
+        KV(stringResource(R.string.f3_duel_baseline_mae, m(duel.baselineMae)), "", Vio)
+        if (duel.learnedMae != null) {
+            KV(stringResource(R.string.f3_duel_learned_mae, m(duel.learnedMae)), "", Green)
+            duel.improvementPct?.let {
+                KV(stringResource(R.string.f3_duel_improvement, d1(it)), "",
+                    if (it > 0.0) Green else if (it < 0.0) Red else Cyan)
+            }
+            duel.blendWeightLearned?.let {
+                KV(stringResource(R.string.f3_duel_blend, d1(it * 100.0)), "", Cyan)
+            }
+        } else {
+            Text(
+                stringResource(R.string.f3_duel_statistical_only),
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            stringResource(R.string.f3_duel_adopted_title),
+            fontSize = 12.sp, fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        duel.adopted.take(4).forEachIndexed { i, v ->
+            KV(stringResource(R.string.f3_duel_step, i + 1), m(v), if (v >= 0.0) Green else Red)
+        }
+        Text(
+            stringResource(R.string.f3_duel_cuts, duel.cuts),
+            fontSize = 10.sp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+        )
     }
 }
 

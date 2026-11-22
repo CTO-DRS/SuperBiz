@@ -2524,4 +2524,21 @@
     <string name="gem_model_label">Nom du modèle (facultatif)</string>
     <string name="gem_model_hint">gemini-2.5-flash</string>
     <string name="gem_model_save">Enregistrer le modèle</string>
+    <!-- [F3 - ADR-005 D6] المبارزة التنبؤية فوق R7-R18 -->
+    <string name="f3_duel_title">Duel de prévision</string>
+    <string name="f3_duel_note">Duel d\'exactitude enraciné : la ligne statistique établie (moyenne de la dernière fenêtre) contre une ligne entraînée sur votre appareil — le plus précis gagne, le mélange suit l\'erreur inverse, tout sans réseau</string>
+    <string name="f3_duel_locked_note">Duel d\'exactitude entre la ligne statistique établie et la ligne apprise sur l\'appareil — tout sur votre appareil, sans réseau</string>
+    <string name="f3_duel_locked_cta">Débloquez Pro pour voir le duel</string>
+    <string name="f3_duel_winner_learned">La ligne apprise est plus précise — elle a gagné le duel</string>
+    <string name="f3_duel_winner_baseline">La ligne statistique est plus précise — elle reste adoptée</string>
+    <string name="f3_duel_winner_tie">Égalité de précision</string>
+    <string name="f3_duel_winner_none">Ligne statistique adoptée</string>
+    <string name="f3_duel_baseline_mae">Erreur moyenne de la ligne statistique : %1$s</string>
+    <string name="f3_duel_learned_mae">Erreur moyenne de la ligne apprise : %1$s</string>
+    <string name="f3_duel_improvement">Gain de précision sur la ligne établie : %1$s%%</string>
+    <string name="f3_duel_blend">Poids de la ligne apprise dans le mélange : %1$s%%</string>
+    <string name="f3_duel_adopted_title">Prévision adoptée après le duel</string>
+    <string name="f3_duel_step">Dans %1$d jour(s)</string>
+    <string name="f3_duel_cuts">Points de coupe du duel : %1$d</string>
+    <string name="f3_duel_statistical_only">La ligne apprise n\'a pas été évaluée lors de ce duel — la ligne statistique établie est adoptée</string>
 </resources>

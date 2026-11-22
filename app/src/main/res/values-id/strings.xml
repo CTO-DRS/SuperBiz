@@ -2518,4 +2518,21 @@
     <string name="gem_model_label">Nama model (opsional)</string>
     <string name="gem_model_hint">gemini-2.5-flash</string>
     <string name="gem_model_save">Simpan model</string>
+    <!-- [F3 - ADR-005 D6] المبارزة التنبؤية فوق R7-R18 -->
+    <string name="f3_duel_title">Duel prediksi</string>
+    <string name="f3_duel_note">Duel akurasi berakar: garis statistik mapan (rata-rata jendela terakhir) lawan garis yang dilatih di perangkat Anda — yang lebih tepat menang, pencampuran mengikuti galat terbalik, semuanya tanpa jaringan</string>
+    <string name="f3_duel_locked_note">Duel akurasi antara garis statistik mapan dan garis terlatih di perangkat — semuanya di perangkat Anda tanpa jaringan</string>
+    <string name="f3_duel_locked_cta">Buka Pro untuk melihat duel</string>
+    <string name="f3_duel_winner_learned">Garis terlatih lebih tepat — memenangkan duel</string>
+    <string name="f3_duel_winner_baseline">Garis statistik lebih tepat — garisnya tetap dipakai</string>
+    <string name="f3_duel_winner_tie">Seimbang dalam akurasi</string>
+    <string name="f3_duel_winner_none">Garis statistik diadopsi</string>
+    <string name="f3_duel_baseline_mae">Galat rata-rata garis statistik: %1$s</string>
+    <string name="f3_duel_learned_mae">Galat rata-rata garis terlatih: %1$s</string>
+    <string name="f3_duel_improvement">Peningkatan akurasi atas garis mapan: %1$s%%</string>
+    <string name="f3_duel_blend">Bobot garis terlatih dalam campuran: %1$s%%</string>
+    <string name="f3_duel_adopted_title">Prediksi yang diadopsi setelah duel</string>
+    <string name="f3_duel_step">Dalam %1$d hari</string>
+    <string name="f3_duel_cuts">Titik potong duel: %1$d</string>
+    <string name="f3_duel_statistical_only">Garis terlatih tidak dievaluasi pada duel ini — garis statistik mapan yang diadopsi</string>
 </resources>

@@ -2518,4 +2518,21 @@
     <string name="gem_model_label">Model adı (isteğe bağlı)</string>
     <string name="gem_model_hint">gemini-2.5-flash</string>
     <string name="gem_model_save">Modeli kaydet</string>
+    <!-- [F3 - ADR-005 D6] المبارزة التنبؤية فوق R7-R18 -->
+    <string name="f3_duel_title">Tahmin düellosu</string>
+    <string name="f3_duel_note">Köklenmiş doğruluk düellosu: yerleşik istatistik çizgisi (son pencere ortalaması) cihazınızda eğitilen çizgiye karşı — keskin olan kazanır, harmanlama ters hataya uyar, tamamen ağsız</string>
+    <string name="f3_duel_locked_note">Yerleşik istatistik çizgisi ile cihazda öğrenen çizgi arasındaki doğruluk düellosu — tamamen cihazınızda, ağ yok</string>
+    <string name="f3_duel_locked_cta">Düelloyu görmek için Pro\'yu açın</string>
+    <string name="f3_duel_winner_learned">Öğrenen çizgi daha keskin — düelloyu kazandı</string>
+    <string name="f3_duel_winner_baseline">İstatistik çizgisi daha keskin — onun çizgisi geçerli</string>
+    <string name="f3_duel_winner_tie">Doğrulukta eşitlik</string>
+    <string name="f3_duel_winner_none">İstatistik çizgisi benimsendi</string>
+    <string name="f3_duel_baseline_mae">İstatistik çizgisi ortalama hatası: %1$s</string>
+    <string name="f3_duel_learned_mae">Öğrenen çizgi ortalama hatası: %1$s</string>
+    <string name="f3_duel_improvement">Yerleşik çizgiye göre doğruluk kazancı: %1$s%%</string>
+    <string name="f3_duel_blend">Harmandaki öğrenen çizgi ağırlığı: %1$s%%</string>
+    <string name="f3_duel_adopted_title">Düello sonrası benimsenen tahmin</string>
+    <string name="f3_duel_step">%1$d gün içinde</string>
+    <string name="f3_duel_cuts">Düello kesme noktaları: %1$d</string>
+    <string name="f3_duel_statistical_only">Öğrenen çizgi bu düelloda değerlendirilmedi — yerleşik istatistik çizgisi benimsendi</string>
 </resources>

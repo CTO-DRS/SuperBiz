@@ -2518,4 +2518,21 @@
     <string name="gem_model_label">ماڈل کا نام (اختیاری)</string>
     <string name="gem_model_hint">gemini-2.5-flash</string>
     <string name="gem_model_save">ماڈل محفوظ کریں</string>
+    <!-- [F3 - ADR-005 D6] المبارزة التنبؤية فوق R7-R18 -->
+    <string name="f3_duel_title">پیشن گوئی کا مقابلہ</string>
+    <string name="f3_duel_note">جڑی ہوئی درستگی کا مقابلہ: مستقل شماریاتی لکیر (آخری ونڈو کا اوسط) بمقابلہ آپ کے ڈیوائس پر تربیت یافتہ لکیر — زیادہ درست فاتح، آمیزش الٹ خرابی کے مطابق، سب کچھ بغیر نیٹ ورک</string>
+    <string name="f3_duel_locked_note">مستقل شماریاتی لکیر اور ڈیوائس پر سیکھی لکیر کے درستگی کا مقابلہ — سب کچھ آپ کے ڈیوائس میں، بغیر نیٹ ورک</string>
+    <string name="f3_duel_locked_cta">مقابلہ دیکھنے کے لیے Pro کھولیں</string>
+    <string name="f3_duel_winner_learned">سیکھی لکیر زیادہ درست — اس نے مقابلہ جیت لیا</string>
+    <string name="f3_duel_winner_baseline">شماریاتی لکیر زیادہ درست — وہی لکیر رائج</string>
+    <string name="f3_duel_winner_tie">درستگی میں برابری</string>
+    <string name="f3_duel_winner_none">شماریاتی لکیر اپنایا گیا</string>
+    <string name="f3_duel_baseline_mae">شماریاتی لکیر کی اوسط غلطی: %1$s</string>
+    <string name="f3_duel_learned_mae">سیکھی لکیر کی اوسط غلطی: %1$s</string>
+    <string name="f3_duel_improvement">مستقل لکیر کے مقابل درستگی میں بہتری: %1$s%%</string>
+    <string name="f3_duel_blend">آمیزش میں سیکھی لکیر کا وزن: %1$s%%</string>
+    <string name="f3_duel_adopted_title">مقابلے کے بعد اپنائی گئی پیشن گوئی</string>
+    <string name="f3_duel_step">%1$d دن میں</string>
+    <string name="f3_duel_cuts">مقابلے کے کاٹ پوائنٹس: %1$d</string>
+    <string name="f3_duel_statistical_only">سیکھی لکیر کا اس مقابلے میں جائزہ نہیں لیا گیا — مستقل شماریاتی لکیر اپنائی گئی</string>
 </resources>

@@ -2641,4 +2641,21 @@
     <string name="gem_model_label">Model name (optional)</string>
     <string name="gem_model_hint">gemini-2.5-flash</string>
     <string name="gem_model_save">Save model</string>
+    <!-- [F3 - ADR-005 D6] المبارزة التنبؤية فوق R7-R18 -->
+    <string name="f3_duel_title">Forecast duel</string>
+    <string name="f3_duel_note">Rooted accuracy duel: the standing statistical line (last-window mean) vs a line trained on your device — the sharper wins, blending follows inverse error, all with no network</string>
+    <string name="f3_duel_locked_note">Accuracy duel between the standing statistical line and the on-device learned line — all inside your device with no network</string>
+    <string name="f3_duel_locked_cta">Unlock Pro to view the duel</string>
+    <string name="f3_duel_winner_learned">The learned line is sharper — it won the duel</string>
+    <string name="f3_duel_winner_baseline">The statistical line is sharper — its line stands</string>
+    <string name="f3_duel_winner_tie">Tied in accuracy</string>
+    <string name="f3_duel_winner_none">Statistical line adopted</string>
+    <string name="f3_duel_baseline_mae">Statistical line mean error: %1$s</string>
+    <string name="f3_duel_learned_mae">Learned line mean error: %1$s</string>
+    <string name="f3_duel_improvement">Accuracy gain over the standing line: %1$s%%</string>
+    <string name="f3_duel_blend">Learned line blend weight: %1$s%%</string>
+    <string name="f3_duel_adopted_title">Adopted forecast after the duel</string>
+    <string name="f3_duel_step">In %1$d day(s)</string>
+    <string name="f3_duel_cuts">Duel cut points: %1$d</string>
+    <string name="f3_duel_statistical_only">The learned line was not evaluated this duel — the standing statistical line is adopted</string>
 </resources>

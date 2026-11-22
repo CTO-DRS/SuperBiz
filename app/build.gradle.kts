@@ -35,8 +35,8 @@ android {
         // شاشة مسح كاملة مدخولة من الفواتير — RED-first موثق في CHANGELOG.
         // الإصدار يُعرض للمستخدم حصريًا من
         // BuildConfig.VERSION_NAME / VERSION_CODE (الإعدادات + تذييل PDF).
-        versionCode = 26
-        versionName = "3.8.0"
+        versionCode = 27
+        versionName = "3.9.0"
         vectorDrawables { useSupportLibrary = true }
     }
 
