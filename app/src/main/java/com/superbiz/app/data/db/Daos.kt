@@ -1449,6 +1449,32 @@ interface SyncLogDao {
     @Query("DELETE FROM sync_log")
     suspend fun clearAll()
 }
+
+// [E2.2 V3.6.0] DAO المدفوعات — سجل المعاملات ودفتر الاسترداد (كلها suspend؛ القراءة والكتابة من المستودع فقط)
+@androidx.room.Dao
+interface PaymentsE22Dao {
+    @androidx.room.Insert
+    suspend fun insertTx(tx: PaymentTxEntity): Long
+
+    @androidx.room.Query("SELECT * FROM payment_tx WHERE id = :id")
+    suspend fun txById(id: Long): PaymentTxEntity?
+
+    @androidx.room.Query("SELECT COALESCE(SUM(amountPiasters), 0) FROM refund_ledger WHERE paymentTxId = :txId")
+    suspend fun refundedSumPiasters(txId: Long): Long
+
+    @androidx.room.Query("SELECT * FROM refund_ledger WHERE idempotencyKey = :key")
+    suspend fun refundByKey(key: String): RefundLedgerEntity?
+
+    @androidx.room.Insert
+    suspend fun insertRefund(row: RefundLedgerEntity): Long
+
+    @androidx.room.Query("SELECT COUNT(*) FROM payment_tx")
+    suspend fun txCount(): Int
+
+    @androidx.room.Query("SELECT COUNT(*) FROM refund_ledger")
+    suspend fun refundCount(): Int
+}
+
 @androidx.room.Database(
     entities = [
         Party::class, JournalEntry::class, JournalLine::class, Product::class,
@@ -1477,7 +1503,10 @@ interface SyncLogDao {
         UserEntity::class, UserSecretEntity::class,
         // [Z2-أ V 1.5.0] أرشيف مستندات ZATCA-2 — جدول بإنشاء فقط
         // (ترحيل 13→14 في SuperBizApp: CREATE TABLE/INDEX فقط — لا جدول قائم يُمس)
-        ZatcaDocEntity::class
+        ZatcaDocEntity::class,
+        // [E2.2 V3.6.0] جدولا المدفوعات بإنشاء فقط (ترحيل 19→20 في SuperBizApp — إلحاقي خالص)
+        PaymentTxEntity::class,
+        RefundLedgerEntity::class
     ],
     // [P11-a] عمودا المفضّلة والإحداثيات على parties (ترحيل 6→7 في SuperBizApp)
     // [P12-b] جدول الزيارات بموقعها الجغرافي (ترحيل 7→8 في SuperBizApp)
@@ -1501,7 +1530,7 @@ interface SyncLogDao {
     // (ترحيل 16→17 في SuperBizApp — إنشاء فهارس فقط، لا أعمدة ولا جداول)
     // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — جدول بإنشاء فقط
     // (ترحيل 17→18 في SuperBizApp — CREATE TABLE/INDEX/مشغّلات مزامنة فقط، إلحاقي خالص)
-    version = 19,
+    version = 20,
     exportSchema = true
 )
 
@@ -1544,6 +1573,7 @@ abstract class AppDatabase : androidx.room.RoomDatabase() {
     abstract fun users(): UserDao
     abstract fun userSecrets(): UserSecretDao
     abstract fun zatcaDocs(): ZatcaDocDao
+    abstract fun paymentsE22(): PaymentsE22Dao
     abstract fun syncLog(): SyncLogDao
 }
 
