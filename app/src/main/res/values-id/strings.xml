@@ -1861,6 +1861,9 @@
     <string name="st_lang_ar">Arab</string>
     <string name="st_lang_en">Inggris</string>
     <string name="st_lang_bi">Bilingual</string>
+    <string name="st_lang_fr">Français</string>
+    <string name="st_lang_tr">Türkçe</string>
+    <string name="st_lang_id">Indonesia</string>
     <string name="st_preview">Pratinjau langsung</string>
     <string name="st_generate_save">Terbitkan &amp; simpan</string>
     <string name="st_saving">Menerbitkan</string>

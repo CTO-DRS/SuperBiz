@@ -301,7 +301,7 @@ class StatementDomainWallsTest {
 
     @Test
     fun `لغة الكشف - ثلاث قيم وisRtl محسوبة للعربي والثنائي لا للإنجليزي`() {
-        assertEquals(listOf("AR", "EN", "BILINGUAL"), StatementLang.values().map { it.name })
+        assertEquals(listOf("AR", "EN", "BILINGUAL", "FR", "TR", "ID"), StatementLang.values().map { it.name })
         assertTrue(sampleData(StatementLang.AR).isRtl)
         assertTrue(sampleData(StatementLang.BILINGUAL).isRtl)
         assertFalse(sampleData(StatementLang.EN).isRtl)

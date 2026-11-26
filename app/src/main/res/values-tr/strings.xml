@@ -1861,6 +1861,9 @@
     <string name="st_lang_ar">Arapça</string>
     <string name="st_lang_en">İngilizce</string>
     <string name="st_lang_bi">İkili dil</string>
+    <string name="st_lang_fr">Français</string>
+    <string name="st_lang_tr">Türkçe</string>
+    <string name="st_lang_id">Indonesia</string>
     <string name="st_preview">Canlı önizleme</string>
     <string name="st_generate_save">Oluştur ve kaydet</string>
     <string name="st_saving">Oluşturuluyor</string>

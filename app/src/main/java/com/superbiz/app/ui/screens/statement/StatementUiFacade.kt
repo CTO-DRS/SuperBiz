@@ -27,7 +27,7 @@ object StatementUiFacade {
     // ═══════════ نماذج واجهة محلية (معزولة عن العقد) ═══════════
 
     /** لغة الكشف — أسماء مضاهية لـ StatementLang من العقد */
-    enum class UiLang { AR, EN, BILINGUAL }
+    enum class UiLang { AR, EN, BILINGUAL, FR, TR, ID }
 
     data class RenderedPdf(val file: File, val pageCount: Int)
 

@@ -95,6 +95,8 @@ object StatementFormat {
             StatementLang.AR -> "$d ${AR_MONTHS[m]} $y"
             StatementLang.EN, StatementLang.BILINGUAL ->
                 String.format(Locale.US, "%s %d, %d", EN_MONTHS[m], d, y)
+            StatementLang.FR, StatementLang.TR, StatementLang.ID ->
+                "$d ${StatementI18n.month(m, lang)} $y"
         }
     }
 
@@ -104,12 +106,14 @@ object StatementFormat {
     fun pageOf(page: Int, total: Int, lang: StatementLang): String = when (lang) {
         StatementLang.AR -> "صفحة $page من $total"
         StatementLang.EN, StatementLang.BILINGUAL -> "Page $page of $total"
+        else -> StatementI18n.pageOf(page, total, lang)
     }
 
     /** تاريخ الإصدار كما يُعرض في التذييل: «أُصدر في dd/MM/yyyy» / "Generated: dd/MM/yyyy" */
     fun generatedOn(ts: Long, lang: StatementLang): String = when (lang) {
         StatementLang.AR -> "أُصدر في ${dateShort(ts)}"
         StatementLang.EN, StatementLang.BILINGUAL -> "Generated: ${dateShort(ts)}"
+        else -> StatementI18n.generated(dateShort(ts), lang)
     }
 
     /** فترة الكشف: «من X إلى Y» / "From X to Y" */
@@ -117,6 +121,7 @@ object StatementFormat {
         StatementLang.AR -> "من ${dateShort(fromTs)} إلى ${dateShort(toTs)}"
         StatementLang.EN, StatementLang.BILINGUAL ->
             "From ${dateShort(fromTs)} to ${dateShort(toTs)}"
+        else -> StatementI18n.period(dateShort(fromTs), dateShort(toTs), lang)
     }
 
     // ───────────────────────── مساعدات المحاذاة المحاسبية ─────────────────────────
