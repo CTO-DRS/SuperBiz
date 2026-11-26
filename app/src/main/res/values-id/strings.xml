@@ -1657,6 +1657,10 @@
     <string name="about_dev_share_app_msg">Coba %1$s, aplikasi bisnis berbahasa Arab yang bekerja offline. Unduh di sini:</string>
     <string name="about_dev_share_all_msg">Akun resmi pengembang CTO.DRS:</string>
     <string name="about_dev_check_updates">Periksa pembaruan (versi %1$s)</string>
+    <string name="acc_export_title">Ekspor akuntansi</string>
+    <string name="acc_export_ledger">Buku besar CSV</string>
+    <string name="acc_export_trial">Neraca saldo CSV</string>
+    <string name="acc_export_failed">Ekspor gagal</string>
     <string name="legal_source_note">Sumber kanonik: dokumen lengkap di repositori proyek (docs/PRIVACY_POLICY.md) — salinan dalam aplikasi ini sesuai dengannya dan berfungsi luring.</string>
     <string name="party_role_customer">Pelanggan</string>
     <string name="party_role_supplier">Pemasok</string>

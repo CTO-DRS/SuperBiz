@@ -545,6 +545,7 @@ fun ReportsScreen(appVM: AppVM, nav: NavHostController) {
                 }
             }
         }
+        AccountingExportCard() // [D5]
             },
             com.superbiz.app.ui.insights.insightsGroup("compare") {
         // ══ : وظيفة 16 — مقارنة هذا الشهر × الشهر الماضي (إخفاء صادق بلا بيانات) ══

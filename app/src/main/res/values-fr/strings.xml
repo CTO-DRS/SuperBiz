@@ -1656,6 +1656,10 @@
     <string name="about_dev_share_app_msg">Essayez %1$s, une appli de gestion arabe qui fonctionne hors ligne. Téléchargez-la ici :</string>
     <string name="about_dev_share_all_msg">Comptes officiels du développeur CTO.DRS :</string>
     <string name="about_dev_check_updates">Rechercher des mises à jour (version %1$s)</string>
+    <string name="acc_export_title">Export comptable</string>
+    <string name="acc_export_ledger">Grand livre CSV</string>
+    <string name="acc_export_trial">Balance CSV</string>
+    <string name="acc_export_failed">Échec de l\'export</string>
     <string name="legal_source_note">Source canonique : le document complet dans le dépôt du projet (docs/PRIVACY_POLICY.md) — cette copie intégrée lui correspond et fonctionne hors ligne.</string>
     <string name="party_role_customer">Client</string>
     <string name="party_role_supplier">Fournisseur</string>

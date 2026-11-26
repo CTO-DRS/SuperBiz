@@ -1744,6 +1744,10 @@
     <string name="about_dev_share_app_msg">جرّب %1$s — تطبيق عربي لإدارة الأعمال يعمل بدون إنترنت. حمّله من هنا:</string>
     <string name="about_dev_share_all_msg">حسابات المطوّر CTO.DRS الرسمية:</string>
     <string name="about_dev_check_updates">التحقق من التحديثات (الإصدار %1$s)</string>
+    <string name="acc_export_title">تصدير محاسبي</string>
+    <string name="acc_export_ledger">دفتر الأستاذ CSV</string>
+    <string name="acc_export_trial">ميزان المراجعة CSV</string>
+    <string name="acc_export_failed">فشل التصدير</string>
     <string name="legal_source_note">المصدر الموثّق: وثيقة الخصوصية الكاملة في مستودع المشروع (docs/PRIVACY_POLICY.md) — هذه النسخة داخل التطبيق مطابقة لها وتعمل دون إنترنت.</string>
     <string name="party_role_customer">عميل</string>
     <string name="party_role_supplier">مورد</string>
