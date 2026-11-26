@@ -2511,6 +2511,8 @@
     <string name="ocr_cloud_confirm_body">Seul le texte OCR brut (rien de votre base de données) est envoyé sur Internet pour correction. Vérifiez le texte ci-dessous puis confirmez — l\'envoi est manuel, jamais en arrière-plan.</string>
     <string name="ocr_cloud_send">J\'accepte — envoyer</string>
     <string name="ocr_cloud_cancel">Annuler</string>
+    <string name="ocr_merchant">Commerçant</string>
+    <string name="ocr_date">Date</string>
     <string name="ocr_cloud_failed">Échec de l\'amélioration : %1$s</string>
     <string name="ocr_cloud_disabled_note">L\'amélioration cloud est verrouillée — activez-la dans Paramètres → IA cloud verrouillée et ajoutez une clé API</string>
     <string name="gem_title">IA cloud verrouillée (Gemini)</string>

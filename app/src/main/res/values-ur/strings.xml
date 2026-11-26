@@ -2505,6 +2505,8 @@
     <string name="ocr_cloud_confirm_body">صرف خام OCR متن (آپ کے ڈیٹا بیس سے کچھ نہیں) درستگی کے لیے انٹرنیٹ پر بھیجا جاتا ہے۔ نیچے دیا متن دیکھ کر تصدیق کریں — بھیجنا دستی ہے، پس منظر میں کبھی نہیں۔</string>
     <string name="ocr_cloud_send">میں منظور کرتا ہوں — بھیجیں</string>
     <string name="ocr_cloud_cancel">منسوخ</string>
+    <string name="ocr_merchant">فروخت کنندہ</string>
+    <string name="ocr_date">تاریخ</string>
     <string name="ocr_cloud_failed">بہتری ناکام: %1$s</string>
     <string name="ocr_cloud_disabled_note">کلاؤڈ بہتری مقفل ہے — ترتیبات → مقفل کلاؤڈ AI میں فعال کریں اور API کی شامل کریں</string>
     <string name="gem_title">مقفل کلاؤڈ AI (Gemini)</string>

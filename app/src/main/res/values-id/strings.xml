@@ -2505,6 +2505,8 @@
     <string name="ocr_cloud_confirm_body">Hanya teks OCR mentah (bukan data dari basis data Anda) dikirim lewat internet untuk dikoreksi. Periksa teks di bawah lalu konfirmasi — pengiriman manual, tidak pernah otomatis.</string>
     <string name="ocr_cloud_send">Saya setuju — kirim</string>
     <string name="ocr_cloud_cancel">Batal</string>
+    <string name="ocr_merchant">Pedagang</string>
+    <string name="ocr_date">Tanggal</string>
     <string name="ocr_cloud_failed">Peningkatan gagal: %1$s</string>
     <string name="ocr_cloud_disabled_note">Peningkatan awan terkunci — aktifkan di Pengaturan → AI awan terkunci dan tambahkan kunci API</string>
     <string name="gem_title">AI awan terkunci (Gemini)</string>

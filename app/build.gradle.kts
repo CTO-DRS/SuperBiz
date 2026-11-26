@@ -36,7 +36,7 @@ android {
         // الإصدار يُعرض للمستخدم حصريًا من
         // BuildConfig.VERSION_NAME / VERSION_CODE (الإعدادات + تذييل PDF).
         versionCode = 27
-        versionName = "3.9.0"
+        versionName = "0.1.0" // إعادة ترقيم 2026-11-26: المشروع يبدأ من v0.1.0 (versionCode يبقى تصاعديًا — قيد أندرويد)
         vectorDrawables { useSupportLibrary = true }
     }
 
@@ -100,6 +100,11 @@ android {
         unitTests.all {
             it.maxHeapSize = "1024m"
             it.jvmArgs("-XX:MaxMetaspaceSize=320m")
+            // [E1 / إصلاح CI 2026-11-26] عزل المفردات المشتركة (DataStore/Main dispatcher/AppGraph)
+            // بين ملفات الاختبار: JVM جديد كل 15 صنفًا بدل عملية واحدة طويلة — السبب الجذري لتذبذب
+            // ConfigRbacGateTest/SearchHealthVMTest الموثق في docs/FLAKE_LEDGER.md (#3)
+            it.forkEvery = 15
+            it.maxParallelForks = 2
         }
     }
 }
@@ -139,7 +144,6 @@ dependencies {
     // مضمنة في الحزمة (bundled) — صفر طلب شبكي صفر مفاتيح API؛ يعمل دون اتصال
     // كاملًا فلا يلمس التزام ADR-001 إطلاقًا (لا socket في ملفات الموجة A1)
     implementation("com.google.mlkit:text-recognition:16.0.1")
-    implementation("com.google.mlkit:text-recognition-arabic:16.0.1")
     // جسر coroutines لمهام ML Kit (ListenableTask.await) — بإصدار coroutines المعتمد نفسه
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
     // [W1] Play Billing v7 — فريميوم Pro بلا خادم (شراء لمرة واحدة + استعادة)

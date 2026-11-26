@@ -2628,6 +2628,8 @@
     <string name="ocr_cloud_confirm_body">سيُرسل نص OCR الخام فقط (بلا أي بيانات من قاعدة بياناتك) عبر الإنترنت لتحسينه. راجع النص أدناه ثم أكّد — الإرسال يدوي ولا يحدث خلفيًا أبدًا.</string>
     <string name="ocr_cloud_send">أقر وأرسل</string>
     <string name="ocr_cloud_cancel">إلغاء</string>
+    <string name="ocr_merchant">الجهة</string>
+    <string name="ocr_date">التاريخ</string>
     <string name="ocr_cloud_failed">فشل التحسين: %1$s</string>
     <string name="ocr_cloud_disabled_note">التحسين السحابي مقفول — فعّله من الإعدادات ← الذكاء السحابي المقفول وأدخل مفتاح API</string>
     <string name="gem_title">الذكاء السحابي المقفول (Gemini)</string>

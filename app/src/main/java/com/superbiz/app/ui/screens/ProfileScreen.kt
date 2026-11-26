@@ -862,7 +862,7 @@ fun ProfileScreen(appVM: AppVM, settingsVM: SettingsVM, nav: NavHostController) 
 
 /** قراءة اسم إصدار التطبيق ديناميكياً */
 internal fun appVersionName(activity: MainActivity?): String = try {
-    activity?.packageManager?.getPackageInfo(activity.packageName, 0)?.versionName ?: "3.9.0"
+    activity?.packageManager?.getPackageInfo(activity.packageName, 0)?.versionName ?: "0.1.0"
 } catch (e: Exception) { "3.7.0" }
 
 /**
