@@ -1633,6 +1633,9 @@
     <string name="support_row_terms_hint">Lisans, veri sorumluluğunuz, ücretli hizmetler ve sorumluluk sınırları</string>
     <string name="support_open_fail">Cihazınızda bu bağlantıyı açabilecek uygulama yok</string>
     <string name="set_about_dev_credit">CTO.DRS tarafından geliştirildi ve sürdürüldü — destek için «Destek &amp; İletişim» bölümüne bakın</string>
+    <string name="about_dev_title">Geliştirici hakkında</string>
+    <string name="about_dev_tagline">CTO: DRS tarafından geliştirildi</string>
+    <string name="about_dev_photo_desc">Geliştirici fotoğrafı</string>
     <string name="legal_source_note">Kanonik kaynak: proje deposundaki tam belge (docs/PRIVACY_POLICY.md) — bu uygulama içi kopya ona uyar ve çevrimdışı çalışır.</string>
     <string name="party_role_customer">Müşteri</string>
     <string name="party_role_supplier">Tedarikçi</string>

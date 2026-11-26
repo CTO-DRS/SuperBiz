@@ -1633,6 +1633,9 @@
     <string name="support_row_terms_hint">لائسنس، آپ کے ڈیٹا کی ذمہ داری، ادا شدہ خدمات اور ذمہ داری کی حدود</string>
     <string name="support_open_fail">آپ کے آلے پر کوئی ایپ نہیں جو یہ لنک کھول سکے</string>
     <string name="set_about_dev_credit">ترقی و دیکھ بھال: CTO.DRS — مدد کے لیے «سپورٹ اور رابطہ» سیکشن کھولیں</string>
+    <string name="about_dev_title">ڈیولپر کے بارے میں</string>
+    <string name="about_dev_tagline">ڈیولپمنٹ: CTO: DRS</string>
+    <string name="about_dev_photo_desc">ڈیولپر کی تصویر</string>
     <string name="legal_source_note">بنیادی ذریعہ: پروجیکٹ ریپوزٹری میں مکمل دستاویز (docs/PRIVACY_POLICY.md) — ایپ کے اندر یہ نقل اسی سے مطابقت رکھتی ہے اور آف لائن کام کرتی ہے۔</string>
     <string name="party_role_customer">عميل</string>
     <string name="party_role_supplier">مورد</string>

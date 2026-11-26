@@ -1632,6 +1632,9 @@
     <string name="support_row_terms_hint">Licence, responsabilité de vos données, services payants et limites</string>
     <string name="support_open_fail">Aucune application de votre appareil ne peut ouvrir ce lien</string>
     <string name="set_about_dev_credit">Développée et maintenue par CTO.DRS — voir « Support &amp; contact » pour l\'assistance</string>
+    <string name="about_dev_title">À propos du développeur</string>
+    <string name="about_dev_tagline">Développé par CTO: DRS</string>
+    <string name="about_dev_photo_desc">Photo du développeur</string>
     <string name="legal_source_note">Source canonique : le document complet dans le dépôt du projet (docs/PRIVACY_POLICY.md) — cette copie intégrée lui correspond et fonctionne hors ligne.</string>
     <string name="party_role_customer">Client</string>
     <string name="party_role_supplier">Fournisseur</string>

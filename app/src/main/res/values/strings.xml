@@ -1720,6 +1720,9 @@
     <string name="support_row_terms_hint">الترخيص، مسؤوليتك عن بياناتك، الخدمات المدفوعة، وحدود المسؤولية</string>
     <string name="support_open_fail">لا يوجد تطبيق على جهازك يفتح هذا الرابط</string>
     <string name="set_about_dev_credit">تطوير وصيانة: CTO.DRS — للتواصل والدعم التقني افتح قسم «الدعم والتواصل»</string>
+    <string name="about_dev_title">عن المطور</string>
+    <string name="about_dev_tagline">تطوير CTO: DRS</string>
+    <string name="about_dev_photo_desc">صورة المطور</string>
     <string name="legal_source_note">المصدر الموثّق: وثيقة الخصوصية الكاملة في مستودع المشروع (docs/PRIVACY_POLICY.md) — هذه النسخة داخل التطبيق مطابقة لها وتعمل دون إنترنت.</string>
     <string name="party_role_customer">عميل</string>
     <string name="party_role_supplier">مورد</string>

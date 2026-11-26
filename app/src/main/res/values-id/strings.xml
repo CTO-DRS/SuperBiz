@@ -1633,6 +1633,9 @@
     <string name="support_row_terms_hint">Lisensi, tanggung jawab data Anda, layanan berbayar, dan batasan tanggung jawab</string>
     <string name="support_open_fail">Tidak ada aplikasi di perangkat Anda yang dapat membuka tautan ini</string>
     <string name="set_about_dev_credit">Dikembangkan &amp; dipelihara oleh CTO.DRS — buka «Dukungan &amp; Kontak» untuk bantuan</string>
+    <string name="about_dev_title">Tentang pengembang</string>
+    <string name="about_dev_tagline">Dikembangkan oleh CTO: DRS</string>
+    <string name="about_dev_photo_desc">Foto pengembang</string>
     <string name="legal_source_note">Sumber kanonik: dokumen lengkap di repositori proyek (docs/PRIVACY_POLICY.md) — salinan dalam aplikasi ini sesuai dengannya dan berfungsi luring.</string>
     <string name="party_role_customer">Pelanggan</string>
     <string name="party_role_supplier">Pemasok</string>
