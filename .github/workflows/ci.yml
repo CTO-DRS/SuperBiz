@@ -26,7 +26,12 @@ jobs:
           java-version: '17.0.13+11'
 
       - name: Android SDK
-        uses: android-actions/setup-android@v3
+        # الأداة المسبقة على صورة ubuntu-latest — نقبل التراخيص مباشرة (setup-android@v3 ينهار على الصورة الجديدة)
+        run: |
+          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
 
       - name: Gradle cache
         uses: actions/setup-java@v4
