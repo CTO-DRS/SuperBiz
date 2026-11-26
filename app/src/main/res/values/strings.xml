@@ -1751,6 +1751,14 @@
     <string name="rp_title">صلاحيات الأدوار</string>
     <string name="rp_hint">فعّل أو عطّل كل عملية لكل دور. دور المالك ثابت ولا يُعدَّل. كل تغيير يُسجَّل في سجل التدقيق.</string>
     <string name="rp_open">تخصيص صلاحيات الأدوار</string>
+    <string name="portal_title">بوابة العميل</string>
+    <string name="portal_col_date">التاريخ</string>
+    <string name="portal_col_memo">البيان</string>
+    <string name="portal_col_debit">مدين</string>
+    <string name="portal_col_credit">دائن</string>
+    <string name="portal_col_balance">الرصيد</string>
+    <string name="portal_footer">لقطة من حسابك بتاريخ الإرسال</string>
+    <string name="portal_share">مشاركة بوابة العميل</string>
     <string name="legal_source_note">المصدر الموثّق: وثيقة الخصوصية الكاملة في مستودع المشروع (docs/PRIVACY_POLICY.md) — هذه النسخة داخل التطبيق مطابقة لها وتعمل دون إنترنت.</string>
     <string name="party_role_customer">عميل</string>
     <string name="party_role_supplier">مورد</string>

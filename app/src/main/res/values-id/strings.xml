@@ -1664,6 +1664,14 @@
     <string name="rp_title">Izin peran</string>
     <string name="rp_hint">Aktifkan atau nonaktifkan tiap operasi per peran. Peran pemilik tetap. Setiap perubahan dicatat di log audit.</string>
     <string name="rp_open">Atur izin peran</string>
+    <string name="portal_title">Akun pelanggan</string>
+    <string name="portal_col_date">Tanggal</string>
+    <string name="portal_col_memo">Keterangan</string>
+    <string name="portal_col_debit">Debit</string>
+    <string name="portal_col_credit">Kredit</string>
+    <string name="portal_col_balance">Saldo</string>
+    <string name="portal_footer">Cuplikan akun Anda saat dikirim</string>
+    <string name="portal_share">Bagikan portal pelanggan</string>
     <string name="legal_source_note">Sumber kanonik: dokumen lengkap di repositori proyek (docs/PRIVACY_POLICY.md) — salinan dalam aplikasi ini sesuai dengannya dan berfungsi luring.</string>
     <string name="party_role_customer">Pelanggan</string>
     <string name="party_role_supplier">Pemasok</string>

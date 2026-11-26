@@ -1663,6 +1663,14 @@
     <string name="rp_title">Permissions des rôles</string>
     <string name="rp_hint">Activez ou désactivez chaque opération par rôle. Le rôle propriétaire est fixe. Chaque changement est consigné dans le journal d\'audit.</string>
     <string name="rp_open">Personnaliser les permissions</string>
+    <string name="portal_title">Compte client</string>
+    <string name="portal_col_date">Date</string>
+    <string name="portal_col_memo">Détails</string>
+    <string name="portal_col_debit">Débit</string>
+    <string name="portal_col_credit">Crédit</string>
+    <string name="portal_col_balance">Solde</string>
+    <string name="portal_footer">Instantané de votre compte au moment de l\'envoi</string>
+    <string name="portal_share">Partager le portail client</string>
     <string name="legal_source_note">Source canonique : le document complet dans le dépôt du projet (docs/PRIVACY_POLICY.md) — cette copie intégrée lui correspond et fonctionne hors ligne.</string>
     <string name="party_role_customer">Client</string>
     <string name="party_role_supplier">Fournisseur</string>
