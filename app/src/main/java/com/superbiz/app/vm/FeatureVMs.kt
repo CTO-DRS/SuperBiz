@@ -3077,3 +3077,47 @@ class BranchesVM(app: Application) : AndroidViewModel(app) {
 
     fun setActive(id: Long, active: Boolean) = launchSafe { g.transfers.setBranchActive(id, active) }
 }
+
+/** [A2] شاشة التحويلات بين الفروع — فوق TransferRepo (الصلاحية INVENTORY_MANAGE عند حد المستودع) */
+class TransfersVM(app: Application) : AndroidViewModel(app) {
+    private val g = AppGraph.from(app)
+
+    val transfers: StateFlow<List<com.superbiz.app.data.db.StockTransferEntity>> =
+        g.transfers.transfers().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val branches: StateFlow<List<com.superbiz.app.data.db.BranchEntity>> =
+        g.transfers.branches().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val products: StateFlow<List<Product>> =
+        g.db.products().all().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    suspend fun linesOf(id: Long): List<com.superbiz.app.data.db.StockTransferLineEntity> = g.transfers.lines(id)
+    suspend fun qtyAt(branchId: Long, productId: Long): Double = g.transfers.branchQty(branchId, productId)
+
+    /** يعيد null عند النجاح أو رمزًا: same / qty / stock / denied / other */
+    private suspend fun guarded(block: suspend () -> Unit): String? = try {
+        block(); null
+    } catch (e: com.superbiz.app.domain.rbac.RoleDeniedException) {
+        "denied"
+    } catch (e: IllegalArgumentException) {
+        val m = e.message.orEmpty()
+        when {
+            m.contains("insufficient") -> "stock"
+            m.contains("differ") -> "same"
+            m.contains("qty") -> "qty"
+            else -> "other"
+        }
+    }
+
+    fun send(from: Long, to: Long, productId: Long, qty: Double, note: String, onResult: (String?) -> Unit) = launchSafe {
+        onResult(guarded {
+            g.transfers.sendTransfer(from, to, listOf(productId to qty), System.currentTimeMillis(), note.trim())
+        })
+    }
+
+    fun receive(id: Long, onResult: (String?) -> Unit = {}) = launchSafe {
+        onResult(guarded { g.transfers.receiveTransfer(id, emptyMap(), System.currentTimeMillis()) })
+    }
+
+    fun cancel(id: Long, onResult: (String?) -> Unit = {}) = launchSafe {
+        onResult(guarded { g.transfers.cancelTransfer(id) })
+    }
+}
