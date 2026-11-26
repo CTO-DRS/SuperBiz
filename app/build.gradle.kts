@@ -100,6 +100,11 @@ android {
         unitTests.all {
             it.maxHeapSize = "1024m"
             it.jvmArgs("-XX:MaxMetaspaceSize=320m")
+            // [E1 / إصلاح CI 2026-11-26] عزل المفردات المشتركة (DataStore/Main dispatcher/AppGraph)
+            // بين ملفات الاختبار: JVM جديد كل 15 صنفًا بدل عملية واحدة طويلة — السبب الجذري لتذبذب
+            // ConfigRbacGateTest/SearchHealthVMTest الموثق في docs/FLAKE_LEDGER.md (#3)
+            it.forkEvery = 15
+            it.maxParallelForks = 2
         }
     }
 }
