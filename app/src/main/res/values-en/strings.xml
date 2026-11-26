@@ -1960,6 +1960,9 @@
     <string name="st_lang_ar">Arabic</string>
     <string name="st_lang_en">English</string>
     <string name="st_lang_bi">Bilingual</string>
+    <string name="st_lang_fr">Français</string>
+    <string name="st_lang_tr">Türkçe</string>
+    <string name="st_lang_id">Indonesia</string>
     <string name="st_preview">Live preview</string>
     <string name="st_generate_save">Issue and save</string>
     <string name="st_saving">Issuing</string>

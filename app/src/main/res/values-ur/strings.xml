@@ -1861,6 +1861,9 @@
     <string name="st_lang_ar">عربی</string>
     <string name="st_lang_en">انگریزی</string>
     <string name="st_lang_bi">دو لسانی</string>
+    <string name="st_lang_fr">Français</string>
+    <string name="st_lang_tr">Türkçe</string>
+    <string name="st_lang_id">Indonesia</string>
     <string name="st_preview">لازمی معاینہ</string>
     <string name="st_generate_save">جاری کریں اور محفوظ کریں</string>
     <string name="st_saving">جاری کیا جا رہا ہے</string>

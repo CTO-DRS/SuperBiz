@@ -281,6 +281,7 @@ object StatementLayout {
         private fun lbl(ar: String, en: String): String = when {
             bi -> "$ar / $en"
             d.lang == StatementLang.AR -> ar
+            StatementI18n.isLatinExtra(d.lang) -> StatementI18n.tr(en, d.lang)
             else -> en
         }
 
@@ -663,7 +664,7 @@ object StatementLayout {
         private var creditPhys = 4
         private var balPhys = 5
 
-        private fun headerLabel(ar: String, en: String): String = if (d.lang == StatementLang.AR && !bi) ar else if (bi) ar else en
+        private fun headerLabel(ar: String, en: String): String = if (d.lang == StatementLang.AR && !bi) ar else if (bi) ar else StatementI18n.tr(en, d.lang)
         private fun headerLabelEn(ar: String, en: String): String = en
 
         private fun drawTableHeader() {
@@ -796,6 +797,7 @@ object StatementLayout {
             val line = when {
                 bi -> EMPTY_AR
                 d.lang == StatementLang.AR -> EMPTY_AR
+                StatementI18n.isLatinExtra(d.lang) -> StatementI18n.tr(EMPTY_EN, d.lang)
                 else -> EMPTY_EN
             }
             addCentered(line, hx0 + tableW / 2f, ty, bodySize + 1f, true, s.secondary, tableW - 16f)

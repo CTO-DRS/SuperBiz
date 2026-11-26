@@ -31,7 +31,7 @@ enum class StatementPeriodPreset {
 enum class BalanceDirection { DUE_ON_CUSTOMER, IN_FAVOR_OF_CUSTOMER, BALANCED }
 
 /** لغة الكشف — isRtl محسوب على StatementData: AR/BILINGUAL = true */
-enum class StatementLang { AR, EN, BILINGUAL }
+enum class StatementLang { AR, EN, BILINGUAL, FR, TR, ID }
 
 /**
  * مفاتيح أنواع سطور الكشف — قيم مكتوبة (string literals) لا enum كي تبقى JSON/SQL-صديقة،
@@ -132,5 +132,5 @@ data class StatementData(
     val lang: StatementLang
 ) {
     /** العربي والثنائي يُرسمان RTL — الإنجليزي وحده LTR */
-    val isRtl: Boolean get() = lang != StatementLang.EN
+    val isRtl: Boolean get() = lang == StatementLang.AR || lang == StatementLang.BILINGUAL
 }

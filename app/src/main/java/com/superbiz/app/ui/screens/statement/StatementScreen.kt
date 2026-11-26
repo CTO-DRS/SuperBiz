@@ -391,7 +391,10 @@ fun StatementScreen(appVM: AppVM, partyId: Long, nav: NavHostController) {
                             listOf(
                                 StatementUiFacade.UiLang.AR to stringResourceCompat(R.string.st_lang_ar),
                                 StatementUiFacade.UiLang.EN to stringResourceCompat(R.string.st_lang_en),
-                                StatementUiFacade.UiLang.BILINGUAL to stringResourceCompat(R.string.st_lang_bi)
+                                StatementUiFacade.UiLang.BILINGUAL to stringResourceCompat(R.string.st_lang_bi),
+                                StatementUiFacade.UiLang.FR to stringResourceCompat(R.string.st_lang_fr),
+                                StatementUiFacade.UiLang.TR to stringResourceCompat(R.string.st_lang_tr),
+                                StatementUiFacade.UiLang.ID to stringResourceCompat(R.string.st_lang_id)
                             ).forEach { (l, label) ->
                                 StChip(label, lang == l) { lang = l }
                             }

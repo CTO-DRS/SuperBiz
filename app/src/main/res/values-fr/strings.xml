@@ -1860,6 +1860,9 @@
     <string name="st_lang_ar">Arabe</string>
     <string name="st_lang_en">Anglais</string>
     <string name="st_lang_bi">Bilingue</string>
+    <string name="st_lang_fr">Français</string>
+    <string name="st_lang_tr">Türkçe</string>
+    <string name="st_lang_id">Indonesia</string>
     <string name="st_preview">Aperçu en direct</string>
     <string name="st_generate_save">Émettre et enregistrer</string>
     <string name="st_saving">Émission</string>
