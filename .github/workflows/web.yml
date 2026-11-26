@@ -46,7 +46,7 @@ jobs:
       - name: Deps checker [W1.6/#40] — أي حزمة إنتاج بلا استيراد = أحمر (منع رجوع التقليم)
         run: bun run check:deps
 
-      - name: Typecheck (enforced — ignoreBuildErrors: false)
+      - name: "Typecheck (enforced — ignoreBuildErrors false)"
         run: bun run typecheck
 
       - name: Contracts suite (vitest — golden vectors + W1.5 auth contracts)
