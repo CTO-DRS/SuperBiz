@@ -203,3 +203,7 @@ SuperBiz/
 | [`docs/PRIVACY_POLICY.md`](docs/PRIVACY_POLICY.md) · [`docs/PLAY_DATA_SAFETY.md`](docs/PLAY_DATA_SAFETY.md) · [`docs/STORE_LISTING_ASO.md`](docs/STORE_LISTING_ASO.md) | وثائق النشر على المتجر |
 | [`docs/LAUNCH_RUNBOOK_W1.md`](docs/LAUNCH_RUNBOOK_W1.md) | دفتر الإطلاق التشغيلي |
 | [`docs/ops/`](docs/ops/) | حزمة العمليات: سياسة الخصوصية العامة، المختبرون، خط أساس الأداء |
+
+---
+
+Developed by [CTO: DRS](https://cto-drs.com) · تطوير [CTO: DRS](https://cto-drs.com)

@@ -1344,6 +1344,7 @@ private fun couponValueLabel(c: CouponEntity): String {
 @Composable
 private fun AboutSection() {
     val g = glassColors()
+    Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)) {
     GlassCard(corner = 18.dp) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             // [P6-M51 إصلاح] توطين قسم «حول» — الإصدار من BuildConfig بدل النص الصلب الخاطئ
@@ -1374,6 +1375,8 @@ private fun AboutSection() {
                 style = MaterialTheme.typography.bodySmall, color = g.accent
             )
         }
+    }
+    AboutDeveloperCard()
     }
 }
 
