@@ -84,6 +84,7 @@ class MultiBranchCoreTest {
         assertEquals("الاستلام أضاف للوجهة والثابت صامد", before, planeTotal(), 1e-9)
         assertEquals(30.0, transfers.branchQty(otherBranchId, productId), 1e-9)
         assertEquals(0.0, transfers.inTransitTotal(productId), 1e-9)
+        Unit
     }
 
     @Test
@@ -298,6 +299,7 @@ class MultiBranchCoreTest {
         assertEquals(70.0, db.branchStock().qtyAt(mainBranchId, productId)!!, 1e-9)
         assertEquals(30.0, transfers.inTransitTotal(productId), 1e-9)
         assertThrows(IllegalArgumentException::class.java) { runBlocking { transfers.approveTransfer(tid) } }
+        Unit
     }
 
     /** [A5] الرفض نهائي بلا أثر؛ والاعتماد عند نقص المخزون يفشل ويبقى الطلب معلقاً */
