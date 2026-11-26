@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -86,6 +87,7 @@ private val Violet = Color(0xFF6D3FC9)
 internal fun AboutDeveloperCard() {
     val context = LocalContext.current
     var showPhoto by remember { mutableStateOf(false) }
+    var qrLink by remember { mutableStateOf<DevLink?>(null) }
 
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // ── ترويسة القسم
@@ -177,13 +179,7 @@ internal fun AboutDeveloperCard() {
                                 Modifier
                                     .weight(1f)
                                     .clip(RoundedCornerShape(12.dp))
-                                    .clickable(role = Role.Button) {
-                                        startIntentSafe(
-                                            context,
-                                            Intent(Intent.ACTION_VIEW, Uri.parse(link.url)),
-                                            R.string.support_open_fail
-                                        )
-                                    }
+                                    .clickable(role = Role.Button) { qrLink = link }
                                     .semantics { contentDescription = label }
                                     .padding(vertical = 2.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
@@ -229,6 +225,104 @@ internal fun AboutDeveloperCard() {
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp))
                 )
+            }
+        }
+    }
+
+    qrLink?.let { link -> DevQrSheet(link, onDismiss = { qrLink = null }) }
+}
+
+/**
+ * نافذة الحساب: رمز QR يُولَّد على الجهاز (zxing عبر BarcodeGen) + زرا «فتح» و«نسخ» بنفس زجاج لوحة المطور.
+ * التسلسل: «فتح» يشغّل الرابط ثم يغلق النافذة؛ «نسخ» ينسخ الرابط ثم يغلقها؛ النقر خارجها يغلقها.
+ */
+@Composable
+private fun DevQrSheet(link: DevLink, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+    val label = stringResource(link.label)
+    val copiedMsg = stringResource(R.string.about_dev_copied)
+    val bitmap = remember(link.url) { com.superbiz.app.util.BarcodeGen.qr(link.url, 600)?.asImageBitmap() }
+    Dialog(onDismissRequest = onDismiss) {
+        val shape = RoundedCornerShape(24.dp)
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .background(Color(0xF00B0C24))
+                .background(Color(0x0CFFFFFF))
+                .border(
+                    1.dp,
+                    Brush.linearGradient(listOf(Color(0x5C8E5BD0), Color(0x5C5558C2), Color(0x5C2FA9C0))),
+                    shape
+                )
+        ) {
+            Box(
+                Modifier.fillMaxWidth().height(60.dp)
+                    .background(Brush.verticalGradient(listOf(Color(0x1CFFFFFF), Color.Transparent)))
+            )
+            Column(
+                Modifier.fillMaxWidth().padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    Modifier.size(46.dp).clip(CircleShape).background(link.brand)
+                        .border(1.dp, Color(0x40FFFFFF), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (link.glyph != null) {
+                        Icon(painterResource(link.glyph), null, tint = Color.White, modifier = Modifier.size(22.dp))
+                    } else if (link.icon != null) {
+                        Icon(link.icon, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                Text(label, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(14.dp))
+                Box(
+                    Modifier.size(210.dp).clip(RoundedCornerShape(16.dp)).background(Color.White).padding(10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (bitmap != null) {
+                        Image(bitmap = bitmap, contentDescription = label, modifier = Modifier.fillMaxSize())
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                androidx.compose.runtime.CompositionLocalProvider(
+                    androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr
+                ) {
+                    Text(
+                        link.url.removePrefix("https://"),
+                        color = Color(0xFFA5B4FC), fontSize = 12.sp, textAlign = TextAlign.Center, maxLines = 2
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    androidx.compose.material3.Button(
+                        onClick = {
+                            startIntentSafe(
+                                context,
+                                Intent(Intent.ACTION_VIEW, Uri.parse(link.url)),
+                                R.string.support_open_fail
+                            )
+                            onDismiss()
+                        },
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = if (link.brand == Color(0xFF000000) || link.brand == Color(0xFF111111)) Color(0xFF6D3FC9) else link.brand,
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) { Text(stringResource(R.string.about_dev_open)) }
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = {
+                            clipboard.setText(androidx.compose.ui.text.AnnotatedString(link.url))
+                            android.widget.Toast.makeText(context, copiedMsg, android.widget.Toast.LENGTH_SHORT).show()
+                            onDismiss()
+                        },
+                        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFCBD5E1)),
+                        modifier = Modifier.weight(1f)
+                    ) { Text(stringResource(R.string.about_dev_copy)) }
+                }
             }
         }
     }

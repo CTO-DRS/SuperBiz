@@ -1638,6 +1638,9 @@
     <string name="about_dev_footer">%1$s • Versi %2$s</string>
     <string name="about_dev_verified">Terverifikasi</string>
     <string name="about_dev_photo_desc">Foto pengembang</string>
+    <string name="about_dev_open">Buka</string>
+    <string name="about_dev_copy">Salin tautan</string>
+    <string name="about_dev_copied">Tautan disalin</string>
     <string name="about_dev_l_whatsapp">WhatsApp</string>
     <string name="about_dev_l_telegram">Telegram</string>
     <string name="about_dev_l_tiktok">TikTok</string>

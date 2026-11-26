@@ -1638,6 +1638,9 @@
     <string name="about_dev_footer">%1$s • Sürüm %2$s</string>
     <string name="about_dev_verified">Doğrulandı</string>
     <string name="about_dev_photo_desc">Geliştirici fotoğrafı</string>
+    <string name="about_dev_open">Aç</string>
+    <string name="about_dev_copy">Bağlantıyı kopyala</string>
+    <string name="about_dev_copied">Bağlantı kopyalandı</string>
     <string name="about_dev_l_whatsapp">WhatsApp</string>
     <string name="about_dev_l_telegram">Telegram</string>
     <string name="about_dev_l_tiktok">TikTok</string>

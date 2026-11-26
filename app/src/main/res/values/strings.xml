@@ -1725,6 +1725,9 @@
     <string name="about_dev_footer">%1$s • الإصدار %2$s</string>
     <string name="about_dev_verified">موثّق</string>
     <string name="about_dev_photo_desc">صورة المطوّر</string>
+    <string name="about_dev_open">فتح</string>
+    <string name="about_dev_copy">نسخ الرابط</string>
+    <string name="about_dev_copied">تم نسخ الرابط</string>
     <string name="about_dev_l_whatsapp">واتساب</string>
     <string name="about_dev_l_telegram">تيليجرام</string>
     <string name="about_dev_l_tiktok">تيك توك</string>
