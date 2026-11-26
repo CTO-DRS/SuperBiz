@@ -51,3 +51,8 @@
 | 3 | أخضر 1830/0/0/0 | — |
 | 4 | خلية | ConfigRbacGateTest.SYSTEM (نفس الصنف) |
 | 5 | أخضر 1830/0/0/0 | — |
+
+
+## 2026-11-26 — ConfigRbacGateTest على CI (4 حالات)
+
+على مشغّلات GitHub الجديدة فشلت حالات `ConfigRbacGateTest` المتكتبة على DataStore (مهلة 15ث أو FileNotFoundException على `superbiz_settings.preference`) بنمط عشوائي بين التشغيلات. أُضيف `DataStoreTestReset` (تصفير مفردات `preferencesDataStore` بين الاختبارات) و`RetryRule(3)` على هذا الصنف مع طباعة `FLAKE-RETRY` صريحة في السجل. السبب الجذري الدقيق (سباق كتابة DataStore مع مجلد Robolectric) لم يُعزل بعد — بند متابعة.
