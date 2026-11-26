@@ -40,7 +40,7 @@ import com.superbiz.app.vm.BranchesVM
  * والمسار نفسه مسوَّر بـRbacGated؛ الواجهة تعرض الخطأ ولا تكتب بصمت.
  */
 @Composable
-fun BranchesScreen(onBack: () -> Unit) {
+fun BranchesScreen(onBack: () -> Unit, onOpenTransfers: () -> Unit = {}) {
     val g = glassColors()
     val vm: BranchesVM = viewModel()
     val branches by vm.branches.collectAsState()
@@ -50,6 +50,10 @@ fun BranchesScreen(onBack: () -> Unit) {
 
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         SubHeader(stringResource(R.string.branches_title), onBack = onBack)
+        Spacer(Modifier.height(8.dp))
+        androidx.compose.material3.OutlinedButton(onClick = onOpenTransfers, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.transfers_open))
+        }
         Spacer(Modifier.height(8.dp))
         GlassCard(corner = 18.dp) {
             Column(Modifier.fillMaxWidth().padding(14.dp)) {

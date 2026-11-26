@@ -168,6 +168,7 @@ object Routes {
     const val DATA_HEALTH = "data_health"
     // [A1] شاشة الفروع
     const val BRANCHES = "branches"
+    const val TRANSFERS = "transfers"
     // [P11-a]: المفضّلات مع بطاقة الموقع الجغرافي — الدخول من رقاقة الذمم
     const val FAVORITES = "favorites"
     // [P17-c]: منظومة كشف الحساب — المسارات السبعة الجديدة
@@ -398,7 +399,15 @@ fun SuperBizRoot(
                 }
                 composable(Routes.BRANCHES) {
                     RbacGated(com.superbiz.app.domain.rbac.Op.INVENTORY_MANAGE) {
-                        com.superbiz.app.ui.screens.BranchesScreen(onBack = { nav.popBackStack() })
+                        com.superbiz.app.ui.screens.BranchesScreen(
+                            onBack = { nav.popBackStack() },
+                            onOpenTransfers = { nav.navigate(Routes.TRANSFERS) }
+                        )
+                    }
+                }
+                composable(Routes.TRANSFERS) {
+                    RbacGated(com.superbiz.app.domain.rbac.Op.INVENTORY_MANAGE) {
+                        com.superbiz.app.ui.screens.TransfersScreen(onBack = { nav.popBackStack() })
                     }
                 }
                 composable(Routes.DATA_HEALTH) {
