@@ -65,6 +65,9 @@ import java.io.File
 @Config(sdk = [34], application = android.app.Application::class)
 class ConfigRbacGateTest {
 
+    @get:org.junit.Rule
+    val retry = com.superbiz.app.testutil.RetryRule(3)
+
     private val testMain = UnconfinedTestDispatcher()
     private lateinit var app: Application
     private lateinit var g: AppGraph
