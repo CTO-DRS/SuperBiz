@@ -3051,3 +3051,29 @@ class FavoritesVM(app: Application) : AndroidViewModel(app) {
         }
     }
 }
+
+
+/** [A1] شاشة الفروع — عرض/إنشاء/أرشفة فرع فوق TransferRepo (البوابات في المستودع نفسه: INVENTORY_MANAGE) */
+class BranchesVM(app: Application) : AndroidViewModel(app) {
+    private val g = AppGraph.from(app)
+
+    val branches: kotlinx.coroutines.flow.StateFlow<List<com.superbiz.app.data.db.BranchEntity>> =
+        g.transfers.branches().stateIn(
+            viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5_000), emptyList()
+        )
+
+    /** يعيد null عند النجاح أو رمز الخطأ (name_required / duplicate / denied) */
+    fun create(name: String, kind: Int, onResult: (String?) -> Unit) = launchSafe {
+        val clean = name.trim()
+        if (clean.isEmpty()) { onResult("name_required"); return@launchSafe }
+        if (branches.value.any { it.name.equals(clean, ignoreCase = true) }) { onResult("duplicate"); return@launchSafe }
+        try {
+            g.transfers.createBranch(clean, kind)
+            onResult(null)
+        } catch (e: com.superbiz.app.domain.rbac.RoleDeniedException) {
+            onResult("denied")
+        }
+    }
+
+    fun setActive(id: Long, active: Boolean) = launchSafe { g.transfers.setBranchActive(id, active) }
+}

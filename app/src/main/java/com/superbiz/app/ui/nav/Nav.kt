@@ -166,6 +166,8 @@ object Routes {
     // البحث الشامل + فحص صحة البيانات
     const val SEARCH = "search"
     const val DATA_HEALTH = "data_health"
+    // [A1] شاشة الفروع
+    const val BRANCHES = "branches"
     // [P11-a]: المفضّلات مع بطاقة الموقع الجغرافي — الدخول من رقاقة الذمم
     const val FAVORITES = "favorites"
     // [P17-c]: منظومة كشف الحساب — المسارات السبعة الجديدة
@@ -366,6 +368,7 @@ fun SuperBizRoot(
                         settingsVM = settingsVM,
                         onOpenErrorLog = { nav.navigate(Routes.ERROR_LOG) },
                         onOpenHealth = { nav.navigate(Routes.DATA_HEALTH) },
+                        onOpenBranches = { nav.navigate(Routes.BRANCHES) },
                         // [P17-c] مدخلا إدارة التواقيع والأختام من قسم البيانات
                         onOpenSignatures = { nav.navigate(Routes.SIGNATURES) },
                         onOpenStamps = { nav.navigate(Routes.STAMPS) },
@@ -392,6 +395,11 @@ fun SuperBizRoot(
                 // البحث الشامل + فحص صحة البيانات
                 composable(Routes.SEARCH) {
                     SearchScreen(appVM, nav, onBack = { nav.popBackStack() })
+                }
+                composable(Routes.BRANCHES) {
+                    RbacGated(com.superbiz.app.domain.rbac.Op.INVENTORY_MANAGE) {
+                        com.superbiz.app.ui.screens.BranchesScreen(onBack = { nav.popBackStack() })
+                    }
                 }
                 composable(Routes.DATA_HEALTH) {
                     DataHealthScreen(onBack = { nav.popBackStack() })
