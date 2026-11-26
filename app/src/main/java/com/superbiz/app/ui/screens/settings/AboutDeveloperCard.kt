@@ -33,6 +33,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.animation.togetherWith
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -98,6 +101,8 @@ internal fun AboutDeveloperCard() {
             Spacer(Modifier.width(10.dp))
             Box(Modifier.weight(1f).height(1.dp).background(Color(0x40A78BFA)))
         }
+
+        DevBannerCarousel()
 
         // ── اللوحة الزجاجية
         val shape = RoundedCornerShape(24.dp)
@@ -205,6 +210,33 @@ internal fun AboutDeveloperCard() {
                     }
                 }
                 Spacer(Modifier.height(16.dp))
+                val appName = stringResource(R.string.app_name)
+                val shareAppTitle = stringResource(R.string.about_dev_share_app)
+                val shareAllTitle = stringResource(R.string.about_dev_share_all)
+                val shareAppIntro = stringResource(R.string.about_dev_share_app_msg, appName)
+                val allHeader = stringResource(R.string.about_dev_share_all_msg)
+                val entries = DEV_LINKS.map { stringResource(it.label) to it.url }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    androidx.compose.material3.Button(
+                        onClick = { DevShare.shareText(context, shareAppTitle, DevShare.appMessage(shareAppIntro)) },
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Violet, contentColor = Color.White),
+                        modifier = Modifier.weight(1f)
+                    ) { Text(shareAppTitle, fontSize = 13.sp, maxLines = 1) }
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = { DevShare.shareText(context, shareAllTitle, DevShare.allAccountsMessage(allHeader, entries)) },
+                        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFCBD5E1)),
+                        modifier = Modifier.weight(1f)
+                    ) { Text(shareAllTitle, fontSize = 13.sp, maxLines = 1) }
+                }
+                Spacer(Modifier.height(8.dp))
+                androidx.compose.material3.OutlinedButton(
+                    onClick = {
+                        startIntentSafe(context, Intent(Intent.ACTION_VIEW, Uri.parse(APP_RELEASES_URL)), R.string.support_open_fail)
+                    },
+                    colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFA5B4FC)),
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text(stringResource(R.string.about_dev_check_updates, com.superbiz.app.BuildConfig.VERSION_NAME), fontSize = 13.sp) }
+                Spacer(Modifier.height(10.dp))
                 Text(
                     stringResource(R.string.about_dev_footer, stringResource(R.string.app_name), com.superbiz.app.BuildConfig.VERSION_NAME),
                     color = Color(0xFF64748B), fontSize = 11.sp, textAlign = TextAlign.Center
@@ -323,7 +355,91 @@ private fun DevQrSheet(link: DevLink, onDismiss: () -> Unit) {
                         modifier = Modifier.weight(1f)
                     ) { Text(stringResource(R.string.about_dev_copy)) }
                 }
+                Spacer(Modifier.height(8.dp))
+                val shareTitle = stringResource(R.string.about_dev_share)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = { DevShare.shareText(context, shareTitle, link.url); onDismiss() },
+                        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFCBD5E1)),
+                        modifier = Modifier.weight(1f)
+                    ) { Text(stringResource(R.string.about_dev_share_link), fontSize = 13.sp, maxLines = 1) }
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = { DevShare.shareQrImage(context, shareTitle, link.url, link.url.hashCode().toString()); onDismiss() },
+                        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFCBD5E1)),
+                        modifier = Modifier.weight(1f)
+                    ) { Text(stringResource(R.string.about_dev_share_qr), fontSize = 13.sp, maxLines = 1) }
+                }
             }
         }
     }
 }
+
+
+/** شريط إعلانات متحرك (يتبدل كل 4.5 ثانية، وسحب أفقي للتنقل) — المحتوى من assets/dev_banners.json */
+@Composable
+private fun DevBannerCarousel() {
+    val context = LocalContext.current
+    val banners = remember { DevShare.loadBanners(context) }
+    if (banners.isEmpty()) return
+    var index by remember { mutableStateOf(0) }
+    var dragX by remember { mutableStateOf(0f) }
+    androidx.compose.runtime.LaunchedEffect(banners.size, index) {
+        if (banners.size > 1) {
+            kotlinx.coroutines.delay(4_500)
+            index = (index + 1) % banners.size
+        }
+    }
+    val shape = RoundedCornerShape(20.dp)
+    val b = banners[index.coerceIn(0, banners.size - 1)]
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .background(Brush.linearGradient(listOf(Color(b.from), Color(b.to))))
+                .border(1.dp, Color(0x40FFFFFF), shape)
+                .androidx_pointer(
+                    onDrag = { dragX += it },
+                    onEnd = {
+                        if (kotlin.math.abs(dragX) > 80f && banners.size > 1) {
+                            index = if (dragX < 0) (index + 1) % banners.size else (index - 1 + banners.size) % banners.size
+                        }
+                        dragX = 0f
+                    }
+                )
+                .clickable(role = Role.Button, enabled = b.url.isNotEmpty()) {
+                    startIntentSafe(context, Intent(Intent.ACTION_VIEW, Uri.parse(b.url)), R.string.support_open_fail)
+                }
+        ) {
+            androidx.compose.animation.AnimatedContent(
+                targetState = b,
+                transitionSpec = { androidx.compose.animation.fadeIn() togetherWith androidx.compose.animation.fadeOut() },
+                label = "devBanner"
+            ) { cur ->
+                Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp)) {
+                    Text(cur.title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    if (cur.body.isNotEmpty()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(cur.body, color = Color(0xE6FFFFFF), fontSize = 13.sp)
+                    }
+                }
+            }
+        }
+        if (banners.size > 1) {
+            Spacer(Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                banners.indices.forEach { i ->
+                    Box(
+                        Modifier.size(if (i == index) 18.dp else 6.dp, 6.dp).clip(CircleShape)
+                            .background(if (i == index) Color(0xFFA78BFA) else Color(0x66A78BFA))
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun Modifier.androidx_pointer(onDrag: (Float) -> Unit, onEnd: () -> Unit): Modifier =
+    this.pointerInput(Unit) {
+        detectHorizontalDragGestures(onDragEnd = onEnd, onDragCancel = onEnd) { _, d -> onDrag(d) }
+    }

@@ -1649,6 +1649,14 @@
     <string name="about_dev_l_youtube">YouTube</string>
     <string name="about_dev_l_github">GitHub</string>
     <string name="about_dev_l_website">Situs web</string>
+    <string name="about_dev_share">Bagikan</string>
+    <string name="about_dev_share_link">Bagikan tautan</string>
+    <string name="about_dev_share_qr">Bagikan QR</string>
+    <string name="about_dev_share_app">Bagikan aplikasi</string>
+    <string name="about_dev_share_all">Bagikan semua akun</string>
+    <string name="about_dev_share_app_msg">Coba %1$s, aplikasi bisnis berbahasa Arab yang bekerja offline. Unduh di sini:</string>
+    <string name="about_dev_share_all_msg">Akun resmi pengembang CTO.DRS:</string>
+    <string name="about_dev_check_updates">Periksa pembaruan (versi %1$s)</string>
     <string name="legal_source_note">Sumber kanonik: dokumen lengkap di repositori proyek (docs/PRIVACY_POLICY.md) — salinan dalam aplikasi ini sesuai dengannya dan berfungsi luring.</string>
     <string name="party_role_customer">Pelanggan</string>
     <string name="party_role_supplier">Pemasok</string>
