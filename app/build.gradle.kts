@@ -139,7 +139,6 @@ dependencies {
     // مضمنة في الحزمة (bundled) — صفر طلب شبكي صفر مفاتيح API؛ يعمل دون اتصال
     // كاملًا فلا يلمس التزام ADR-001 إطلاقًا (لا socket في ملفات الموجة A1)
     implementation("com.google.mlkit:text-recognition:16.0.1")
-    implementation("com.google.mlkit:text-recognition-arabic:16.0.1")
     // جسر coroutines لمهام ML Kit (ListenableTask.await) — بإصدار coroutines المعتمد نفسه
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
     // [W1] Play Billing v7 — فريميوم Pro بلا خادم (شراء لمرة واحدة + استعادة)
