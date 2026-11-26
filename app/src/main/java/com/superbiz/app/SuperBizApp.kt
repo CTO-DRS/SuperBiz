@@ -107,6 +107,8 @@ class AppGraph(val context: android.content.Context) {
         }
     }
     val checks by lazy { ChecksRepo(db, ledger) }
+    // [A1] نواة الفروع والنقل البيني — الواجهة تُبنى فوقها (شاشة الفروع)
+    val transfers by lazy { com.superbiz.app.data.repo.TransferRepo(db) }
     val installments by lazy { com.superbiz.app.data.repo.InstallmentRepo(db, ledger) }
     val expenses by lazy { com.superbiz.app.data.repo.ExpenseRepo(db, ledger) }
     val reports by lazy { ReportsRepo(db) }

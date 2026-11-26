@@ -102,6 +102,7 @@ fun SettingsHubScreen(
     onOpenErrorLog: () -> Unit,
     // مدخل فحص صحة البيانات من قسم الأدوات
     onOpenHealth: () -> Unit = {},
+    onOpenBranches: () -> Unit = {},
     // [P17-c] مدخلا إدارة التواقيع والأختام من قسم البيانات — افتراضات آمنة
     onOpenSignatures: () -> Unit = {},
     onOpenStamps: () -> Unit = {},
@@ -215,7 +216,7 @@ fun SettingsHubScreen(
             "privacy" -> PrivacySection(s, settingsVM)
             "notifications" -> NotificationsSection(s, settingsVM)
             "data" -> DataSection(s, settingsVM, onOpenSignatures, onOpenStamps)
-            "advanced" -> AdvancedSection(s, settingsVM, onOpenErrorLog, onOpenHealth)
+            "advanced" -> AdvancedSection(s, settingsVM, onOpenErrorLog, onOpenHealth, onOpenBranches)
             // [V 3.6.0] قسم الدعم والتواصل
             "support" -> SupportContactSection(onOpenPrivacyPolicy, onOpenTerms)
             "about" -> AboutSection()
@@ -881,7 +882,8 @@ private fun AdvancedSection(
     s: com.superbiz.app.data.repo.Settings,
     vm: SettingsVM,
     onOpenErrorLog: () -> Unit,
-    onOpenHealth: () -> Unit
+    onOpenHealth: () -> Unit,
+    onOpenBranches: () -> Unit = {}
 ) {
     val g = glassColors()
     GlassCard(corner = 18.dp) {
@@ -1087,6 +1089,22 @@ private fun AdvancedSection(
                 .clip(RoundedCornerShape(12.dp))
                 .background(g.accent.copy(alpha = 0.18f))
                 .clickable { onOpenHealth() }
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+        ) {
+            Text(stringResource(R.string.set_btn_view), color = g.accent, style = MaterialTheme.typography.labelLarge)
+        }
+    }
+    Spacer(Modifier.height(8.dp))
+    // [A1] الفروع — إدارة الفروع والمخازن
+    SettingRow(
+        stringResource(R.string.branches_title),
+        stringResource(R.string.branches_hint)
+    ) {
+        Row(
+            Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(g.accent.copy(alpha = 0.18f))
+                .clickable { onOpenBranches() }
                 .padding(horizontal = 12.dp, vertical = 6.dp)
         ) {
             Text(stringResource(R.string.set_btn_view), color = g.accent, style = MaterialTheme.typography.labelLarge)
