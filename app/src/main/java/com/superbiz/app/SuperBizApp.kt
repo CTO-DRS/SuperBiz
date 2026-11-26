@@ -1047,8 +1047,15 @@ class AppGraph(val context: android.content.Context) {
         // [A5] اعتمادات التحويل — عمودان إلحاقيان على stock_transfers (ALTER ADD COLUMN ببذور محايدة "")
         private val MIGRATION_19_20 = object : androidx.room.migration.Migration(19, 20) {
             override fun migrate(d: androidx.sqlite.db.SupportSQLiteDatabase) {
-                d.execSQL("ALTER TABLE `stock_transfers` ADD COLUMN `requestedBy` TEXT NOT NULL DEFAULT ''")
-                d.execSQL("ALTER TABLE `stock_transfers` ADD COLUMN `approvedBy` TEXT NOT NULL DEFAULT ''")
+                // آمن لإعادة التشغيل: سلسلة الاختبار الكاملة تشغّل كل ترحيل يدوياً ثم يعيد Room
+                // الترحيلات من الترويسة المخفضة — ALTER ADD COLUMN وحده ليس idempotent (يرمي duplicate column)
+                val have = HashSet<String>()
+                d.query("PRAGMA table_info(`stock_transfers`)").use { c ->
+                    val ni = c.getColumnIndex("name")
+                    while (c.moveToNext()) have.add(c.getString(ni))
+                }
+                if ("requestedBy" !in have) d.execSQL("ALTER TABLE `stock_transfers` ADD COLUMN `requestedBy` TEXT NOT NULL DEFAULT ''")
+                if ("approvedBy" !in have) d.execSQL("ALTER TABLE `stock_transfers` ADD COLUMN `approvedBy` TEXT NOT NULL DEFAULT ''")
             }
         }
 
