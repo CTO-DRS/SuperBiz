@@ -244,4 +244,37 @@ class MultiBranchCoreTest {
             }
         }
     }
+
+    /** [A3] لا مخزون شبح: بيع/شراء/تعديل/إلغاء فاتورة يبقي Σ branch_stock = products.stockQty */
+    @Test
+    fun invoiceFlowKeepsBranchPlaneEqualToProductPlane() = runBlocking {
+        val invoices = com.superbiz.app.data.repo.InvoiceRepo(db)
+        val partyId = db.parties().upsert(com.superbiz.app.data.db.Party(name = "عميل"))
+        suspend fun planesEqual(label: String) {
+            val total = db.products().allOnce().first { it.id == productId }.stockQty
+            val branch = db.branchStock().totalFor(productId)
+            assertEquals("planes diverged after $label", total, branch, 1e-9)
+        }
+        planesEqual("seed")
+        val rnd = Random(7)
+        repeat(30) { n ->
+            val qty = (1 + rnd.nextInt(5)).toDouble()
+            val isSale = rnd.nextBoolean()
+            val inv = com.superbiz.app.data.db.Invoice(
+                number = "T-$n", partyId = partyId, type = if (isSale) 0 else 1, date = T, dueDate = T,
+                subtotal = 1000L, total = 1000L, costTotal = 500L
+            )
+            val items = listOf(com.superbiz.app.data.db.InvoiceItem(invoiceId = 0, productId = productId, desc = "x", qty = qty, unitPrice = 1000L))
+            val id = invoices.save(inv, items)
+            planesEqual("save #$n")
+            when (rnd.nextInt(3)) {
+                0 -> { invoices.voidInvoice(db.invoices().byId(id)!!); planesEqual("void #$n") }
+                1 -> {
+                    invoices.save(db.invoices().byId(id)!!, items.map { it.copy(qty = qty + 1.0) })
+                    planesEqual("edit #$n")
+                }
+                else -> Unit
+            }
+        }
+    }
 }
