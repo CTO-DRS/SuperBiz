@@ -84,6 +84,7 @@ class MultiBranchCoreTest {
         assertEquals("الاستلام أضاف للوجهة والثابت صامد", before, planeTotal(), 1e-9)
         assertEquals(30.0, transfers.branchQty(otherBranchId, productId), 1e-9)
         assertEquals(0.0, transfers.inTransitTotal(productId), 1e-9)
+        Unit
     }
 
     @Test
@@ -276,5 +277,46 @@ class MultiBranchCoreTest {
                 else -> Unit
             }
         }
+    }
+
+    /** [A5] الطلب لا يمس المخزون؛ الاعتماد (المالك) يخصم ويصير قيد النقل ويسجل المعتمِد */
+    @Test
+    fun requestThenApprove_movesStockOnlyAtApproval_andRecordsActors() = runBlocking {
+        SessionState.start(92L, "مدير النقل", Role.MANAGER)
+        val tid = transfers.requestTransfer(mainBranchId, otherBranchId, listOf(productId to 30.0), T, "طلب")
+        assertEquals(TransferRepo.STATUS_PENDING_APPROVAL, db.stockTransfers().byId(tid)!!.status)
+        assertEquals("مدير النقل", db.stockTransfers().byId(tid)!!.requestedBy)
+        assertEquals(100.0, db.branchStock().qtyAt(mainBranchId, productId)!!, 1e-9)
+        // المدير لا يعتمد
+        assertThrows(RoleDeniedException::class.java) { runBlocking { transfers.approveTransfer(tid) } }
+        assertEquals(100.0, db.branchStock().qtyAt(mainBranchId, productId)!!, 1e-9)
+        SessionState.clear()
+        SessionState.start(1L, "المالك", Role.OWNER)
+        transfers.approveTransfer(tid)
+        val t = db.stockTransfers().byId(tid)!!
+        assertEquals(TransferRepo.STATUS_IN_TRANSIT, t.status)
+        assertEquals("المالك", t.approvedBy)
+        assertEquals(70.0, db.branchStock().qtyAt(mainBranchId, productId)!!, 1e-9)
+        assertEquals(30.0, transfers.inTransitTotal(productId), 1e-9)
+        assertThrows(IllegalArgumentException::class.java) { runBlocking { transfers.approveTransfer(tid) } }
+        Unit
+    }
+
+    /** [A5] الرفض نهائي بلا أثر؛ والاعتماد عند نقص المخزون يفشل ويبقى الطلب معلقاً */
+    @Test
+    fun reject_isTerminalWithoutStockEffect_andApproveFailsClosedOnShortage() = runBlocking {
+        SessionState.start(92L, "مدير النقل", Role.MANAGER)
+        val t1 = transfers.requestTransfer(mainBranchId, otherBranchId, listOf(productId to 10.0), T)
+        val t2 = transfers.requestTransfer(mainBranchId, otherBranchId, listOf(productId to 500.0), T)
+        assertThrows(RoleDeniedException::class.java) { runBlocking { transfers.rejectTransfer(t1) } }
+        SessionState.clear()
+        SessionState.start(1L, "المالك", Role.OWNER)
+        transfers.rejectTransfer(t1)
+        assertEquals(TransferRepo.STATUS_REJECTED, db.stockTransfers().byId(t1)!!.status)
+        assertEquals(100.0, db.branchStock().qtyAt(mainBranchId, productId)!!, 1e-9)
+        assertThrows(IllegalArgumentException::class.java) { runBlocking { transfers.approveTransfer(t2) } }
+        assertEquals(TransferRepo.STATUS_PENDING_APPROVAL, db.stockTransfers().byId(t2)!!.status)
+        assertEquals(100.0, db.branchStock().qtyAt(mainBranchId, productId)!!, 1e-9)
+        assertEquals(0.0, transfers.inTransitTotal(productId), 1e-9)
     }
 }

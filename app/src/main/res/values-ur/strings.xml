@@ -2559,6 +2559,13 @@
     <string name="transfer_err_product">پروڈکٹ منتخب کریں</string>
     <string name="transfer_err_other">منتقلی مکمل نہ ہو سکی</string>
     <string name="transfer_available">ماخذ پر دستیاب: %1$s</string>
+    <string name="transfer_status_pending">منظوری کا انتظار</string>
+    <string name="transfer_status_rejected">مسترد</string>
+    <string name="transfer_approve">منظور کریں</string>
+    <string name="transfer_reject">مسترد کریں</string>
+    <string name="transfer_request">منظوری کی درخواست</string>
+    <string name="transfer_requested_by">درخواست: %1$s</string>
+    <string name="transfer_decided_by">فیصلہ: %1$s</string>
     <string name="ocr_cloud_failed">بہتری ناکام: %1$s</string>
     <string name="ocr_cloud_disabled_note">کلاؤڈ بہتری مقفل ہے — ترتیبات → مقفل کلاؤڈ AI میں فعال کریں اور API کی شامل کریں</string>
     <string name="gem_title">مقفل کلاؤڈ AI (Gemini)</string>

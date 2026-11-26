@@ -2559,6 +2559,13 @@
     <string name="transfer_err_product">Pilih produk</string>
     <string name="transfer_err_other">Transfer tidak dapat diselesaikan</string>
     <string name="transfer_available">Tersedia di asal: %1$s</string>
+    <string name="transfer_status_pending">Menunggu persetujuan</string>
+    <string name="transfer_status_rejected">Ditolak</string>
+    <string name="transfer_approve">Setujui</string>
+    <string name="transfer_reject">Tolak</string>
+    <string name="transfer_request">Minta persetujuan</string>
+    <string name="transfer_requested_by">Diminta oleh: %1$s</string>
+    <string name="transfer_decided_by">Diputuskan oleh: %1$s</string>
     <string name="ocr_cloud_failed">Peningkatan gagal: %1$s</string>
     <string name="ocr_cloud_disabled_note">Peningkatan awan terkunci — aktifkan di Pengaturan → AI awan terkunci dan tambahkan kunci API</string>
     <string name="gem_title">AI awan terkunci (Gemini)</string>

@@ -2682,6 +2682,13 @@
     <string name="transfer_err_product">Pick a product</string>
     <string name="transfer_err_other">The transfer could not be completed</string>
     <string name="transfer_available">Available at source: %1$s</string>
+    <string name="transfer_status_pending">Pending approval</string>
+    <string name="transfer_status_rejected">Rejected</string>
+    <string name="transfer_approve">Approve</string>
+    <string name="transfer_reject">Reject</string>
+    <string name="transfer_request">Request approval</string>
+    <string name="transfer_requested_by">Requested by: %1$s</string>
+    <string name="transfer_decided_by">Decided by: %1$s</string>
     <string name="ocr_cloud_failed">Enhancement failed: %1$s</string>
     <string name="ocr_cloud_disabled_note">Cloud enhance is locked — enable it in Settings → Locked cloud AI and add an API key</string>
     <string name="gem_title">Locked cloud AI (Gemini)</string>

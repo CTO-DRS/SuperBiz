@@ -118,6 +118,8 @@ private fun TransferCard(
     val statusRes = when (t.status) {
         TransferRepo.STATUS_RECEIVED -> R.string.transfer_status_received
         TransferRepo.STATUS_CANCELED -> R.string.transfer_status_canceled
+        TransferRepo.STATUS_PENDING_APPROVAL -> R.string.transfer_status_pending
+        TransferRepo.STATUS_REJECTED -> R.string.transfer_status_rejected
         else -> R.string.transfer_status_transit
     }
     GlassCard(corner = 16.dp) {
@@ -138,6 +140,19 @@ private fun TransferCard(
             }
             if (t.note.isNotBlank()) {
                 Text(t.note, color = g.textSecondary, style = MaterialTheme.typography.bodySmall)
+            }
+            if (t.requestedBy.isNotBlank()) {
+                Text(stringResource(R.string.transfer_requested_by, t.requestedBy), color = g.textSecondary, style = MaterialTheme.typography.bodySmall)
+            }
+            if (t.approvedBy.isNotBlank()) {
+                Text(stringResource(R.string.transfer_decided_by, t.approvedBy), color = g.textSecondary, style = MaterialTheme.typography.bodySmall)
+            }
+            if (t.status == TransferRepo.STATUS_PENDING_APPROVAL && vm.canApprove()) {
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { vm.approve(t.id) { onError(it) } }) { Text(stringResource(R.string.transfer_approve)) }
+                    OutlinedButton(onClick = { vm.reject(t.id) { onError(it) } }) { Text(stringResource(R.string.transfer_reject)) }
+                }
             }
             if (t.status == TransferRepo.STATUS_IN_TRANSIT) {
                 Spacer(Modifier.height(8.dp))
@@ -237,9 +252,10 @@ private fun NewTransferDialog(
                     f == t -> err = "same"
                     p == null -> err = "product"
                     q == null || q <= 0.0 || !q.isFinite() -> err = "qty"
-                    else -> vm.send(f, t, p, q, note) { r -> if (r == null) onDone() else err = r }
+                    vm.isOwner() -> vm.send(f, t, p, q, note) { r -> if (r == null) onDone() else err = r }
+                    else -> vm.request(f, t, p, q, note) { r -> if (r == null) onDone() else err = r }
                 }
-            }) { Text(stringResource(R.string.transfer_send)) }
+            }) { Text(stringResource(if (vm.isOwner()) R.string.transfer_send else R.string.transfer_request)) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.transfer_close)) } }
     )
