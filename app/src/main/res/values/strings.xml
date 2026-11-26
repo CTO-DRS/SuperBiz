@@ -1748,9 +1748,9 @@
     <string name="acc_export_ledger">دفتر الأستاذ CSV</string>
     <string name="acc_export_trial">ميزان المراجعة CSV</string>
     <string name="acc_export_failed">فشل التصدير</string>
-    <string name="perm_title">صلاحيات الأدوار</string>
-    <string name="perm_hint">فعّل أو عطّل كل عملية لكل دور. دور المالك ثابت ولا يُعدَّل. كل تغيير يُسجَّل في سجل التدقيق.</string>
-    <string name="perm_open">تخصيص صلاحيات الأدوار</string>
+    <string name="rp_title">صلاحيات الأدوار</string>
+    <string name="rp_hint">فعّل أو عطّل كل عملية لكل دور. دور المالك ثابت ولا يُعدَّل. كل تغيير يُسجَّل في سجل التدقيق.</string>
+    <string name="rp_open">تخصيص صلاحيات الأدوار</string>
     <string name="legal_source_note">المصدر الموثّق: وثيقة الخصوصية الكاملة في مستودع المشروع (docs/PRIVACY_POLICY.md) — هذه النسخة داخل التطبيق مطابقة لها وتعمل دون إنترنت.</string>
     <string name="party_role_customer">عميل</string>
     <string name="party_role_supplier">مورد</string>

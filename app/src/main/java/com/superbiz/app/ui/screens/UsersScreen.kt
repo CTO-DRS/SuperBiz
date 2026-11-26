@@ -120,7 +120,7 @@ fun UsersScreen(usersVM: UsersVM, onBack: () -> Unit, onOpenPermissions: () -> U
             }
             Spacer(Modifier.height(10.dp))
             androidx.compose.material3.OutlinedButton(onClick = onOpenPermissions, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.perm_open))
+                Text(stringResource(R.string.rp_open))
             }
             Spacer(Modifier.height(10.dp))
 

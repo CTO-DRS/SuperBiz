@@ -42,8 +42,8 @@ fun RolePermissionsScreen(onBack: () -> Unit) {
         Role.CASHIER to stringResource(R.string.role_cashier)
     )
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        SubHeader(stringResource(R.string.perm_title), onBack = onBack)
-        Text(stringResource(R.string.perm_hint), color = g.textSecondary, style = MaterialTheme.typography.bodySmall)
+        SubHeader(stringResource(R.string.rp_title), onBack = onBack)
+        Text(stringResource(R.string.rp_hint), color = g.textSecondary, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(8.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(Op.entries.toList(), key = { it.name }) { op ->
