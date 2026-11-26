@@ -71,6 +71,7 @@ class CsvImportRepo(private val db: AppDatabase) {
                     val delta = row.stockQty - match.stockQty
                     if (kotlin.math.abs(delta) > 1e-9) {
                         db.products().addQty(match.id, delta)
+                        db.mirrorToActiveBranch(match.id, delta)
                         db.stockMoves().insert(
                             StockMove(
                                 productId = match.id, qty = delta, reason = "ADJUST",

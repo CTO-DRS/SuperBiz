@@ -136,6 +136,7 @@ class InvoiceRepo(
                         val pid = it.productId ?: continue
                         val delta = if (prev!!.isSale) it.qty else -it.qty   // عكس الأثر القديم
                         db.products().addQty(pid, delta)
+                        db.mirrorToActiveBranch(pid, delta)
                         db.stockMoves().insert(
                             StockMove(
                                 productId = pid, qty = delta, reason = "ADJUST",
@@ -169,6 +170,7 @@ class InvoiceRepo(
                     val pid = it.productId ?: continue
                     val delta = if (withNumber.isSale) -it.qty else it.qty
                     db.products().addQty(pid, delta)
+                        db.mirrorToActiveBranch(pid, delta)
                     db.stockMoves().insert(
                         StockMove(
                             productId = pid, qty = delta,
@@ -301,6 +303,7 @@ class InvoiceRepo(
                 val pid = it.productId ?: continue
                 val delta = if (fresh.isSale) it.qty else -it.qty   // عكس الأثر
                 db.products().addQty(pid, delta)
+                        db.mirrorToActiveBranch(pid, delta)
                 db.stockMoves().insert(
                     StockMove(productId = pid, qty = delta, reason = "ADJUST",
                         date = System.currentTimeMillis(), refType = "void", refId = fresh.id,

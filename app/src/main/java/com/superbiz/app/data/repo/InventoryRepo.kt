@@ -92,6 +92,7 @@ class InventoryRepo(private val db: AppDatabase, private val ledger: LedgerRepo)
         var moveId = 0L
         db.withTransaction {
             db.products().addQty(product.id, qty)
+            db.mirrorToActiveBranch(product.id, qty)
             moveId = db.stockMoves().insert(
                 StockMove(productId = product.id, qty = qty, reason = reason,
                     date = date, refType = "stock", refId = product.id, note = note)
