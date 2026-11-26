@@ -62,7 +62,8 @@ class ExpenseRepo(private val db: AppDatabase, private val ledger: LedgerRepo) {
             id = db.expenses().insert(
                 Expense(
                     amount = amount, category = category.trim(), note = note.trim(), date = date,
-                    origCurrency = origCurrency, origTotal = origTotal, origFxMicros = origFxMicros
+                    origCurrency = origCurrency, origTotal = origTotal, origFxMicros = origFxMicros,
+                    branchId = db.resolveBranchId()
                 )
             )
             ledger.postInternal(

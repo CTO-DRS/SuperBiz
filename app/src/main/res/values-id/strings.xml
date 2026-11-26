@@ -2535,6 +2535,9 @@
     <string name="branch_err_name">Nama cabang wajib diisi</string>
     <string name="branch_err_dup">Nama sudah digunakan</string>
     <string name="branch_err_denied">Anda tidak berhak mengelola cabang</string>
+    <string name="branch_summary">Penjualan %1$s · Laba %2$s · Stok %3$s</string>
+    <string name="branch_current">Cabang saat ini</string>
+    <string name="branch_make_current">Jadikan saat ini</string>
     <string name="transfers_title">Transfer antar cabang</string>
     <string name="transfers_open">Buka transfer antar cabang</string>
     <string name="transfers_empty">Belum ada transfer</string>

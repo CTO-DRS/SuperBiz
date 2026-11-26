@@ -484,7 +484,8 @@ private fun invoiceToJson(i: Invoice): String {
     sb.append(',')
     sb.str("origCurrency", i.origCurrency); sb.append(',')
     sb.lng("origTotal", i.origTotal); sb.append(',')
-    sb.lng("origFxMicros", i.origFxMicros)
+    sb.lng("origFxMicros", i.origFxMicros); sb.append(',')
+    sb.lng("branchId", i.branchId)
     sb.append('}')
     return sb.toString()
 }
@@ -548,7 +549,8 @@ private fun expenseToJson(e: Expense): String {
     sb.append(',')
     sb.str("origCurrency", e.origCurrency); sb.append(',')
     sb.lng("origTotal", e.origTotal); sb.append(',')
-    sb.lng("origFxMicros", e.origFxMicros)
+    sb.lng("origFxMicros", e.origFxMicros); sb.append(',')
+    sb.lng("branchId", e.branchId)
     sb.append('}')
     return sb.toString()
 }
@@ -1097,7 +1099,8 @@ private fun invoiceFromJson(m: Map<*, *>, legacy: Boolean) = Invoice(
     // [H4-1 V 2.5.0] ختم الفئة الأصلية — متسامح: غياب المفاتيح (ملفات ≤v14) ⇒ البذور المحايدة
     origCurrency = m.strF("origCurrency", ""),
     origTotal = m.moneyF("origTotal", legacy),
-    origFxMicros = m.lngF("origFxMicros", 0L)
+    origFxMicros = m.lngF("origFxMicros", 0L),
+    branchId = m.lngF("branchId", 0L)
 )
 
 private fun invoiceItemFromJson(m: Map<*, *>, legacy: Boolean) = InvoiceItem(
@@ -1141,7 +1144,8 @@ private fun expenseFromJson(m: Map<*, *>, legacy: Boolean) = Expense(
     category = m.strF("category", ""),
     note = m.strF("note", ""),
     date = m.lngF("date", 0L),
-    createdAt = m.lngF("createdAt", 0L)
+    createdAt = m.lngF("createdAt", 0L),
+    branchId = m.lngF("branchId", 0L)
 )
 
 private fun checkFromJson(m: Map<*, *>, legacy: Boolean) = CheckEntity(

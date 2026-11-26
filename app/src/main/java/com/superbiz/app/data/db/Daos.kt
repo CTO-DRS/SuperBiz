@@ -1502,7 +1502,7 @@ interface SyncLogDao {
     // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — جدول بإنشاء فقط
     // (ترحيل 17→18 في SuperBizApp — CREATE TABLE/INDEX/مشغّلات مزامنة فقط، إلحاقي خالص)
     // [A5 V 0.1.0] اعتمادات التحويل — عمودان إلحاقيان على stock_transfers (ترحيل 19→20 في SuperBizApp)
-    version = 20,
+    version = 21,
     exportSchema = true
 )
 
@@ -1569,6 +1569,19 @@ interface BranchDao {
 
     @Query("UPDATE branches SET active = :active WHERE id = :id")
     suspend fun setActive(id: Long, active: Boolean)
+
+    // [A4] تقارير الفرع — المبيعات الصافية بلا ضريبة، المُلغاة (status 3) مستبعدة
+    @Query("SELECT COALESCE(SUM(total - taxAmount), 0) FROM invoices WHERE branchId = :b AND type = 0 AND status != 3")
+    suspend fun salesNet(b: Long): Long
+
+    @Query("SELECT COALESCE(SUM(costTotal), 0) FROM invoices WHERE branchId = :b AND type = 0 AND status != 3")
+    suspend fun cogs(b: Long): Long
+
+    @Query("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE branchId = :b")
+    suspend fun expensesOf(b: Long): Long
+
+    @Query("SELECT COALESCE(SUM(bs.qty * p.costPrice), 0.0) FROM branch_stock bs JOIN products p ON p.id = bs.productId WHERE bs.branchId = :b")
+    suspend fun stockValue(b: Long): Double
 }
 
 @androidx.room.Dao
