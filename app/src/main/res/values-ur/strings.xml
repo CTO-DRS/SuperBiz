@@ -1638,6 +1638,9 @@
     <string name="about_dev_footer">%1$s • ورژن %2$s</string>
     <string name="about_dev_verified">تصدیق شدہ</string>
     <string name="about_dev_photo_desc">ڈیولپر کی تصویر</string>
+    <string name="about_dev_open">کھولیں</string>
+    <string name="about_dev_copy">لنک کاپی کریں</string>
+    <string name="about_dev_copied">لنک کاپی ہو گیا</string>
     <string name="about_dev_l_whatsapp">WhatsApp</string>
     <string name="about_dev_l_telegram">Telegram</string>
     <string name="about_dev_l_tiktok">TikTok</string>

@@ -1637,6 +1637,9 @@
     <string name="about_dev_footer">%1$s • Version %2$s</string>
     <string name="about_dev_verified">Vérifié</string>
     <string name="about_dev_photo_desc">Photo du développeur</string>
+    <string name="about_dev_open">Ouvrir</string>
+    <string name="about_dev_copy">Copier le lien</string>
+    <string name="about_dev_copied">Lien copié</string>
     <string name="about_dev_l_whatsapp">WhatsApp</string>
     <string name="about_dev_l_telegram">Telegram</string>
     <string name="about_dev_l_tiktok">TikTok</string>
