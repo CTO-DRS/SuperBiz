@@ -13,7 +13,7 @@ dependencyResolutionManagement {
         // [OCR عربي] Tesseract4Android غير منشور على Central — JitPack مقيّد بمجموعته وحدها
         maven {
             url = uri("https://jitpack.io")
-            content { includeGroup("com.github.adaptech-cz") }
+            content { includeGroupByRegex("com\\.github\\.adaptech-cz.*") }
         }
     }
 }
