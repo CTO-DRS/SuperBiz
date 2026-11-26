@@ -571,6 +571,14 @@
     <string name="rep_vatr_net">اٹھانا ہوئی ٹیک کا صاف</string>
     <string name="rep_vatr_refund">منفی صاف = واپس لینے یا اگلے دورہ منتقل کرنے کے قابل ٹیک</string>
     <string name="rep_vatr_export">ویٹ ریٹرن ایکسپورٹ (CSV)</string>
+    <string name="budget_title">ماہانہ اخراجات کا بجٹ (موجودہ برانچ)</string>
+    <string name="budget_hint">ماہانہ ہدف مقرر کرنے کے لیے زمرے پر ٹیپ کریں</string>
+    <string name="budget_empty">اس ماہ ابھی تک کوئی خرچ نہیں</string>
+    <string name="budget_none">بجٹ نہیں</string>
+    <string name="budget_total">بجٹ کے اندر: %1$s از %2$s</string>
+    <string name="budget_monthly_target">ماہانہ ہدف</string>
+    <string name="budget_save">محفوظ کریں</string>
+    <string name="budget_cancel">منسوخ</string>
     <string name="rep_deep_title">تفصیلی لجر (گہرا ایکسپورٹ)</string>
     <string name="rep_deep_none">دورہ کے پنجرے میں کوئی پوائنٹس نہیں</string>
     <string name="rep_deep_sales">فروخت کی صفیں</string>

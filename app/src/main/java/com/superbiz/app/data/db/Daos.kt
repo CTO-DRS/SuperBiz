@@ -1078,6 +1078,10 @@ interface ExpenseDao {
 
     @Query("SELECT COUNT(*) FROM expenses")
     suspend fun count(): Int
+
+    /** [D4] مجموع المصروف لكل فئة في نافذة؛ branchId = 0 يعني كل الفروع */
+    @Query("SELECT category AS category, COALESCE(SUM(amount),0) AS total FROM expenses WHERE date >= :from AND date <= :to AND (:branchId = 0 OR branchId = :branchId) GROUP BY category")
+    suspend fun byCategoryBetweenBranch(from: Long, to: Long, branchId: Long): List<CategorySum>
 }
 
 data class CategorySum(val category: String, val total: Long)  // [P33-P8] قروش

@@ -571,6 +571,14 @@
     <string name="rep_vatr_net">PPN Neto yang Harus Dibayar</string>
     <string name="rep_vatr_refund">Neto Negatif = PPN Dapat Dikredit atau Dibawa ke Periode Berikutnya</string>
     <string name="rep_vatr_export">Ekspor SPT PPN (CSV)</string>
+    <string name="budget_title">Anggaran biaya bulanan (cabang saat ini)</string>
+    <string name="budget_hint">Ketuk kategori untuk menetapkan target bulanannya</string>
+    <string name="budget_empty">Belum ada biaya bulan ini</string>
+    <string name="budget_none">tanpa anggaran</string>
+    <string name="budget_total">Dalam anggaran: %1$s dari %2$s</string>
+    <string name="budget_monthly_target">Target bulanan</string>
+    <string name="budget_save">Simpan</string>
+    <string name="budget_cancel">Batal</string>
     <string name="rep_deep_title">Buku Besar Rincian (Eksp Mendalam)</string>
     <string name="rep_deep_none">Tidak ada item dalam jangka waktu</string>
     <string name="rep_deep_sales">Baris Penjualan</string>
