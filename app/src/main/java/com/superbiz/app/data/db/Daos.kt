@@ -99,6 +99,15 @@ interface JournalDao {
     )
     suspend fun accountSumsBetween(from: Long, to: Long): List<AccountSum>
 
+    // [D5] دفتر الأستاذ التفصيلي للتصدير — سطراً لكل سطر قيد، بترتيب زمني ثابت
+    @Query(
+        """SELECT e.date AS date, e.id AS entryId, e.memo AS memo, e.refType AS refType, e.refId AS refId,
+                  l.account AS account, l.debit AS debit, l.credit AS credit, l.partyId AS partyId
+           FROM journal_lines l JOIN journal e ON e.id = l.entryId
+           WHERE e.date >= :from AND e.date <= :to ORDER BY e.date, e.id, l.id"""
+    )
+    suspend fun ledgerRows(from: Long, to: Long): List<LedgerExportRow>
+
     @Query(
         """SELECT l.* FROM journal_lines l JOIN journal e ON e.id = l.entryId
            WHERE l.partyId = :partyId ORDER BY e.date"""
@@ -204,6 +213,11 @@ data class AccountDateRow(val date: Long, val debit: Long, val credit: Long)  //
 
 /** [P6-M8 إصلاح]: صف حساب مع ما قوبل نقداً من قيده — cashCredit = مجموع CASH الدائن في القيد */
 data class CashSettledRow(val date: Long, val debit: Long, val cashCredit: Long)  // [P33-P8] قروش
+
+data class LedgerExportRow(
+    val date: Long, val entryId: Long, val memo: String, val refType: String?, val refId: Long?,
+    val account: String, val debit: Long, val credit: Long, val partyId: Long?
+)
 
 data class AccountSum(val account: String, val d: Long, val c: Long)  // [P33-P8] قروش
 

@@ -1657,6 +1657,10 @@
     <string name="about_dev_share_app_msg">%1$s آزمائیں — بغیر انٹرنیٹ چلنے والی عربی کاروباری ایپ۔ یہاں سے ڈاؤن لوڈ کریں:</string>
     <string name="about_dev_share_all_msg">ڈیولپر CTO.DRS کے سرکاری اکاؤنٹس:</string>
     <string name="about_dev_check_updates">اپ ڈیٹس چیک کریں (ورژن %1$s)</string>
+    <string name="acc_export_title">اکاؤنٹنگ برآمد</string>
+    <string name="acc_export_ledger">کھاتہ CSV</string>
+    <string name="acc_export_trial">ٹرائل بیلنس CSV</string>
+    <string name="acc_export_failed">برآمد ناکام</string>
     <string name="legal_source_note">بنیادی ذریعہ: پروجیکٹ ریپوزٹری میں مکمل دستاویز (docs/PRIVACY_POLICY.md) — ایپ کے اندر یہ نقل اسی سے مطابقت رکھتی ہے اور آف لائن کام کرتی ہے۔</string>
     <string name="party_role_customer">عميل</string>
     <string name="party_role_supplier">مورد</string>
