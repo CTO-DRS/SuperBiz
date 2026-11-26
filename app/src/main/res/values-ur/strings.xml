@@ -1664,6 +1664,14 @@
     <string name="rp_title">کردار کی اجازتیں</string>
     <string name="rp_hint">ہر عمل کو ہر کردار کے لیے آن یا آف کریں۔ مالک کا کردار مستقل ہے۔ ہر تبدیلی آڈٹ لاگ میں درج ہوتی ہے۔</string>
     <string name="rp_open">کرداروں کی اجازتیں ترتیب دیں</string>
+    <string name="portal_title">کسٹمر اکاؤنٹ</string>
+    <string name="portal_col_date">تاریخ</string>
+    <string name="portal_col_memo">تفصیل</string>
+    <string name="portal_col_debit">ڈیبٹ</string>
+    <string name="portal_col_credit">کریڈٹ</string>
+    <string name="portal_col_balance">بیلنس</string>
+    <string name="portal_footer">بھیجنے کے وقت آپ کے اکاؤنٹ کا خلاصہ</string>
+    <string name="portal_share">کسٹمر پورٹل شیئر کریں</string>
     <string name="legal_source_note">بنیادی ذریعہ: پروجیکٹ ریپوزٹری میں مکمل دستاویز (docs/PRIVACY_POLICY.md) — ایپ کے اندر یہ نقل اسی سے مطابقت رکھتی ہے اور آف لائن کام کرتی ہے۔</string>
     <string name="party_role_customer">عميل</string>
     <string name="party_role_supplier">مورد</string>

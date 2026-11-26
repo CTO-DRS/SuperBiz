@@ -790,6 +790,44 @@ fun PartyStatementSheet(
         com.superbiz.app.print.ReportReadyDialog(ready) { readyPdf = null }
     }
 
+    // [بوابة العميل] ملف HTML مكتفٍ بذاته يُشارك للعميل
+    fun sharePortal() {
+        try {
+            val df = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+            var run = 0L
+            val rows = data.rows.map {
+                run += it.debit - it.credit
+                com.superbiz.app.domain.portal.CustomerPortalHtml.Row(
+                    df.format(java.util.Date(it.date)), it.memo,
+                    com.superbiz.app.util.Money.formatP(it.debit, symbol), com.superbiz.app.util.Money.formatP(it.credit, symbol),
+                    com.superbiz.app.util.Money.formatP(run, symbol)
+                )
+            }
+            val labels = com.superbiz.app.domain.portal.CustomerPortalHtml.Labels(
+                title = context.getString(R.string.portal_title), balanceDue = context.getString(R.string.statement_balance_is),
+                date = context.getString(R.string.portal_col_date), memo = context.getString(R.string.portal_col_memo),
+                debit = context.getString(R.string.portal_col_debit), credit = context.getString(R.string.portal_col_credit),
+                balance = context.getString(R.string.portal_col_balance), footer = context.getString(R.string.portal_footer)
+            )
+            val rtl = context.resources.configuration.layoutDirection == android.view.View.LAYOUT_DIRECTION_RTL
+            val html = com.superbiz.app.domain.portal.CustomerPortalHtml.build(
+                context.getString(R.string.app_name), party.name,
+                com.superbiz.app.util.Money.formatP(data.balance, symbol), rows, labels, rtl
+            )
+            val dir = java.io.File(context.cacheDir, "shared").apply { mkdirs() }
+            val f = java.io.File(dir, "portal_${party.id}.html").apply { writeText(html, Charsets.UTF_8) }
+            val uri = androidx.core.content.FileProvider.getUriForFile(context, "com.superbiz.app.fileprovider", f)
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = "text/html"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startIntentSafe(context, Intent.createChooser(send, shareTitle).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))
+        } catch (e: Exception) {
+            android.util.Log.e("DebtsScreen", "portal share failed", e)
+        }
+    }
+
     // خطة سداد مقترحة (وظيفة 21) — حوار تقسيم الرصيد قرشاً بقرش بمواعيد شهرية
     var showPlan by remember { mutableStateOf(false) }
 
@@ -971,6 +1009,7 @@ fun PartyStatementSheet(
                     ActionPill(stringResourceCompat(R.string.send_sms), Cyan) { openSms() }
                     ActionPill(stringResourceCompat(R.string.share), g.textSecondary) { shareGeneric() }
                     ActionPill(pdfTitle, Color(0xFFDC2626)) { pendingPdf = true }
+                    ActionPill(stringResourceCompat(R.string.portal_share), Color(0xFF0EA5E9)) { sharePortal() }
                 }
                 }
                 }

@@ -1664,6 +1664,14 @@
     <string name="rp_title">Rol izinleri</string>
     <string name="rp_hint">Her işlemi rol bazında açın veya kapatın. Sahip rolü sabittir. Her değişiklik denetim günlüğüne yazılır.</string>
     <string name="rp_open">Rol izinlerini özelleştir</string>
+    <string name="portal_title">Müşteri hesabı</string>
+    <string name="portal_col_date">Tarih</string>
+    <string name="portal_col_memo">Açıklama</string>
+    <string name="portal_col_debit">Borç</string>
+    <string name="portal_col_credit">Alacak</string>
+    <string name="portal_col_balance">Bakiye</string>
+    <string name="portal_footer">Gönderim anındaki hesap görüntünüz</string>
+    <string name="portal_share">Müşteri portalını paylaş</string>
     <string name="legal_source_note">Kanonik kaynak: proje deposundaki tam belge (docs/PRIVACY_POLICY.md) — bu uygulama içi kopya ona uyar ve çevrimdışı çalışır.</string>
     <string name="party_role_customer">Müşteri</string>
     <string name="party_role_supplier">Tedarikçi</string>
