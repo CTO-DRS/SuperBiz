@@ -99,7 +99,7 @@ android {
         // جدار Compose الثقيل (Robolectric + ui-test + work-testing)
         unitTests.all {
             it.maxHeapSize = "1024m"
-            it.jvmArgs("-XX:MaxMetaspaceSize=320m")
+            it.jvmArgs("-XX:MaxMetaspaceSize=320m", "-XX:TieredStopAtLevel=1") // C2 JIT SIGSEGV seen on CI (Temurin 17.0.13, Node::uncast)
             // [E1 / إصلاح CI 2026-11-26] عزل المفردات المشتركة (DataStore/Main dispatcher/AppGraph)
             // بين ملفات الاختبار: JVM جديد كل 15 صنفًا بدل عملية واحدة طويلة — السبب الجذري لتذبذب
             // ConfigRbacGateTest/SearchHealthVMTest الموثق في docs/FLAKE_LEDGER.md (#3)
@@ -144,6 +144,9 @@ dependencies {
     // مضمنة في الحزمة (bundled) — صفر طلب شبكي صفر مفاتيح API؛ يعمل دون اتصال
     // كاملًا فلا يلمس التزام ADR-001 إطلاقًا (لا socket في ملفات الموجة A1)
     implementation("com.google.mlkit:text-recognition:16.0.1")
+    // [OCR عربي] Tesseract على الجهاز — نماذج ara+eng مضمنة في assets/tessdata (tessdata_fast، Apache-2.0)؛
+    // ML Kit لا يوفّر محركًا عربيًا. صفر شبكة وقت التشغيل.
+    implementation("com.github.adaptech-cz.Tesseract4Android:tesseract4android:4.7.0")
     // جسر coroutines لمهام ML Kit (ListenableTask.await) — بإصدار coroutines المعتمد نفسه
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
     // [W1] Play Billing v7 — فريميوم Pro بلا خادم (شراء لمرة واحدة + استعادة)
