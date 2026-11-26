@@ -49,7 +49,7 @@ fun RolePermissionsScreen(onBack: () -> Unit) {
             items(Op.entries.toList(), key = { it.name }) { op ->
                 GlassCard(corner = 16.dp) {
                     Column(Modifier.fillMaxWidth().padding(12.dp)) {
-                        Text(op.name, color = g.textPrimary, style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(opLabel(op)), color = g.textPrimary, style = MaterialTheme.typography.labelLarge)
                         roles.forEach { role ->
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                 Text(roleNames[role] ?: "", color = g.textSecondary, modifier = Modifier.weight(1f))
@@ -61,4 +61,29 @@ fun RolePermissionsScreen(onBack: () -> Unit) {
             }
         }
     }
+}
+
+
+/** تسمية مترجمة لكل عملية — مفتاح الموارد op_<الاسم بحروف صغيرة> عبر ثوابت R (مفحوص وقت الترجمة) */
+private fun opLabel(op: Op): Int = when (op) {
+    Op.POS_SELL -> R.string.op_pos_sell
+    Op.INVOICE_SHARE -> R.string.op_invoice_share
+    Op.INVOICE_CANCEL -> R.string.op_invoice_cancel
+    Op.PARTY_PRODUCT_EDIT -> R.string.op_party_product_edit
+    Op.HARD_DELETE -> R.string.op_hard_delete
+    Op.INVENTORY_READ -> R.string.op_inventory_read
+    Op.INVENTORY_MANAGE -> R.string.op_inventory_manage
+    Op.FINANCIAL_REPORTS -> R.string.op_financial_reports
+    Op.TAX_RETURN_VIEW -> R.string.op_tax_return_view
+    Op.TAX_OWNER_DATA -> R.string.op_tax_owner_data
+    Op.EXPENSES_CHECKS_INSTALLMENTS -> R.string.op_expenses_checks_installments
+    Op.GENERAL_SETTINGS -> R.string.op_general_settings
+    Op.USERS_MANAGE -> R.string.op_users_manage
+    Op.BACKUP_RESTORE -> R.string.op_backup_restore
+    Op.PRO_MANAGE -> R.string.op_pro_manage
+    Op.TRANSFER_APPROVE -> R.string.op_transfer_approve
+    Op.COLLECTION -> R.string.op_collection
+    Op.DEBT_WRITE -> R.string.op_debt_write
+    Op.LOYALTY_APPLY -> R.string.op_loyalty_apply
+    Op.LOYALTY_MANAGE -> R.string.op_loyalty_manage
 }
