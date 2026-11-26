@@ -1376,7 +1376,6 @@ private fun AboutSection() {
             )
         }
     }
-    }
     AboutDeveloperCard()
     }
 }
