@@ -570,6 +570,14 @@
     <string name="rep_vatr_net">TVA nette due</string>
     <string name="rep_vatr_refund">TVA nette négative = remboursement ou report</string>
     <string name="rep_vatr_export">Exporter la déclaration de TVA (CSV)</string>
+    <string name="budget_title">Budget mensuel des dépenses (succursale actuelle)</string>
+    <string name="budget_hint">Touchez une catégorie pour fixer son objectif mensuel</string>
+    <string name="budget_empty">Aucune dépense ce mois-ci</string>
+    <string name="budget_none">sans budget</string>
+    <string name="budget_total">Dans le budget : %1$s sur %2$s</string>
+    <string name="budget_monthly_target">Objectif mensuel</string>
+    <string name="budget_save">Enregistrer</string>
+    <string name="budget_cancel">Annuler</string>
     <string name="rep_deep_title">Registre détaillé (export au niveau des lignes)</string>
     <string name="rep_deep_none">Aucun article dans la fenêtre de la période</string>
     <string name="rep_deep_sales">Lignes de vente</string>

@@ -546,6 +546,7 @@ fun ReportsScreen(appVM: AppVM, nav: NavHostController) {
             }
         }
         AccountingExportCard() // [D5]
+        BudgetCard(symbol) // [D4]
             },
             com.superbiz.app.ui.insights.insightsGroup("compare") {
         // ══ : وظيفة 16 — مقارنة هذا الشهر × الشهر الماضي (إخفاء صادق بلا بيانات) ══

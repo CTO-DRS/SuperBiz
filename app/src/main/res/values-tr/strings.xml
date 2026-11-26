@@ -571,6 +571,14 @@
     <string name="rep_vatr_net">Ödenecek Net Vergi</string>
     <string name="rep_vatr_refund">Net Negatif = İade Edilebilir veya Gelecek Döneme Erteleme Vergisi</string>
     <string name="rep_vatr_export">KDV beyannamesini dışa aktar (CSV)</string>
+    <string name="budget_title">Aylık gider bütçesi (geçerli şube)</string>
+    <string name="budget_hint">Aylık hedefi belirlemek için bir kategoriye dokunun</string>
+    <string name="budget_empty">Bu ay henüz gider yok</string>
+    <string name="budget_none">bütçe yok</string>
+    <string name="budget_total">Bütçe içinde: %1$s / %2$s</string>
+    <string name="budget_monthly_target">Aylık hedef</string>
+    <string name="budget_save">Kaydet</string>
+    <string name="budget_cancel">İptal</string>
     <string name="rep_deep_title">Detaylı Defter (Derin Dışa Aktarma)</string>
     <string name="rep_deep_none">Dönem Penceresinde Öge Yok</string>
     <string name="rep_deep_sales">Satış Satırları</string>
