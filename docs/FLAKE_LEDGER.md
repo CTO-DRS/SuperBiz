@@ -56,3 +56,6 @@
 ## 2026-11-26 — ConfigRbacGateTest على CI (4 حالات)
 
 على مشغّلات GitHub الجديدة فشلت حالات `ConfigRbacGateTest` المتكتبة على DataStore (مهلة 15ث أو FileNotFoundException على `superbiz_settings.preference`) بنمط عشوائي بين التشغيلات. أُضيف `DataStoreTestReset` (تصفير مفردات `preferencesDataStore` بين الاختبارات) و`RetryRule(3)` على هذا الصنف مع طباعة `FLAKE-RETRY` صريحة في السجل. السبب الجذري الدقيق (سباق كتابة DataStore مع مجلد Robolectric) لم يُعزل بعد — بند متابعة.
+
+## 2026-11-27 — ConfigRbacGateTest timeout (الحالة manager session)
+فشل مرة على CI رغم RetryRule(3) ونجح عند إعادة التشغيل (TimeoutCancellationException بعد 15ث). الاشتباه: بطء مشغّل CI تحت الحمل لا منطق. رُفعت مهلات الانتظار في الصنف إلى 60ث (الفشل الحقيقي يبقى مهلة صريحة). يُراقب: إن تكرر بعد هذا فالسبب سباق DataStore وليس المهلة.
