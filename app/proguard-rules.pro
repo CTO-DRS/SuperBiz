@@ -17,3 +17,6 @@
 # ── 4) الحفاظ على أسماء خطوط Source قياسية لتقارير الأعطال القابلة للقراءة
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# ── [OCR عربي] Tesseract4Android: JNI يربط بأسماء الأصناف/الدوال — لا تُعاد تسميتها
+-keep class com.googlecode.tesseract.android.** { *; }

@@ -27,13 +27,18 @@ object MlKitOcr {
 
     /** التعرف على نص صورة (فاتورة/إيصال) — يرمي IOException عند تعذر قراءة الصورة فقط */
     suspend fun recognize(context: Context, uri: Uri): OcrResult = withContext(Dispatchers.IO) {
-        // [إصلاح بناء 2026-11-26] لا يوجد artifact «text-recognition-arabic» في ML Kit —
-        // المتاح لاتيني/صيني/ديفاناغاري/ياباني/كوري فقط، فكان البناء ينكسر. المحرك اللاتيني
-        // يقرأ الأرقام والنص اللاتيني؛ القراءة العربية مؤجلة لمحرك مدمج بديل (انظر الخارطة).
+        // 1) المحرك العربي (Tesseract ara+eng على الجهاز) — ML Kit لا يوفّر عربيًا.
+        //    أي فشل في المحرك لا يُسقط المسح: نرجع للاتيني.
+        val arabicText = try { TesseractOcr.recognize(context, uri) } catch (e: Throwable) { "" }
+        if (arabicText.any { it in '\u0600'..'\u06FF' }) {
+            return@withContext OcrResult(arabicText, usedArabicEngine = true)
+        }
+        // 2) لا عربية في الخروج — ML Kit اللاتيني (أدق للنص اللاتيني والأرقام) ويُعتمد الأغنى
         val latinText = recognizeWith(context, uri) {
             TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         }
-        OcrResult(latinText, usedArabicEngine = false)
+        if (latinText.length >= arabicText.length) OcrResult(latinText, usedArabicEngine = false)
+        else OcrResult(arabicText, usedArabicEngine = true)
     }
 
     /** تشغيل محرك واحد على الصورة مع إغلاق العميل في كل الحالات */

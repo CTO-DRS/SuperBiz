@@ -144,6 +144,9 @@ dependencies {
     // مضمنة في الحزمة (bundled) — صفر طلب شبكي صفر مفاتيح API؛ يعمل دون اتصال
     // كاملًا فلا يلمس التزام ADR-001 إطلاقًا (لا socket في ملفات الموجة A1)
     implementation("com.google.mlkit:text-recognition:16.0.1")
+    // [OCR عربي] Tesseract على الجهاز — نماذج ara+eng مضمنة في assets/tessdata (tessdata_fast، Apache-2.0)؛
+    // ML Kit لا يوفّر محركًا عربيًا. صفر شبكة وقت التشغيل.
+    implementation("com.github.adaptech-cz:Tesseract4Android:4.7.0")
     // جسر coroutines لمهام ML Kit (ListenableTask.await) — بإصدار coroutines المعتمد نفسه
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
     // [W1] Play Billing v7 — فريميوم Pro بلا خادم (شراء لمرة واحدة + استعادة)
