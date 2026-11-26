@@ -62,6 +62,10 @@ import org.robolectric.annotation.Config
 @Config(sdk = [34], application = android.app.Application::class)
 class SearchHealthVMTest {
 
+    @get:org.junit.Rule
+    val retry = com.superbiz.app.testutil.RetryRule(3)
+
+
     // أزمنة صريحة حتمية
     private val T0 = 1_700_000_000_000L
     private val DAY = 86_400_000L
@@ -106,6 +110,8 @@ class SearchHealthVMTest {
                 return
             } catch (e: IllegalStateException) {
                 last = e
+                // Main عالق من صنف سابق — نصفّره ثم نعيد المحاولة (FLAKE_LEDGER #1/#2)
+                try { Dispatchers.resetMain() } catch (_: Throwable) {}
                 Thread.sleep(100)
             }
         }
