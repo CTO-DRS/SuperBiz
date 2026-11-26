@@ -2535,6 +2535,9 @@
     <string name="branch_err_name">شاخ کا نام ضروری ہے</string>
     <string name="branch_err_dup">یہ نام پہلے سے استعمال میں ہے</string>
     <string name="branch_err_denied">آپ کو شاخیں منظم کرنے کی اجازت نہیں</string>
+    <string name="branch_summary">فروخت %1$s · منافع %2$s · اسٹاک %3$s</string>
+    <string name="branch_current">موجودہ شاخ</string>
+    <string name="branch_make_current">موجودہ بنائیں</string>
     <string name="transfers_title">شاخوں کے درمیان منتقلی</string>
     <string name="transfers_open">شاخوں کی منتقلی کھولیں</string>
     <string name="transfers_empty">ابھی کوئی منتقلی نہیں</string>

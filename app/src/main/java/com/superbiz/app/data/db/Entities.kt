@@ -187,7 +187,8 @@ data class Invoice(
     // origFxMicros: سعر الختم — قروش الأساس لكل وحدة أجنبية × 1e6 (عقد R17 بند 2)
     val origCurrency: String = "",
     val origTotal: Long = 0,
-    val origFxMicros: Long = 0
+    val origFxMicros: Long = 0,
+    val branchId: Long = 0   // [A4] الفرع الذي سُجّلت عليه العملية (0 = غير محدد/قبل الفروع)
 ) {
     val open: Long get() = total - paid  // [P33-P8] مساواة تامة — لا تقريب
     val isSale: Boolean get() = type == 0
@@ -301,7 +302,8 @@ data class Expense(
     // [H4-1 V 2.5.0] ختم الفئة الأصلية — نفس عقد أعمدة invoices الثلاثة أعلاه
     val origCurrency: String = "",
     val origTotal: Long = 0,
-    val origFxMicros: Long = 0
+    val origFxMicros: Long = 0,
+    val branchId: Long = 0   // [A4] الفرع الذي سُجّلت عليه العملية (0 = غير محدد/قبل الفروع)
 )
 
 @Entity(tableName = "rules")

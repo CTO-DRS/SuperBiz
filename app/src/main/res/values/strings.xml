@@ -2658,6 +2658,9 @@
     <string name="branch_err_name">اسم الفرع مطلوب</string>
     <string name="branch_err_dup">الاسم مستخدم من قبل</string>
     <string name="branch_err_denied">ليست لديك صلاحية إدارة الفروع</string>
+    <string name="branch_summary">المبيعات %1$s · الربح %2$s · المخزون %3$s</string>
+    <string name="branch_current">الفرع الحالي</string>
+    <string name="branch_make_current">اجعله الحالي</string>
     <string name="transfers_title">التحويلات بين الفروع</string>
     <string name="transfers_open">فتح التحويلات بين الفروع</string>
     <string name="transfers_empty">لا توجد تحويلات بعد</string>

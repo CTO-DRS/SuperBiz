@@ -143,6 +143,7 @@ class SettingsRepo(private val context: Context) {
         val rptHour = intPreferencesKey("report_schedule_hour")
         val rptChannel = stringPreferencesKey("report_schedule_channel")
         val rptLast = longPreferencesKey("last_scheduled_report")
+        val currentBranch = longPreferencesKey("current_branch_id")
         val rptRecipient = stringPreferencesKey("report_recipient")
         val monthlyGoal = doublePreferencesKey("monthly_sales_goal")
         // مفاتيح الإعدادات المركزية الجديدة
@@ -389,6 +390,13 @@ class SettingsRepo(private val context: Context) {
         context.dataStore.edit {
             it[K.rptChannel] = if (v == "email") "email" else "whatsapp"
         }
+    }
+    /** [A4] الفرع الحالي — يحدّث الحامل الفوري أيضاً */
+    suspend fun currentBranchId(): Long = (context.dataStore.data.first()[K.currentBranch] ?: 0L)
+        .also { com.superbiz.app.data.repo.CurrentBranch.id = it }
+    suspend fun setCurrentBranchId(id: Long) {
+        context.dataStore.edit { it[K.currentBranch] = id }
+        com.superbiz.app.data.repo.CurrentBranch.id = id
     }
     suspend fun setLastScheduledReport(ts: Long) = context.dataStore.edit { it[K.rptLast] = ts }
 

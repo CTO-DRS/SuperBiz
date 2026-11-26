@@ -13,6 +13,19 @@ import com.superbiz.app.data.db.AppDatabase
  */
 internal suspend fun AppDatabase.mirrorToActiveBranch(productId: Long, delta: Double) {
     if (!delta.isFinite() || delta == 0.0) return
-    val branch = branches().activeOnce().firstOrNull() ?: return
-    branchStock().addQty(branch.id, productId, delta)
+    val id = resolveBranchId()
+    if (id == 0L) return
+    branchStock().addQty(id, productId, delta)
+}
+
+/** [A4] «الفرع الحالي» — يُحمَّل من الإعدادات عند الإقلاع ويحدَّث عند التبديل (0 = تلقائي: أول فرع نشط) */
+object CurrentBranch {
+    @Volatile var id: Long = 0L
+}
+
+/** الفرع الفعّال للكتابة: المختار إن كان نشطاً، وإلا أول فرع نشط، وإلا 0 (بلا فروع = سلوك v18) */
+internal suspend fun AppDatabase.resolveBranchId(): Long {
+    val active = branches().activeOnce()
+    val want = CurrentBranch.id
+    return active.firstOrNull { it.id == want }?.id ?: active.firstOrNull()?.id ?: 0L
 }

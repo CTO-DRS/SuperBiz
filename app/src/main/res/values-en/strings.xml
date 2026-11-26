@@ -2658,6 +2658,9 @@
     <string name="branch_err_name">Branch name is required</string>
     <string name="branch_err_dup">This name is already used</string>
     <string name="branch_err_denied">You do not have permission to manage branches</string>
+    <string name="branch_summary">Sales %1$s · Profit %2$s · Stock %3$s</string>
+    <string name="branch_current">Current branch</string>
+    <string name="branch_make_current">Make current</string>
     <string name="transfers_title">Branch transfers</string>
     <string name="transfers_open">Open branch transfers</string>
     <string name="transfers_empty">No transfers yet</string>

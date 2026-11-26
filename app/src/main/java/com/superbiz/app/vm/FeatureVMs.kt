@@ -3076,6 +3076,31 @@ class BranchesVM(app: Application) : AndroidViewModel(app) {
     }
 
     fun setActive(id: Long, active: Boolean) = launchSafe { g.transfers.setBranchActive(id, active) }
+
+    /** [A4] ملخص فرع: مبيعات صافية، ربح (مبيعات − تكلفة − مصروفات)، قيمة المخزون — كلها قروش */
+    data class BranchSummary(val sales: Long, val profit: Long, val stockValue: Long)
+
+    val currentId = kotlinx.coroutines.flow.MutableStateFlow(0L)
+    val summaries = kotlinx.coroutines.flow.MutableStateFlow<Map<Long, BranchSummary>>(emptyMap())
+
+    init {
+        launchSafe { currentId.value = g.settings.currentBranchId() }
+        launchSafe {
+            g.transfers.branches().collect { list ->
+                val dao = g.db.branches()
+                summaries.value = list.associate { b ->
+                    val sales = dao.salesNet(b.id)
+                    b.id to BranchSummary(
+                        sales = sales,
+                        profit = sales - dao.cogs(b.id) - dao.expensesOf(b.id),
+                        stockValue = Math.round(dao.stockValue(b.id))
+                    )
+                }
+            }
+        }
+    }
+
+    fun select(id: Long) = launchSafe { g.settings.setCurrentBranchId(id); currentId.value = id }
 }
 
 /** [A2] شاشة التحويلات بين الفروع — فوق TransferRepo (الصلاحية INVENTORY_MANAGE عند حد المستودع) */

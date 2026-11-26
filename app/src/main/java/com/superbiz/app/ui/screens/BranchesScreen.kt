@@ -44,6 +44,9 @@ fun BranchesScreen(onBack: () -> Unit, onOpenTransfers: () -> Unit = {}) {
     val g = glassColors()
     val vm: BranchesVM = viewModel()
     val branches by vm.branches.collectAsState()
+    val currentId by vm.currentId.collectAsState()
+    val summaries by vm.summaries.collectAsState()
+    val effectiveId = branches.filter { it.active }.let { act -> act.firstOrNull { it.id == currentId }?.id ?: act.firstOrNull()?.id ?: 0L }
     var name by remember { mutableStateOf("") }
     var kind by remember { mutableStateOf(0) }
     var errorKey by remember { mutableStateOf<String?>(null) }
@@ -116,6 +119,23 @@ fun BranchesScreen(onBack: () -> Unit, onOpenTransfers: () -> Unit = {}) {
                                         " · " + stringResource(if (b.active) R.string.branch_active else R.string.branch_inactive),
                                     color = g.textSecondary, style = MaterialTheme.typography.bodySmall
                                 )
+                                summaries[b.id]?.let { s ->
+                                    Text(
+                                        stringResource(
+                                            R.string.branch_summary,
+                                            com.superbiz.app.util.Money.numP(s.sales),
+                                            com.superbiz.app.util.Money.numP(s.profit),
+                                            com.superbiz.app.util.Money.numP(s.stockValue)
+                                        ),
+                                        color = g.textSecondary, style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                                if (b.active) {
+                                    FilterChip(
+                                        selected = b.id == effectiveId, onClick = { vm.select(b.id) },
+                                        label = { Text(stringResource(if (b.id == effectiveId) R.string.branch_current else R.string.branch_make_current)) }
+                                    )
+                                }
                             }
                             Switch(checked = b.active, onCheckedChange = { vm.setActive(b.id, it) })
                         }

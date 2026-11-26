@@ -2541,6 +2541,9 @@
     <string name="branch_err_name">Le nom est obligatoire</string>
     <string name="branch_err_dup">Ce nom est déjà utilisé</string>
     <string name="branch_err_denied">Vous n\'avez pas la permission de gérer les succursales</string>
+    <string name="branch_summary">Ventes %1$s · Bénéfice %2$s · Stock %3$s</string>
+    <string name="branch_current">Succursale actuelle</string>
+    <string name="branch_make_current">Définir comme actuelle</string>
     <string name="transfers_title">Transferts entre succursales</string>
     <string name="transfers_open">Ouvrir les transferts</string>
     <string name="transfers_empty">Aucun transfert pour l\'instant</string>

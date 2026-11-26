@@ -156,7 +156,10 @@ class InvoiceRepo(
             // [Z2-أ V 1.5.0]: الختم قبل الإدراج (قراءة السلسلة + هوية جديدة) —
             // كل قراءاته وإسناده داخل هذه المعاملة نفسها فلا سباق عدّاد.
             val stamped = zatca?.stamp(withNumber, items, prev)
-            val toInsert = stamped?.invoice ?: withNumber
+            val toInsert = (stamped?.invoice ?: withNumber).let {
+                // [A4] الفاتورة الجديدة تُختم بالفرع الحالي؛ التعديل يُبقي فرعها الأصلي
+                it.copy(branchId = if (isUpdate) prev!!.branchId else db.resolveBranchId())
+            }
             invId = db.invoices().upsert(toInsert)
                 .let { if (it == -1L && toInsert.id != 0L) toInsert.id else it }
             db.invoiceItems().deleteForInvoice(invId)
