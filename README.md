@@ -1,11 +1,11 @@
 # SuperBiz
 
-**Version: V 3.9.0**
+**Version: v0.1.0** _(إعادة ترقيم 2026-11-26 — الإصدارات السابقة v3.x تبقى في السجل التاريخي)_
 **الموجة F3 «المبارزة التنبؤية على الجهاز» — D7 كامل العقد بعقد ADR-005 (مقارنة متجذرة بين الخط الإحصائي القائم وخط تعلّم مُدرَّب على الجهاز فوق محركات R7–R18 بلا لمسها)**
 
 ![SuperBiz](assets/banner.png)
 
-![Version](https://img.shields.io/badge/الإصدار-V%203.9.0-8B5CF6?style=flat-square&labelColor=0B1026)
+![Version](https://img.shields.io/badge/الإصدار-v0.1.0-8B5CF6?style=flat-square&labelColor=0B1026)
 ![Tests](https://img.shields.io/badge/الاختبارات-1938%2B%20خضراء-34D399?style=flat-square&labelColor=0B1026)
 ![Platform](https://img.shields.io/badge/Android-7.0%2B%20(minSdk%2024)-3B82F6?style=flat-square&labelColor=0B1026)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-8B5CF6?style=flat-square&labelColor=0B1026)

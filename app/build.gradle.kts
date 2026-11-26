@@ -36,7 +36,7 @@ android {
         // الإصدار يُعرض للمستخدم حصريًا من
         // BuildConfig.VERSION_NAME / VERSION_CODE (الإعدادات + تذييل PDF).
         versionCode = 27
-        versionName = "3.9.0"
+        versionName = "0.1.0" // إعادة ترقيم 2026-11-26: المشروع يبدأ من v0.1.0 (versionCode يبقى تصاعديًا — قيد أندرويد)
         vectorDrawables { useSupportLibrary = true }
     }
 
