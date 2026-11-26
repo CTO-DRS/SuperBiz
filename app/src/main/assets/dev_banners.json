@@ -1,0 +1,18 @@
+{
+  "banners": [
+    {
+      "title": {"ar": "Super Biz — أدِر أعمالك بالعربية", "en": "Super Biz: run your business in Arabic"},
+      "body": {"ar": "فواتير ومخزون وفروع وتقارير تعمل بدون إنترنت.", "en": "Invoices, stock, branches and reports that work offline."},
+      "url": "https://github.com/CTO-DRS/SuperBiz",
+      "from": "#6D3FC9",
+      "to": "#06B6D4"
+    },
+    {
+      "title": {"ar": "تابع جديد المطوّر", "en": "Follow the developer for new apps"},
+      "body": {"ar": "تطبيقات وعروض جديدة تُعلن هنا أولاً.", "en": "New apps and offers are announced here first."},
+      "url": "https://github.com/CTO-DRS",
+      "from": "#4F46E5",
+      "to": "#A855F7"
+    }
+  ]
+}

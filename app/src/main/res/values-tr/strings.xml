@@ -1649,6 +1649,14 @@
     <string name="about_dev_l_youtube">YouTube</string>
     <string name="about_dev_l_github">GitHub</string>
     <string name="about_dev_l_website">Web sitesi</string>
+    <string name="about_dev_share">Paylaş</string>
+    <string name="about_dev_share_link">Bağlantıyı paylaş</string>
+    <string name="about_dev_share_qr">QR paylaş</string>
+    <string name="about_dev_share_app">Uygulamayı paylaş</string>
+    <string name="about_dev_share_all">Tüm hesapları paylaş</string>
+    <string name="about_dev_share_app_msg">%1$s uygulamasını deneyin: çevrimdışı çalışan, Arapça öncelikli bir işletme uygulaması. Buradan indirin:</string>
+    <string name="about_dev_share_all_msg">Geliştirici CTO.DRS resmi hesapları:</string>
+    <string name="about_dev_check_updates">Güncellemeleri denetle (sürüm %1$s)</string>
     <string name="legal_source_note">Kanonik kaynak: proje deposundaki tam belge (docs/PRIVACY_POLICY.md) — bu uygulama içi kopya ona uyar ve çevrimdışı çalışır.</string>
     <string name="party_role_customer">Müşteri</string>
     <string name="party_role_supplier">Tedarikçi</string>
