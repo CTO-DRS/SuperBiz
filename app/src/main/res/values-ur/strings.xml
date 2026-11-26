@@ -570,6 +570,7 @@
     <string name="rep_vatr_input">ان پٹ ٹیک (خصم کے قابل)</string>
     <string name="rep_vatr_net">اٹھانا ہوئی ٹیک کا صاف</string>
     <string name="rep_vatr_refund">منفی صاف = واپس لینے یا اگلے دورہ منتقل کرنے کے قابل ٹیک</string>
+    <string name="rep_vatr_export">ویٹ ریٹرن ایکسپورٹ (CSV)</string>
     <string name="rep_deep_title">تفصیلی لجر (گہرا ایکسپورٹ)</string>
     <string name="rep_deep_none">دورہ کے پنجرے میں کوئی پوائنٹس نہیں</string>
     <string name="rep_deep_sales">فروخت کی صفیں</string>

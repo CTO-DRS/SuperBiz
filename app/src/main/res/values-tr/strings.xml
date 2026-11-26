@@ -570,6 +570,7 @@
     <string name="rep_vatr_input">Giriş Vergisi (Düşülebilir)</string>
     <string name="rep_vatr_net">Ödenecek Net Vergi</string>
     <string name="rep_vatr_refund">Net Negatif = İade Edilebilir veya Gelecek Döneme Erteleme Vergisi</string>
+    <string name="rep_vatr_export">KDV beyannamesini dışa aktar (CSV)</string>
     <string name="rep_deep_title">Detaylı Defter (Derin Dışa Aktarma)</string>
     <string name="rep_deep_none">Dönem Penceresinde Öge Yok</string>
     <string name="rep_deep_sales">Satış Satırları</string>

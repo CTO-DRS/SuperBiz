@@ -870,6 +870,29 @@ fun ReportsScreen(appVM: AppVM, nav: NavHostController) {
                             color = g.textSecondary, fontSize = 12.sp
                         )
                     }
+                    // [VAT-export] مشاركة الإقرار الدوري CSV
+                    val vatCtx = androidx.compose.ui.platform.LocalContext.current
+                    val vatLabel = stringResourceCompat(R.string.rep_vatr_export)
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = {
+                            runCatching {
+                                val fmt = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+                                val now = System.currentTimeMillis()
+                                val csv = com.superbiz.app.domain.algo.VatReturnCsv.build(vr, fmt.format(java.util.Date(now - days * 86_400_000L)), fmt.format(java.util.Date(now)))
+                                val dir = java.io.File(vatCtx.cacheDir, "shared").apply { mkdirs() }
+                                val f = java.io.File(dir, "vat-return-" + fmt.format(java.util.Date(now)) + ".csv")
+                                f.writeBytes(csv.toByteArray(Charsets.UTF_8))
+                                val uri = androidx.core.content.FileProvider.getUriForFile(vatCtx, "com.superbiz.app.fileprovider", f)
+                                val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                    type = "text/csv"
+                                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                startIntentSafe(vatCtx, android.content.Intent.createChooser(send, vatLabel).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(vatLabel) }
                 }
             }
         }
