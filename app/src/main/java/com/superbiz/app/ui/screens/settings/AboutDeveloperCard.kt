@@ -228,7 +228,6 @@ internal fun AboutDeveloperCard() {
             }
         }
     }
-}
 
     qrLink?.let { link -> DevQrSheet(link, onDismiss = { qrLink = null }) }
 }
