@@ -631,6 +631,7 @@
     <string name="rep_vatr_input">ضريبة المدخلات (قابلة للخصم)</string>
     <string name="rep_vatr_net">صافي الضريبة المستحق</string>
     <string name="rep_vatr_refund">صافٍ سالب = ضريبة قابلة للاسترداد أو الترحيل للفترة القادمة</string>
+    <string name="rep_vatr_export">تصدير الإقرار الضريبي CSV</string>
     <!-- [P43-D1] جولة 4 — الدفتر التفصيلي (تصدير عميق): صفوف لكل بند بأعمدة الضريبة v11 -->
     <string name="rep_deep_title">الدفتر التفصيلي (تصدير عميق)</string>
     <string name="rep_deep_none">لا بنود داخل نافذة الفترة</string>
