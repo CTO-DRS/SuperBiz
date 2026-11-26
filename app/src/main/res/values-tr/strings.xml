@@ -2556,6 +2556,13 @@
     <string name="transfer_err_product">Bir ürün seçin</string>
     <string name="transfer_err_other">Transfer tamamlanamadı</string>
     <string name="transfer_available">Çıkışta mevcut: %1$s</string>
+    <string name="transfer_status_pending">Onay bekliyor</string>
+    <string name="transfer_status_rejected">Reddedildi</string>
+    <string name="transfer_approve">Onayla</string>
+    <string name="transfer_reject">Reddet</string>
+    <string name="transfer_request">Onay iste</string>
+    <string name="transfer_requested_by">Talep eden: %1$s</string>
+    <string name="transfer_decided_by">Karar veren: %1$s</string>
     <string name="ocr_cloud_failed">İyileştirme başarısız: %1$s</string>
     <string name="ocr_cloud_disabled_note">Bulut iyileştirme kilitli — Ayarlar → Kilitli bulut AI bölümünden etkinleştirin ve API anahtarı ekleyin</string>
     <string name="gem_title">Kilitli bulut yapay zekâ (Gemini)</string>

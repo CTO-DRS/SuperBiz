@@ -2562,6 +2562,13 @@
     <string name="transfer_err_product">Choisissez un produit</string>
     <string name="transfer_err_other">Le transfert n\'a pas pu être effectué</string>
     <string name="transfer_available">Disponible à la source : %1$s</string>
+    <string name="transfer_status_pending">En attente d\'approbation</string>
+    <string name="transfer_status_rejected">Refusé</string>
+    <string name="transfer_approve">Approuver</string>
+    <string name="transfer_reject">Refuser</string>
+    <string name="transfer_request">Demander l\'approbation</string>
+    <string name="transfer_requested_by">Demandé par : %1$s</string>
+    <string name="transfer_decided_by">Décidé par : %1$s</string>
     <string name="ocr_cloud_failed">Échec de l\'amélioration : %1$s</string>
     <string name="ocr_cloud_disabled_note">L\'amélioration cloud est verrouillée — activez-la dans Paramètres → IA cloud verrouillée et ajoutez une clé API</string>
     <string name="gem_title">IA cloud verrouillée (Gemini)</string>

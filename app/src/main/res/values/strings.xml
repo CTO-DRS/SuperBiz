@@ -2679,6 +2679,13 @@
     <string name="transfer_err_product">اختر صنفًا</string>
     <string name="transfer_err_other">تعذر تنفيذ التحويل</string>
     <string name="transfer_available">المتاح في المصدر: %1$s</string>
+    <string name="transfer_status_pending">بانتظار الاعتماد</string>
+    <string name="transfer_status_rejected">مرفوض</string>
+    <string name="transfer_approve">اعتماد</string>
+    <string name="transfer_reject">رفض</string>
+    <string name="transfer_request">طلب اعتماد</string>
+    <string name="transfer_requested_by">طلب: %1$s</string>
+    <string name="transfer_decided_by">القرار: %1$s</string>
     <string name="ocr_cloud_failed">فشل التحسين: %1$s</string>
     <string name="ocr_cloud_disabled_note">التحسين السحابي مقفول — فعّله من الإعدادات ← الذكاء السحابي المقفول وأدخل مفتاح API</string>
     <string name="gem_title">الذكاء السحابي المقفول (Gemini)</string>

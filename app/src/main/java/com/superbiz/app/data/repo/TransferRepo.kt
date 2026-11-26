@@ -42,6 +42,10 @@ class TransferRepo(private val db: AppDatabase) {
         const val STATUS_IN_TRANSIT = 0
         const val STATUS_RECEIVED = 1
         const val STATUS_CANCELED = 2
+        /** [A5] طلب ينتظر اعتماد المالك — لا يمس المخزون إطلاقاً حتى القرار */
+        const val STATUS_PENDING_APPROVAL = 3
+        /** [A5] طلب رُفض — حالة نهائية بلا أثر على المخزون */
+        const val STATUS_REJECTED = 4
         /** الفرع الرئيسي الذي يبذره الترحيل 18→19 (id الحقيقي يقرأ من القاعدة) */
         const val MAIN_BRANCH_NAME = "المخزن الرئيسي"
     }
@@ -120,6 +124,78 @@ class TransferRepo(private val db: AppDatabase) {
                 lines.map { StockTransferLineEntity(transferId = tid, productId = it.first, qty = it.second) }
             )
             tid
+        }
+    }
+
+    /**
+     * [A5] طلب تحويل: يُسجَّل PENDING_APPROVAL بلا أي خصم (الحفظ: لا شيء يتحرك قبل الاعتماد).
+     * الطالب INVENTORY_MANAGE (المدير أو المالك)؛ الاسم يُؤخذ من الجلسة الفعلية.
+     */
+    suspend fun requestTransfer(
+        fromBranchId: Long,
+        toBranchId: Long,
+        lines: List<Pair<Long, Double>>,
+        today: Long,
+        note: String = ""
+    ): Long {
+        val session = com.superbiz.app.domain.rbac.SessionState.effective()
+        com.superbiz.app.domain.rbac.RoleGate.require(session, com.superbiz.app.domain.rbac.Op.INVENTORY_MANAGE)
+        require(fromBranchId != toBranchId) { "source and destination must differ" }
+        require(lines.isNotEmpty()) { "no lines" }
+        require(lines.all { it.second > 0.0 && it.second.isFinite() }) { "qty must be finite positive" }
+        require(note.length <= 500) { "note too long" }
+        return db.withTransaction {
+            val from = db.branches().byId(fromBranchId) ?: throw IllegalArgumentException("source branch missing")
+            val to = db.branches().byId(toBranchId) ?: throw IllegalArgumentException("destination branch missing")
+            require(from.active && to.active) { "inactive branch cannot transfer" }
+            val tid = db.stockTransfers().insert(
+                StockTransferEntity(
+                    fromBranchId = fromBranchId, toBranchId = toBranchId,
+                    status = STATUS_PENDING_APPROVAL, sentAt = today, note = note,
+                    requestedBy = session.name
+                )
+            )
+            db.stockTransferLines().insertAll(
+                lines.map { StockTransferLineEntity(transferId = tid, productId = it.first, qty = it.second) }
+            )
+            tid
+        }
+    }
+
+    /**
+     * [A5] اعتماد طلب: TRANSFER_APPROVE (المالك). يعيد فحص الكفاية داخل المعاملة وقت الاعتماد
+     * (المخزون تحرك منذ الطلب)، ثم يخصم من المصدر وينقل الحالة إلى IN_TRANSIT ويسجل المعتمِد.
+     * فشل الكفاية يرمي ويتراجع كل شيء — يبقى الطلب معلقاً ولا خصم جزئي.
+     */
+    suspend fun approveTransfer(transferId: Long): Unit {
+        val session = com.superbiz.app.domain.rbac.SessionState.effective()
+        com.superbiz.app.domain.rbac.RoleGate.require(session, com.superbiz.app.domain.rbac.Op.TRANSFER_APPROVE)
+        db.withTransaction {
+            val t = db.stockTransfers().byId(transferId)
+                ?: throw IllegalArgumentException("transfer missing")
+            require(t.status == STATUS_PENDING_APPROVAL) { "transfer is not pending approval" }
+            val from = db.branches().byId(t.fromBranchId) ?: throw IllegalArgumentException("source branch missing")
+            val to = db.branches().byId(t.toBranchId) ?: throw IllegalArgumentException("destination branch missing")
+            require(from.active && to.active) { "inactive branch cannot transfer" }
+            val lines = db.stockTransferLines().forTransfer(transferId)
+            for (l in lines) {
+                val have = db.branchStock().qtyAt(t.fromBranchId, l.productId) ?: 0.0
+                require(have >= l.qty) { "insufficient transfer-plane stock: product ${l.productId} has $have, needs ${l.qty}" }
+            }
+            for (l in lines) db.branchStock().addQty(t.fromBranchId, l.productId, -l.qty)
+            db.stockTransfers().update(t.copy(status = STATUS_IN_TRANSIT, approvedBy = session.name))
+        }
+    }
+
+    /** [A5] رفض طلب: TRANSFER_APPROVE — حالة REJECTED نهائية، بلا أي أثر على المخزون */
+    suspend fun rejectTransfer(transferId: Long): Unit {
+        val session = com.superbiz.app.domain.rbac.SessionState.effective()
+        com.superbiz.app.domain.rbac.RoleGate.require(session, com.superbiz.app.domain.rbac.Op.TRANSFER_APPROVE)
+        db.withTransaction {
+            val t = db.stockTransfers().byId(transferId)
+                ?: throw IllegalArgumentException("transfer missing")
+            require(t.status == STATUS_PENDING_APPROVAL) { "transfer is not pending approval" }
+            db.stockTransfers().update(t.copy(status = STATUS_REJECTED, approvedBy = session.name))
         }
     }
 

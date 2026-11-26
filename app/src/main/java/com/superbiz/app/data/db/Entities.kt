@@ -890,7 +890,11 @@ data class StockTransferEntity(
     val status: Int = 0,
     val sentAt: Long,
     val receivedAt: Long = 0L,
-    val note: String = ""
+    val note: String = "",
+    /** [A5] من طلب التحويل (اسم/معرّف الجلسة) — فارغ للإرسال المباشر القديم */
+    val requestedBy: String = "",
+    /** [A5] من اعتمد أو رفض الطلب — فارغ قبل القرار */
+    val approvedBy: String = ""
 )
 
 /** سطر نقل — qty المُرسل وreceivedQty المستلم فعلاً؛ الفرق = تسوية بصرية */

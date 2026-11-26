@@ -3113,6 +3113,19 @@ class TransfersVM(app: Application) : AndroidViewModel(app) {
         })
     }
 
+    /** [A5] المالك يرسل مباشرة؛ غيره (المدير) يطلب اعتماداً — القرار من الجلسة الفعلية */
+    fun canApprove(): Boolean = com.superbiz.app.domain.rbac.SessionState.effective().can(com.superbiz.app.domain.rbac.Op.TRANSFER_APPROVE)
+    fun isOwner(): Boolean = com.superbiz.app.domain.rbac.SessionState.effective().role == com.superbiz.app.domain.rbac.Role.OWNER
+
+    fun request(from: Long, to: Long, productId: Long, qty: Double, note: String, onResult: (String?) -> Unit) = launchSafe {
+        onResult(guarded {
+            g.transfers.requestTransfer(from, to, listOf(productId to qty), System.currentTimeMillis(), note.trim())
+        })
+    }
+
+    fun approve(id: Long, onResult: (String?) -> Unit = {}) = launchSafe { onResult(guarded { g.transfers.approveTransfer(id) }) }
+    fun reject(id: Long, onResult: (String?) -> Unit = {}) = launchSafe { onResult(guarded { g.transfers.rejectTransfer(id) }) }
+
     fun receive(id: Long, onResult: (String?) -> Unit = {}) = launchSafe {
         onResult(guarded { g.transfers.receiveTransfer(id, emptyMap(), System.currentTimeMillis()) })
     }

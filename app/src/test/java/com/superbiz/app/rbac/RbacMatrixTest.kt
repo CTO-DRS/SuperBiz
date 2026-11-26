@@ -57,6 +57,8 @@ class RbacMatrixTest {
         Op.BACKUP_RESTORE to setOf(Role.OWNER),
         // سطر 13: تفعيل Pro/شراء/استعادة — المالك وحده
         Op.PRO_MANAGE to setOf(Role.OWNER),
+        // [A5] اعتماد/رفض تحويل بين الفروع — المالك وحده
+        Op.TRANSFER_APPROVE to setOf(Role.OWNER),
         // سطر 14-أ: تطبيق الولاء على بيع قائم — بلا المحاسب (الكاشير تطبيق فقط)
         Op.LOYALTY_APPLY to setOf(Role.OWNER, Role.MANAGER, Role.CASHIER),
         // سطر 14-ب: إنشاء قواعد الولاء والكوبونات — المالك والمدير
@@ -98,6 +100,12 @@ class RbacMatrixTest {
     @Test
     fun `matrix row 6b — inventory manage is owner manager only`() {
         assertEquals(expectedAllows[Op.INVENTORY_MANAGE], allowedRolesFor(Op.INVENTORY_MANAGE))
+    }
+
+    @Test
+    fun `matrix A5 — transfer approve is owner only`() {
+        assertEquals(setOf(Role.OWNER), allowedRolesFor(Op.TRANSFER_APPROVE))
+        assertTrue(!RoleGate.allows(Role.MANAGER, Op.TRANSFER_APPROVE))
     }
 
     @Test
@@ -176,7 +184,7 @@ class RbacMatrixTest {
                 Op.INVENTORY_MANAGE, Op.FINANCIAL_REPORTS, Op.TAX_RETURN_VIEW,
                 Op.TAX_OWNER_DATA, Op.EXPENSES_CHECKS_INSTALLMENTS,
                 Op.GENERAL_SETTINGS, Op.USERS_MANAGE, Op.BACKUP_RESTORE, Op.PRO_MANAGE,
-                Op.LOYALTY_MANAGE
+                Op.LOYALTY_MANAGE, Op.TRANSFER_APPROVE
             ),
             cashierDenied.toSet()
         )

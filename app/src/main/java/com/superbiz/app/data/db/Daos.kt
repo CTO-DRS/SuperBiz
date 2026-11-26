@@ -1501,7 +1501,8 @@ interface SyncLogDao {
     // (ترحيل 16→17 في SuperBizApp — إنشاء فهارس فقط، لا أعمدة ولا جداول)
     // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — جدول بإنشاء فقط
     // (ترحيل 17→18 في SuperBizApp — CREATE TABLE/INDEX/مشغّلات مزامنة فقط، إلحاقي خالص)
-    version = 19,
+    // [A5 V 0.1.0] اعتمادات التحويل — عمودان إلحاقيان على stock_transfers (ترحيل 19→20 في SuperBizApp)
+    version = 20,
     exportSchema = true
 )
 
