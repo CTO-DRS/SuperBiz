@@ -1661,6 +1661,9 @@
     <string name="acc_export_ledger">کھاتہ CSV</string>
     <string name="acc_export_trial">ٹرائل بیلنس CSV</string>
     <string name="acc_export_failed">برآمد ناکام</string>
+    <string name="perm_title">کردار کی اجازتیں</string>
+    <string name="perm_hint">ہر عمل کو ہر کردار کے لیے آن یا آف کریں۔ مالک کا کردار مستقل ہے۔ ہر تبدیلی آڈٹ لاگ میں درج ہوتی ہے۔</string>
+    <string name="perm_open">کرداروں کی اجازتیں ترتیب دیں</string>
     <string name="legal_source_note">بنیادی ذریعہ: پروجیکٹ ریپوزٹری میں مکمل دستاویز (docs/PRIVACY_POLICY.md) — ایپ کے اندر یہ نقل اسی سے مطابقت رکھتی ہے اور آف لائن کام کرتی ہے۔</string>
     <string name="party_role_customer">عميل</string>
     <string name="party_role_supplier">مورد</string>

@@ -1661,6 +1661,9 @@
     <string name="acc_export_ledger">Buku besar CSV</string>
     <string name="acc_export_trial">Neraca saldo CSV</string>
     <string name="acc_export_failed">Ekspor gagal</string>
+    <string name="perm_title">Izin peran</string>
+    <string name="perm_hint">Aktifkan atau nonaktifkan tiap operasi per peran. Peran pemilik tetap. Setiap perubahan dicatat di log audit.</string>
+    <string name="perm_open">Atur izin peran</string>
     <string name="legal_source_note">Sumber kanonik: dokumen lengkap di repositori proyek (docs/PRIVACY_POLICY.md) — salinan dalam aplikasi ini sesuai dengannya dan berfungsi luring.</string>
     <string name="party_role_customer">Pelanggan</string>
     <string name="party_role_supplier">Pemasok</string>

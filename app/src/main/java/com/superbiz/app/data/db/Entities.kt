@@ -911,3 +911,12 @@ data class StockTransferLineEntity(
     val qty: Double,
     val receivedQty: Double = 0.0
 )
+
+
+/** [D2] تجاوز صلاحية: صف (دور، عملية) يحل محل افتراضي مصفوفة الكود؛ غياب الصف = الافتراضي */
+@Entity(tableName = "role_permissions", primaryKeys = ["roleId", "op"])
+data class RolePermissionEntity(
+    val roleId: Int,
+    val op: String,
+    val allowed: Boolean
+)

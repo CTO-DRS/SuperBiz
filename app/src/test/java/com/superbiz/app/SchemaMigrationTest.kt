@@ -884,7 +884,7 @@ class SchemaMigrationTest {
             assertEquals(10, migration.startVersion)
             assertEquals(11, migration.endVersion)
             migration.migrate(db)
-            assertEquals("القائمة صارت 20 ترحيلاً — الأخير نطاق الفرع 20→21 [A4]", 20, com.superbiz.app.AppGraph.MIGRATIONS.size)
+            assertEquals("القائمة صارت 21 ترحيلاً — الأخير الصلاحيات الحرة 21→22 [D2]", 21, com.superbiz.app.AppGraph.MIGRATIONS.size)
 
             // 1) العمودان بألفة Room المتوقعة
             assertEquals("taxKind INTEGER", "INTEGER", columnType(db, "invoice_items", "taxKind"))
@@ -962,7 +962,7 @@ class SchemaMigrationTest {
             assertEquals(11, migration.startVersion)
             assertEquals(12, migration.endVersion)
             migration.migrate(db)
-            assertEquals("القائمة صارت 20 ترحيلاً — الأخير نطاق الفرع 20→21 [A4]", 20, com.superbiz.app.AppGraph.MIGRATIONS.size)
+            assertEquals("القائمة صارت 21 ترحيلاً — الأخير الصلاحيات الحرة 21→22 [D2]", 21, com.superbiz.app.AppGraph.MIGRATIONS.size)
 
             // 1) الجدولان وُجدا بألفة Room المتوقعة
             assertEquals("partyId INTEGER", "INTEGER", columnType(db, "loyalty_entries", "partyId"))
@@ -1042,7 +1042,7 @@ class SchemaMigrationTest {
             assertEquals(16, migration.startVersion)
             assertEquals(17, migration.endVersion)
             migration.migrate(db)
-            assertEquals("القائمة صارت 20 ترحيلاً — الأخير نطاق الفرع 20→21 [A4]", 20, com.superbiz.app.AppGraph.MIGRATIONS.size)
+            assertEquals("القائمة صارت 21 ترحيلاً — الأخير الصلاحيات الحرة 21→22 [D2]", 21, com.superbiz.app.AppGraph.MIGRATIONS.size)
 
             // 1) الفهارس الثمانية موجودة بأسماء Room القياسية وعمودَيها الصحيحان
             for (t in identityTables) {
