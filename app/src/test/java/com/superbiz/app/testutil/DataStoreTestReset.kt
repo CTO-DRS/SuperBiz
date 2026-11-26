@@ -1,5 +1,7 @@
 package com.superbiz.app.testutil
 
+import kotlinx.coroutines.cancel
+
 /**
  * [إصلاح تذبذب ConfigRbacGateTest — السبب الجذري، FLAKE_LEDGER #3]
  * كل `by preferencesDataStore(...)` في التطبيق مفرد على مستوى العملية (حقل `$delegate` ساكن)،
@@ -29,6 +31,15 @@ object DataStoreTestReset {
                 val delegate = f.get(null) ?: continue
                 val inst = try { delegate.javaClass.getDeclaredField("INSTANCE") } catch (e: NoSuchFieldException) { continue }
                 inst.isAccessible = true
+                // DataStore يمنع «عدة نسخ فعّالة لنفس الملف» حتى يُلغى نطاق النسخة القديمة —
+                // فنلغي النطاق القديم ونركّب نطاقًا جديدًا قبل تصفير INSTANCE
+                try {
+                    val sf = delegate.javaClass.getDeclaredField("scope")
+                    sf.isAccessible = true
+                    (sf.get(delegate) as? kotlinx.coroutines.CoroutineScope)?.cancel()
+                    sf.set(delegate, kotlinx.coroutines.CoroutineScope(
+                        kotlinx.coroutines.Dispatchers.IO + kotlinx.coroutines.SupervisorJob()))
+                } catch (e: ReflectiveOperationException) { /* تصميم مختلف: نكتفي بتصفير INSTANCE */ }
                 synchronized(delegate) { inst.set(delegate, null) }
             }
         }
