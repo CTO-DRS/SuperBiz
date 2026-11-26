@@ -67,7 +67,7 @@ import com.superbiz.app.vm.UsersVM
  * والمالك لا يحذف جلسته الحية، والبصمة للمالك فقط في الموجة الأولى.
  */
 @Composable
-fun UsersScreen(usersVM: UsersVM, onBack: () -> Unit) {
+fun UsersScreen(usersVM: UsersVM, onBack: () -> Unit, onOpenPermissions: () -> Unit = {}) {
     val g = glassColors()
     val users by usersVM.users.collectAsState()
     val busy by usersVM.busy.collectAsState()
@@ -117,6 +117,10 @@ fun UsersScreen(usersVM: UsersVM, onBack: () -> Unit) {
             toast?.let { msg ->
                 Spacer(Modifier.height(8.dp))
                 Text(msg, fontSize = 13.sp, color = g.accent, fontWeight = FontWeight.SemiBold)
+            }
+            Spacer(Modifier.height(10.dp))
+            androidx.compose.material3.OutlinedButton(onClick = onOpenPermissions, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.rp_open))
             }
             Spacer(Modifier.height(10.dp))
 

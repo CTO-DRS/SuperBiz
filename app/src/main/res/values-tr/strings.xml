@@ -1661,6 +1661,9 @@
     <string name="acc_export_ledger">Defteri kebir CSV</string>
     <string name="acc_export_trial">Mizan CSV</string>
     <string name="acc_export_failed">Dışa aktarma başarısız</string>
+    <string name="rp_title">Rol izinleri</string>
+    <string name="rp_hint">Her işlemi rol bazında açın veya kapatın. Sahip rolü sabittir. Her değişiklik denetim günlüğüne yazılır.</string>
+    <string name="rp_open">Rol izinlerini özelleştir</string>
     <string name="legal_source_note">Kanonik kaynak: proje deposundaki tam belge (docs/PRIVACY_POLICY.md) — bu uygulama içi kopya ona uyar ve çevrimdışı çalışır.</string>
     <string name="party_role_customer">Müşteri</string>
     <string name="party_role_supplier">Tedarikçi</string>

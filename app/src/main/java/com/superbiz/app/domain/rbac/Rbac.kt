@@ -79,6 +79,16 @@ enum class Op {
     LOYALTY_MANAGE
 }
 
+/** [D2] نسخة ذاكرية من جدول role_permissions — تُحمَّل عند الإقلاع وتُحدَّث عند كل تعديل */
+object RolePermissionCache {
+    @Volatile private var overrides: Map<Pair<Int, String>, Boolean> = emptyMap()
+    fun get(role: Role, op: Op): Boolean? = overrides[role.id to op.name]
+    fun replaceAll(rows: List<com.superbiz.app.data.db.RolePermissionEntity>) {
+        overrides = rows.associate { (it.roleId to it.op) to it.allowed }
+    }
+    fun clear() { overrides = emptyMap() }
+}
+
 /** استثناء الرفض — يُرمى من [RoleGate.require] ويُلتقط في launchSafe فيتحول لإشعار مفهوم */
 class RoleDeniedException(val op: Op, val role: Role) :
     RuntimeException("RBAC: role ${role.name} denied op ${op.name}")
@@ -104,7 +114,14 @@ object RoleGate {
      * المصفوفة الحاكمة — أسمحُ صراحةً أم أرفض؟ كل خلية من خلايا التصميم §3
      * هنا، وأي عملية غير مذكورة = رفض (الافتراض مغلق لا استثناء له).
      */
-    fun allows(role: Role, op: Op): Boolean = when (op) {
+    fun allows(role: Role, op: Op): Boolean {
+        // [D2] المالك لا يُقفل أبداً؛ غيره: صف الجدول إن وُجد وإلا افتراض المصفوفة
+        if (role == Role.OWNER) return defaultAllows(role, op)
+        return RolePermissionCache.get(role, op) ?: defaultAllows(role, op)
+    }
+
+    /** مصفوفة الكود الافتراضية — بذرة جدول role_permissions وأساس الرجوع عند غياب صف */
+    fun defaultAllows(role: Role, op: Op): Boolean = when (op) {
         // نقطة البيع وإنشاء فاتورة — المحاسب لا يبيع (تصميم §3 سطر 1)
         Op.POS_SELL -> role == Role.OWNER || role == Role.MANAGER || role == Role.CASHIER
         // طباعة/QR/مشاركة فاتورة قائمة — مفتوحة للجميع (سطر 2)

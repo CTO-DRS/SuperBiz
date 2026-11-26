@@ -44,7 +44,7 @@ class AppGraph(val context: android.content.Context) {
             // [H1-3][v13]: أُضيف MIGRATION_12_13 — نسيانه هنا يعني فشل فتح قاعدة v12 القائمة
             // [Z2-أ][v14]: أُضيف MIGRATION_13_14 — نسيانه هنا يعني فشل فتح قاعدة v13 القائمة
             // [H4-1][v15]: أُضيف MIGRATION_14_15 — نسيانه هنا يعني فشل فتح قاعدة v14 القائمة
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22)
             .build()
     }
     val settings by lazy { SettingsRepo(context) }
@@ -1073,6 +1073,22 @@ class AppGraph(val context: android.content.Context) {
             }
         }
 
+        private val MIGRATION_21_22 = object : androidx.room.migration.Migration(21, 22) {
+            override fun migrate(d: androidx.sqlite.db.SupportSQLiteDatabase) {
+                // [D2] جدول الصلاحيات الحرة — يُبذر بمصفوفة الكود الحالية (INSERT OR IGNORE = idempotent)
+                d.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `role_permissions` (`roleId` INTEGER NOT NULL, " +
+                        "`op` TEXT NOT NULL, `allowed` INTEGER NOT NULL, PRIMARY KEY(`roleId`, `op`))"
+                )
+                for (role in com.superbiz.app.domain.rbac.Role.entries) {
+                    for (op in com.superbiz.app.domain.rbac.Op.entries) {
+                        val v = if (com.superbiz.app.domain.rbac.RoleGate.defaultAllows(role, op)) 1 else 0
+                        d.execSQL("INSERT OR IGNORE INTO `role_permissions` (`roleId`,`op`,`allowed`) VALUES (${role.id}, '${op.name}', $v)")
+                    }
+                }
+            }
+        }
+
         // قائمة الترقيات مكشوفة للاختبارات (SchemaMigrationTest يشغّل كل ترحيل فعلياً) —
         // تُعرّف بعد الترحيلات لأن تهيئة خصائص Kotlin تتم بترتيب الإعلان
         // [P11-a]: MIGRATION_6_7 أُلحقت بالنهاية — الفهرسة بالموضع في الاختبارات تبقى صحيحة
@@ -1085,7 +1101,7 @@ class AppGraph(val context: android.content.Context) {
         // [H4-1]: MIGRATION_14_15 أُلحقت بالنهاية — الفهرس 13 هو ختم الفئة الأصلية
         // [AUD-8]: MIGRATION_16_17 أُلحقت بالنهاية — الفهرس 15 هو فهارس الهوية
         // [RVW-17]: MIGRATION_17_18 أُلحقت بالنهاية — الفهرس 16 هو دفتر استهلاك الكوبونات
-        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21)
+        internal val MIGRATIONS = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22)
 
         /**
          * [H1-3] مزوّد بذرة رمز المالك — يُربط في AppGraph.db قبل بناء القاعدة بقراءة
@@ -1123,6 +1139,7 @@ class SuperBizApp : Application() {
             android.util.Log.e("SuperBizApp", "seedIfFirstRun failed after retries", e)
         }
         graph.appScope.launch(seedHandler) {
+            try { com.superbiz.app.domain.rbac.RolePermissionCache.replaceAll(graph.db.rolePermissions().all()) } catch (e: Exception) { android.util.Log.e("SuperBizApp", "permission cache load failed", e) }
             try { graph.settings.currentBranchId() } catch (e: Exception) { android.util.Log.e("SuperBizApp", "current branch load failed", e) }
             var ok = false
             for (attempt in 1..3) {

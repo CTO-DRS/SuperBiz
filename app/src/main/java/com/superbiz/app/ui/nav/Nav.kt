@@ -168,6 +168,7 @@ object Routes {
     const val DATA_HEALTH = "data_health"
     // [A1] شاشة الفروع
     const val BRANCHES = "branches"
+    const val ROLE_PERMS = "role_perms"
     const val TRANSFERS = "transfers"
     // [P11-a]: المفضّلات مع بطاقة الموقع الجغرافي — الدخول من رقاقة الذمم
     const val FAVORITES = "favorites"
@@ -356,8 +357,14 @@ fun SuperBizRoot(
                     RbacGated(com.superbiz.app.domain.rbac.Op.USERS_MANAGE) {
                         com.superbiz.app.ui.screens.UsersScreen(
                             usersVM = usersVM,
-                            onBack = { nav.popBackStack() }
+                            onBack = { nav.popBackStack() },
+                            onOpenPermissions = { nav.navigate(Routes.ROLE_PERMS) }
                         )
+                    }
+                }
+                composable(Routes.ROLE_PERMS) {
+                    RbacGated(com.superbiz.app.domain.rbac.Op.USERS_MANAGE) {
+                        com.superbiz.app.ui.screens.RolePermissionsScreen(onBack = { nav.popBackStack() })
                     }
                 }
                 // إصلاح CRITICAL — كانت كتلتا SETTINGS_HUB/ERROR_LOG

@@ -1465,6 +1465,7 @@ interface SyncLogDao {
 }
 @androidx.room.Database(
     entities = [
+        RolePermissionEntity::class,
         Party::class, JournalEntry::class, JournalLine::class, Product::class,
         StockMove::class, Invoice::class, InvoiceItem::class, Payment::class,
         CheckEntity::class, Rule::class, Currency::class,
@@ -1516,7 +1517,7 @@ interface SyncLogDao {
     // [RVW-17 V 3.2.6] دفتر استهلاك الكوبونات — جدول بإنشاء فقط
     // (ترحيل 17→18 في SuperBizApp — CREATE TABLE/INDEX/مشغّلات مزامنة فقط، إلحاقي خالص)
     // [A5 V 0.1.0] اعتمادات التحويل — عمودان إلحاقيان على stock_transfers (ترحيل 19→20 في SuperBizApp)
-    version = 21,
+    version = 22,
     exportSchema = true
 )
 
@@ -1552,6 +1553,7 @@ abstract class AppDatabase : androidx.room.RoomDatabase() {
     abstract fun couponRedemptions(): CouponRedemptionDao
     // [E2.1 V 3.5.0] النواة متعددة الفروع
     abstract fun branches(): BranchDao
+    abstract fun rolePermissions(): RolePermissionDao
     abstract fun branchStock(): BranchStockDao
     abstract fun stockTransfers(): StockTransferDao
     abstract fun stockTransferLines(): StockTransferLineDao
@@ -1656,4 +1658,14 @@ interface StockTransferLineDao {
 
     @Query("SELECT * FROM stock_transfer_lines WHERE transferId = :transferId")
     suspend fun forTransfer(transferId: Long): List<StockTransferLineEntity>
+}
+
+
+@androidx.room.Dao
+interface RolePermissionDao {
+    @Query("SELECT * FROM role_permissions")
+    suspend fun all(): List<RolePermissionEntity>
+
+    @androidx.room.Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    suspend fun upsert(row: RolePermissionEntity)
 }
