@@ -794,13 +794,11 @@ fun PartyStatementSheet(
     fun sharePortal() {
         try {
             val df = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-            var run = 0L
             val rows = data.rows.map {
-                run += it.debit - it.credit
                 com.superbiz.app.domain.portal.CustomerPortalHtml.Row(
-                    df.format(java.util.Date(it.date)), it.memo,
+                    df.format(java.util.Date(it.date)), it.title,
                     com.superbiz.app.util.Money.formatP(it.debit, symbol), com.superbiz.app.util.Money.formatP(it.credit, symbol),
-                    com.superbiz.app.util.Money.formatP(run, symbol)
+                    com.superbiz.app.util.Money.formatP(it.balance, symbol)
                 )
             }
             val labels = com.superbiz.app.domain.portal.CustomerPortalHtml.Labels(
