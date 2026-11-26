@@ -99,7 +99,7 @@ android {
         // جدار Compose الثقيل (Robolectric + ui-test + work-testing)
         unitTests.all {
             it.maxHeapSize = "1024m"
-            it.jvmArgs("-XX:MaxMetaspaceSize=320m")
+            it.jvmArgs("-XX:MaxMetaspaceSize=320m", "-XX:TieredStopAtLevel=1") // C2 JIT SIGSEGV seen on CI (Temurin 17.0.13, Node::uncast)
             // [E1 / إصلاح CI 2026-11-26] عزل المفردات المشتركة (DataStore/Main dispatcher/AppGraph)
             // بين ملفات الاختبار: JVM جديد كل 15 صنفًا بدل عملية واحدة طويلة — السبب الجذري لتذبذب
             // ConfigRbacGateTest/SearchHealthVMTest الموثق في docs/FLAKE_LEDGER.md (#3)
