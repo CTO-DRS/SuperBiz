@@ -2505,6 +2505,8 @@
     <string name="ocr_cloud_confirm_body">Yalnızca ham OCR metni (veritabanınızdan hiçbir veri değil) düzeltme için internete gönderilir. Aşağıdaki metni inceleyip onaylayın — gönderim elle yapılır, arka planda asla olmaz.</string>
     <string name="ocr_cloud_send">Onaylıyorum — gönder</string>
     <string name="ocr_cloud_cancel">İptal</string>
+    <string name="ocr_merchant">Satıcı</string>
+    <string name="ocr_date">Tarih</string>
     <string name="ocr_cloud_failed">İyileştirme başarısız: %1$s</string>
     <string name="ocr_cloud_disabled_note">Bulut iyileştirme kilitli — Ayarlar → Kilitli bulut AI bölümünden etkinleştirin ve API anahtarı ekleyin</string>
     <string name="gem_title">Kilitli bulut yapay zekâ (Gemini)</string>

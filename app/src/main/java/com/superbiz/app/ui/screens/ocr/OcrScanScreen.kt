@@ -136,14 +136,6 @@ fun OcrScanScreen(appVM: com.superbiz.app.vm.AppVM, nav: NavHostController) {
         return FileProvider.getUriForFile(context, "com.superbiz.app.fileprovider", file)
     }
 
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        val uri = pendingCapture
-        if (ok && uri != null) scope.launch { doScan(uri) }
-    }
-    val pickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) scope.launch { doScan(uri) }
-    }
-
     fun setState(
         p: String, e: String?, d: OcrInvoiceParser.OcrInvoiceDraft?,
         raw: String, m: List<OcrProductMatcher.Match?>
@@ -190,6 +182,14 @@ fun OcrScanScreen(appVM: com.superbiz.app.vm.AppVM, nav: NavHostController) {
         } catch (e: Exception) {
             setState("failed", e.message ?: "OCR", null, "", emptyList())
         }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        val uri = pendingCapture
+        if (ok && uri != null) scope.launch { doScan(uri) }
+    }
+    val pickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) scope.launch { doScan(uri) }
     }
 
     // ── مطابقة المنتجات بعد نجاح التحليل (قراءة كتالوج واحدة خلف المراجعة) ──

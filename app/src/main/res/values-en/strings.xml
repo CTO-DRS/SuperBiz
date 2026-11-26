@@ -2628,6 +2628,8 @@
     <string name="ocr_cloud_confirm_body">Only the raw OCR text (nothing from your database) is sent over the internet for correction. Review the text below then confirm — sending is manual and never happens in the background.</string>
     <string name="ocr_cloud_send">I consent — send</string>
     <string name="ocr_cloud_cancel">Cancel</string>
+    <string name="ocr_merchant">Merchant</string>
+    <string name="ocr_date">Date</string>
     <string name="ocr_cloud_failed">Enhancement failed: %1$s</string>
     <string name="ocr_cloud_disabled_note">Cloud enhance is locked — enable it in Settings → Locked cloud AI and add an API key</string>
     <string name="gem_title">Locked cloud AI (Gemini)</string>
