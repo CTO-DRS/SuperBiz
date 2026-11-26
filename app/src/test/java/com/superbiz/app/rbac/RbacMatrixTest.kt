@@ -59,6 +59,10 @@ class RbacMatrixTest {
         Op.PRO_MANAGE to setOf(Role.OWNER),
         // [A5] اعتماد/رفض تحويل بين الفروع — المالك وحده
         Op.TRANSFER_APPROVE to setOf(Role.OWNER),
+        // [D3] تحصيل واردة — الجميع
+        Op.COLLECTION to setOf(Role.OWNER, Role.MANAGER, Role.ACCOUNTANT, Role.CASHIER),
+        // [D3] إنشاء دين وسداد مورد — بلا الكاشير
+        Op.DEBT_WRITE to setOf(Role.OWNER, Role.MANAGER, Role.ACCOUNTANT),
         // سطر 14-أ: تطبيق الولاء على بيع قائم — بلا المحاسب (الكاشير تطبيق فقط)
         Op.LOYALTY_APPLY to setOf(Role.OWNER, Role.MANAGER, Role.CASHIER),
         // سطر 14-ب: إنشاء قواعد الولاء والكوبونات — المالك والمدير
@@ -184,7 +188,7 @@ class RbacMatrixTest {
                 Op.INVENTORY_MANAGE, Op.FINANCIAL_REPORTS, Op.TAX_RETURN_VIEW,
                 Op.TAX_OWNER_DATA, Op.EXPENSES_CHECKS_INSTALLMENTS,
                 Op.GENERAL_SETTINGS, Op.USERS_MANAGE, Op.BACKUP_RESTORE, Op.PRO_MANAGE,
-                Op.LOYALTY_MANAGE, Op.TRANSFER_APPROVE
+                Op.LOYALTY_MANAGE, Op.TRANSFER_APPROVE, Op.DEBT_WRITE
             ),
             cashierDenied.toSet()
         )

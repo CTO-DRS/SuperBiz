@@ -111,6 +111,11 @@ class LedgerRepo(private val db: AppDatabase) {
     suspend fun addDebt(
         party: Party, amount: Long, date: Long, note: String, direction: Int = 0
     ): Long {
+        // [D3] إنشاء دين = DEBT_WRITE (بلا الكاشير)
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            com.superbiz.app.domain.rbac.Op.DEBT_WRITE
+        )
         // رفض المبلغ غير المنطقي — الصفر/السالب يُرحّل قيداً مشوّهاً بلا قيمة
         // [P33-P8] عتبة 0.004 حُذفت — مقارنة صحيحة تامة (القرش الواحد مبلغ حقيقي)
         require(amount > 0L) { "مبلغ الدين غير صالح: $amount" }
@@ -152,6 +157,11 @@ class LedgerRepo(private val db: AppDatabase) {
         party: Party, amount: Long, date: Long,
         direction: Int, method: String, invoiceId: Long? = null, note: String = ""
     ): Long {
+        // [D3] واردة (direction 0) = COLLECTION للجميع؛ صادرة (سداد مورد) = DEBT_WRITE
+        com.superbiz.app.domain.rbac.RoleGate.require(
+            com.superbiz.app.domain.rbac.SessionState.effective(),
+            if (direction == 0) com.superbiz.app.domain.rbac.Op.COLLECTION else com.superbiz.app.domain.rbac.Op.DEBT_WRITE
+        )
         // حماية المبالغ — السالب/الصفر يُرحّل دفاتر معكوسة بلا تحذير
         // [P33-P8] عتبة 0.004 حُذفت — مقارنة صحيحة تامة
         require(amount > 0L) { "مبلغ الدفعة غير صالح: $amount" }
