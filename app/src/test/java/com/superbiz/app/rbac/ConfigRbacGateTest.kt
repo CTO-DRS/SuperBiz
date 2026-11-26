@@ -78,6 +78,8 @@ class ConfigRbacGateTest {
         val inst = c.getDeclaredField("instance")
         inst.isAccessible = true
         inst.set(null, null)
+        // السبب الجذري للتذبذب: مفردات DataStore تعيش عبر الاختبارات بينما مجلد Robolectric يُعاد
+        com.superbiz.app.testutil.DataStoreTestReset.reset()
     }
 
     @Before
