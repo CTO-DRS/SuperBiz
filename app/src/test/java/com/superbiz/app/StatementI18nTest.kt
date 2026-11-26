@@ -13,7 +13,7 @@ class StatementI18nTest {
     @Test
     fun `every extra language translates the core labels`() {
         for (l in extra) for (k in listOf("Balance", "Debit", "Credit", "Statement of Account", "Final Balance", "Signature")) {
-            assertNotEquals("$l/$k", k.takeIf { l == StatementLang.TR && false }, StatementI18n.tr(k, l).takeIf { it == "" })
+            assertNotEquals("$l/$k", "", StatementI18n.tr(k, l))
         }
         assertEquals("Solde", StatementI18n.tr("Balance", StatementLang.FR))
         assertEquals("Bakiye", StatementI18n.tr("Balance", StatementLang.TR))
