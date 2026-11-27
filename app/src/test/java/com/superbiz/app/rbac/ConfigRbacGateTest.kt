@@ -250,12 +250,9 @@ class ConfigRbacGateTest {
         StatementPrefs.save(app, SmtpPrefsUi(smtpEnabled = true, host = "smtp.owner.example"))
         assertEquals("smtp.owner.example", StatementPrefs.load(app).host)
 
-        vm.setBackupDir("/sdcard/owner-bk" as String?)
-        assertEquals("/sdcard/owner-bk", withTimeout(60_000, "T6") { g.settings.settings.first { it.backupDirUri == "/sdcard/owner-bk" } }.backupDirUri)
-        vm.setTaxNumber("OWN-77")
-        assertEquals("OWN-77", withTimeout(60_000, "T7") { g.settings.settings.first { it.taxNumber == "OWN-77" } }.taxNumber)
-        vm.setReportRecipient("reports@owner.example")
-        assertEquals("reports@owner.example", withTimeout(60_000, "T8") { g.settings.settings.first { it.reportRecipient == "reports@owner.example" } }.reportRecipient)
+        assertEquals("/sdcard/owner-bk", retryUntil("T6", { vm.setBackupDir("/sdcard/owner-bk" as String?) }) { it.backupDirUri == "/sdcard/owner-bk" }.backupDirUri)
+        assertEquals("OWN-77", retryUntil("T7", { vm.setTaxNumber("OWN-77") }) { it.taxNumber == "OWN-77" }.taxNumber)
+        assertEquals("reports@owner.example", retryUntil("T8", { vm.setReportRecipient("reports@owner.example") }) { it.reportRecipient == "reports@owner.example" }.reportRecipient)
     }
 
     // ─────────────────── ④ عقد الوضع الأحادي §4.3 حرفياً ───────────────────
@@ -264,8 +261,7 @@ class ConfigRbacGateTest {
     fun `implicit owner contract single-user no session passes - design 4-3`() = runBlocking {
         SessionState.clear()
         SessionState.multiUserMode = false
-        vm.setTaxNumber("LEGACY-1")
-        assertEquals("LEGACY-1", withTimeout(60_000, "T9") { g.settings.settings.first { it.taxNumber == "LEGACY-1" } }.taxNumber)
+        assertEquals("LEGACY-1", retryUntil("T9", { vm.setTaxNumber("LEGACY-1") }) { it.taxNumber == "LEGACY-1" }.taxNumber)
         webhook.setUrl("https://legacy.example/h")
         assertEquals("https://legacy.example/h", webhook.urlOnce())
         StatementPrefs.save(app, SmtpPrefsUi(host = "legacy.smtp"))
