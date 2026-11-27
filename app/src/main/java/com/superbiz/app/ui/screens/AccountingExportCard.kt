@@ -82,6 +82,20 @@ fun AccountingExportCard() {
                     modifier = Modifier.weight(1f)
                 ) { Text(stringResource(R.string.acc_export_trial), maxLines = 1) }
             }
+            OutlinedButton(
+                onClick = {
+                    export("branches-$stamp.csv") { g ->
+                        val dao = g.db.branches()
+                        val rows = dao.activeOnce().map { b ->
+                            com.superbiz.app.domain.algo.BranchCompareCsv.Row(
+                                b.id, b.name, dao.salesNet(b.id), dao.cogs(b.id), dao.expensesOf(b.id), Math.round(dao.stockValue(b.id))
+                            )
+                        }
+                        com.superbiz.app.domain.algo.BranchCompareCsv.build(rows)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(stringResource(R.string.acc_export_branches), maxLines = 1) }
         }
     }
 }
