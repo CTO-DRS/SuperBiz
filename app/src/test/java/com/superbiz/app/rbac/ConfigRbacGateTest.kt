@@ -75,6 +75,22 @@ class ConfigRbacGateTest {
 
     private val testKey = javax.crypto.spec.SecretKeySpec(ByteArray(32) { it.toByte() }, "AES")
 
+    /** إعادة إصدار الكتابة (متماثلة القوة) كل 5 ثوانٍ حتى تظهر القيمة: يعالج إسقاط إطلاق غير متزامن نادر على CI */
+    private suspend fun retryUntil(
+        label: String,
+        write: () -> Unit,
+        pred: (com.superbiz.app.data.repo.Settings) -> Boolean
+    ): com.superbiz.app.data.repo.Settings {
+        repeat(12) {
+            write()
+            val r = try {
+                kotlinx.coroutines.withTimeout(5_000) { g.settings.settings.first(pred) }
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) { null }
+            if (r != null) return r
+        }
+        throw AssertionError("FLAKE-DIAG step $label never observed after 12 retries")
+    }
+
     private fun resetGraph() {
         val c = Class.forName("com.superbiz.app.AppGraph")
         val inst = c.getDeclaredField("instance")
@@ -201,11 +217,11 @@ class ConfigRbacGateTest {
 
         // تهيئة التوصيل تمر — قراءة بالانتظار الحتمي (كتابة DataStore غير متزامنة)
         vm.setReportRecipient("owner@example.com")
-        assertEquals("owner@example.com", withTimeout(60_000, "T3") { g.settings.settings.first { it.reportRecipient == "owner@example.com" } }.reportRecipient)
+        assertEquals("owner@example.com", retryUntil("T3", { vm.setReportRecipient("owner@example.com") }) { it.reportRecipient == "owner@example.com" }.reportRecipient)
         vm.setMonthlyGoal(12_000.0)
-        assertEquals(12_000.0, withTimeout(60_000, "T4") { g.settings.settings.first { it.monthlyGoal == 12_000.0 } }.monthlyGoal, 0.0001)
+        assertEquals(12_000.0, retryUntil("T4", { vm.setMonthlyGoal(12_000.0) }) { it.monthlyGoal == 12_000.0 }.monthlyGoal, 0.0001)
         vm.setReportScheduleChannel("email")
-        assertEquals("email", withTimeout(60_000, "T5") { g.settings.settings.first { it.reportScheduleChannel == "email" } }.reportScheduleChannel)
+        assertEquals("email", retryUntil("T5", { vm.setReportScheduleChannel("email") }) { it.reportScheduleChannel == "email" }.reportScheduleChannel)
 
         // قنوات المالك وحده: الويب هوك ومجلد النسخ والهوية الضريبية — رفض بلا كتابة
         assertWebhookWriteDenied()
