@@ -21,4 +21,16 @@ class BudgetStore(context: Context) {
         val key = "b$branchId|$category"
         if (amount <= 0L) sp.edit().remove(key).apply() else sp.edit().putLong(key, amount).apply()
     }
+
+    /** للنسخ الاحتياطي: {"b<فرع>|<فئة>": قروش} */
+    fun dump(): org.json.JSONObject = org.json.JSONObject().also { o ->
+        sp.all.forEach { (k, v) -> if (k.startsWith("b") && '|' in k && v is Long && v > 0L) o.put(k, v) }
+    }
+
+    /** استعادة تستبدل الأهداف الحالية بما في النسخة */
+    fun restore(o: org.json.JSONObject) {
+        val e = sp.edit().clear()
+        o.keys().forEach { k -> if (k.startsWith("b") && '|' in k) { val v = o.optLong(k, 0L); if (v > 0L) e.putLong(k, v) } }
+        e.apply()
+    }
 }
