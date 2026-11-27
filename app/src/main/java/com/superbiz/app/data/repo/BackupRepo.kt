@@ -122,6 +122,11 @@ class BackupRepo(
         // أرشيف الشيكات (DataStore مستقل) لم يكن يُصدَّر — بعد الاستعادة
         // كانت كل الشيكات المؤرشفة تعود إلى القائمة النشطة
         // (قراءة DataStore خارج معاملة Room عمداً — لا يشتركان المعاملة)
+        // [D4/D2] أهداف الميزانية وصلاحيات الأدوار — مفاتيح إضافية بلا تغيير إصدار الصيغة
+        root.put("expense_budgets", BudgetStore(context).dump())
+        root.put("role_permissions", JSONArray(db.rolePermissions().all().map {
+            JSONObject().put("roleId", it.roleId).put("op", it.op).put("allowed", it.allowed)
+        }))
         root.put("checks_archive", JSONArray(com.superbiz.app.data.repo.ChecksArchiveStore(context)
             .ids.first().sorted()))
         val s = settings.snapshot()
@@ -937,6 +942,19 @@ class BackupRepo(
                     it.partyId in partyIds && (it.invoiceId == null || it.invoiceId in fileInvoiceIds)
                 }
                 validStLoyalty.forEach { db.loyalty().insert(it) }
+            }
+
+            // ── 2b) [D4/D2] الميزانية وصلاحيات الأدوار (best-effort، خارج المعاملة) ──
+            runCatching { root.optJSONObject("expense_budgets")?.let { BudgetStore(context).restore(it) } }
+            runCatching {
+                root.optJSONArray("role_permissions")?.let { arr ->
+                    for (i in 0 until arr.length()) {
+                        val j = arr.getJSONObject(i)
+                        db.rolePermissions().upsert(com.superbiz.app.data.db.RolePermissionEntity(
+                            roleId = j.getInt("roleId"), op = j.getString("op"), allowed = j.getBoolean("allowed")))
+                    }
+                    com.superbiz.app.domain.rbac.RolePermissionCache.replaceAll(db.rolePermissions().all())
+                }
             }
 
             // ── 3) الإعدادات (خارج المعاملة — DataStore مستقل) ──
