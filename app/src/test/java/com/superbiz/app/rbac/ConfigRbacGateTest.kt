@@ -20,7 +20,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -192,21 +191,21 @@ class ConfigRbacGateTest {
         // الانتظار الحتمي بديل السباق: كانت القيمة الأولية ‎-1 تُقرأ قبل وصول callback
         // على بيئات أبطأ (فشل زائف لا علاقة له بالبوابة). فشل حقيقي = مهلة واضحة
         // لا قيمة مُلتبسة، والعقد نفسه كما هو: مدير يُدخِل، ولا كتابة صامتة للرفض.
-        val applied = withTimeout(60_000) {
+        val applied = withTimeout(60_000, "T1") {
             CompletableDeferred<Int>().also { d ->
                 vm.importSettingsFrom(settingsImportFile()) { n, _ -> d.complete(n) }
             }.await()
         }
         assertEquals(1, applied)
-        assertEquals(17.5, withTimeout(60_000) { g.settings.settings.first { it.taxRate == 17.5 } }.taxRate, 0.0001)
+        assertEquals(17.5, withTimeout(60_000, "T2") { g.settings.settings.first { it.taxRate == 17.5 } }.taxRate, 0.0001)
 
         // تهيئة التوصيل تمر — قراءة بالانتظار الحتمي (كتابة DataStore غير متزامنة)
         vm.setReportRecipient("owner@example.com")
-        assertEquals("owner@example.com", withTimeout(60_000) { g.settings.settings.first { it.reportRecipient == "owner@example.com" } }.reportRecipient)
+        assertEquals("owner@example.com", withTimeout(60_000, "T3") { g.settings.settings.first { it.reportRecipient == "owner@example.com" } }.reportRecipient)
         vm.setMonthlyGoal(12_000.0)
-        assertEquals(12_000.0, withTimeout(60_000) { g.settings.settings.first { it.monthlyGoal == 12_000.0 } }.monthlyGoal, 0.0001)
+        assertEquals(12_000.0, withTimeout(60_000, "T4") { g.settings.settings.first { it.monthlyGoal == 12_000.0 } }.monthlyGoal, 0.0001)
         vm.setReportScheduleChannel("email")
-        assertEquals("email", withTimeout(60_000) { g.settings.settings.first { it.reportScheduleChannel == "email" } }.reportScheduleChannel)
+        assertEquals("email", withTimeout(60_000, "T5") { g.settings.settings.first { it.reportScheduleChannel == "email" } }.reportScheduleChannel)
 
         // قنوات المالك وحده: الويب هوك ومجلد النسخ والهوية الضريبية — رفض بلا كتابة
         assertWebhookWriteDenied()
@@ -236,11 +235,11 @@ class ConfigRbacGateTest {
         assertEquals("smtp.owner.example", StatementPrefs.load(app).host)
 
         vm.setBackupDir("/sdcard/owner-bk" as String?)
-        assertEquals("/sdcard/owner-bk", withTimeout(60_000) { g.settings.settings.first { it.backupDirUri == "/sdcard/owner-bk" } }.backupDirUri)
+        assertEquals("/sdcard/owner-bk", withTimeout(60_000, "T6") { g.settings.settings.first { it.backupDirUri == "/sdcard/owner-bk" } }.backupDirUri)
         vm.setTaxNumber("OWN-77")
-        assertEquals("OWN-77", withTimeout(60_000) { g.settings.settings.first { it.taxNumber == "OWN-77" } }.taxNumber)
+        assertEquals("OWN-77", withTimeout(60_000, "T7") { g.settings.settings.first { it.taxNumber == "OWN-77" } }.taxNumber)
         vm.setReportRecipient("reports@owner.example")
-        assertEquals("reports@owner.example", withTimeout(60_000) { g.settings.settings.first { it.reportRecipient == "reports@owner.example" } }.reportRecipient)
+        assertEquals("reports@owner.example", withTimeout(60_000, "T8") { g.settings.settings.first { it.reportRecipient == "reports@owner.example" } }.reportRecipient)
     }
 
     // ─────────────────── ④ عقد الوضع الأحادي §4.3 حرفياً ───────────────────
@@ -250,18 +249,18 @@ class ConfigRbacGateTest {
         SessionState.clear()
         SessionState.multiUserMode = false
         vm.setTaxNumber("LEGACY-1")
-        assertEquals("LEGACY-1", withTimeout(60_000) { g.settings.settings.first { it.taxNumber == "LEGACY-1" } }.taxNumber)
+        assertEquals("LEGACY-1", withTimeout(60_000, "T9") { g.settings.settings.first { it.taxNumber == "LEGACY-1" } }.taxNumber)
         webhook.setUrl("https://legacy.example/h")
         assertEquals("https://legacy.example/h", webhook.urlOnce())
         StatementPrefs.save(app, SmtpPrefsUi(host = "legacy.smtp"))
         assertEquals("legacy.smtp", StatementPrefs.load(app).host)
         // [RVW-14] انتظار اكتمال الاستيراد نفسه قبل قراءة الضريبة — لا افتراض سباق
-        withTimeout(60_000) {
+        withTimeout(60_000, "T10") {
             CompletableDeferred<Unit>().also { d ->
                 vm.importSettingsFrom(settingsImportFile()) { _, _ -> d.complete(Unit) }
             }.await()
         }
-        assertEquals(17.5, withTimeout(60_000) { g.settings.settings.first { it.taxRate == 17.5 } }.taxRate, 0.0001)
+        assertEquals(17.5, withTimeout(60_000, "T11") { g.settings.settings.first { it.taxRate == 17.5 } }.taxRate, 0.0001)
     }
 
     // ─────────────────── ⑤ عقد الأتمتة: SYSTEM يمر ───────────────────
@@ -275,7 +274,7 @@ class ConfigRbacGateTest {
         StatementPrefs.save(app, SmtpPrefsUi(host = "auto.smtp"))
         assertEquals("auto.smtp", StatementPrefs.load(app).host)
         vm.setBackupDir("/sdcard/auto" as String?)
-        assertEquals("/sdcard/auto", withTimeout(60_000) { g.settings.settings.first { it.backupDirUri == "/sdcard/auto" } }.backupDirUri)
+        assertEquals("/sdcard/auto", withTimeout(60_000, "T12") { g.settings.settings.first { it.backupDirUri == "/sdcard/auto" } }.backupDirUri)
     }
 
     // ─────────────────── ⑥ رفض طبقة البيانات يسبق أي كتابة (فشل ظاهر) ───────────────────
@@ -299,3 +298,8 @@ class ConfigRbacGateTest {
         assertEquals(legitHost, StatementPrefs.load(app).host)
     }
 }
+
+/** تشخيص التذبذب: يسمّي الخطوة التي انتهت مهلتها بدل رسالة عامة */
+private suspend fun <T> withTimeout(ms: Long, label: String, block: suspend kotlinx.coroutines.CoroutineScope.() -> T): T =
+    try { kotlinx.coroutines.withTimeout(ms, block) }
+    catch (e: kotlinx.coroutines.TimeoutCancellationException) { throw AssertionError("FLAKE-DIAG step $label timed out after ${ms}ms", e) }
