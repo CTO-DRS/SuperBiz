@@ -579,6 +579,7 @@
     <string name="budget_monthly_target">ماہانہ ہدف</string>
     <string name="budget_save">محفوظ کریں</string>
     <string name="budget_cancel">منسوخ</string>
+    <string name="budget_alert_summary">%1$d زمرے ہدف کے 80%% تک پہنچ گئے یا تجاوز کر گئے</string>
     <string name="rep_deep_title">تفصیلی لجر (گہرا ایکسپورٹ)</string>
     <string name="rep_deep_none">دورہ کے پنجرے میں کوئی پوائنٹس نہیں</string>
     <string name="rep_deep_sales">فروخت کی صفیں</string>

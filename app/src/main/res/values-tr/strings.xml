@@ -579,6 +579,7 @@
     <string name="budget_monthly_target">Aylık hedef</string>
     <string name="budget_save">Kaydet</string>
     <string name="budget_cancel">İptal</string>
+    <string name="budget_alert_summary">%1$d kategori hedefin %%80\'ine ulaştı veya aştı</string>
     <string name="rep_deep_title">Detaylı Defter (Derin Dışa Aktarma)</string>
     <string name="rep_deep_none">Dönem Penceresinde Öge Yok</string>
     <string name="rep_deep_sales">Satış Satırları</string>

@@ -579,6 +579,7 @@
     <string name="budget_monthly_target">Target bulanan</string>
     <string name="budget_save">Simpan</string>
     <string name="budget_cancel">Batal</string>
+    <string name="budget_alert_summary">%1$d kategori mencapai 80%% target atau melebihinya</string>
     <string name="rep_deep_title">Buku Besar Rincian (Eksp Mendalam)</string>
     <string name="rep_deep_none">Tidak ada item dalam jangka waktu</string>
     <string name="rep_deep_sales">Baris Penjualan</string>

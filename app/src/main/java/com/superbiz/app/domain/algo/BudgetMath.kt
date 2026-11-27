@@ -9,12 +9,15 @@ object BudgetMath {
         val remaining: Long get() = budget - actual
         val hasBudget: Boolean get() = budget > 0L
         val over: Boolean get() = hasBudget && actual > budget
+        /** تنبيه مبكر: بلغ 80% من الهدف أو أكثر (يشمل المتجاوز) */
+        val warn: Boolean get() = hasBudget && actual * 100L >= budget * 80L
         val usedPct: Int? get() = if (hasBudget) ((actual * 100L) / budget).toInt() else null
     }
 
     data class Report(val rows: List<Row>, val totalBudget: Long, val totalActual: Long) {
         val totalBudgetedActual: Long get() = rows.filter { it.hasBudget }.sumOf { it.actual }
         val overCount: Int get() = rows.count { it.over }
+        val warnCount: Int get() = rows.count { it.warn }
     }
 
     fun compare(budgets: Map<String, Long>, actual: Map<String, Long>): Report {

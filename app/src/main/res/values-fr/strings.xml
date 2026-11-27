@@ -578,6 +578,7 @@
     <string name="budget_monthly_target">Objectif mensuel</string>
     <string name="budget_save">Enregistrer</string>
     <string name="budget_cancel">Annuler</string>
+    <string name="budget_alert_summary">%1$d catégories ont atteint 80 %% de l\'objectif ou l\'ont dépassé</string>
     <string name="rep_deep_title">Registre détaillé (export au niveau des lignes)</string>
     <string name="rep_deep_none">Aucun article dans la fenêtre de la période</string>
     <string name="rep_deep_sales">Lignes de vente</string>
