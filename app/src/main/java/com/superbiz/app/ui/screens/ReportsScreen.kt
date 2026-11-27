@@ -547,6 +547,7 @@ fun ReportsScreen(appVM: AppVM, nav: NavHostController) {
         }
         AccountingExportCard() // [D5]
         BankReconcileCard() // [Phase 2]
+        PeriodLockCard() // [Phase 2]
         BudgetCard(symbol) // [D4]
             },
             com.superbiz.app.ui.insights.insightsGroup("compare") {

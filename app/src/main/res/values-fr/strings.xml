@@ -2676,4 +2676,15 @@
     <string name="f3_duel_step">Dans %1$d jour(s)</string>
     <string name="f3_duel_cuts">Points de coupe du duel : %1$d</string>
     <string name="f3_duel_statistical_only">La ligne apprise n\'a pas été évaluée lors de ce duel — la ligne statistique établie est adoptée</string>
+    <string name="pl_title">Clôture des périodes</string>
+    <string name="pl_locked_through">Clôturé jusqu\'au : %1$s</string>
+    <string name="pl_not_locked">Aucune période clôturée</string>
+    <string name="pl_close_prev_month">Clôturer jusqu\'à la fin du mois dernier</string>
+    <string name="pl_reopen">Rouvrir un mois (propriétaire)</string>
+    <string name="pl_reason_hint">Motif de la réouverture (obligatoire)</string>
+    <string name="pl_confirm">Confirmer</string>
+    <string name="pl_cancel">Annuler</string>
+    <string name="pl_owner_only">Réservé au propriétaire</string>
+    <string name="pl_rejected">Impossible : la clôture avance uniquement et exclut la période en cours</string>
+    <string name="pl_done">Fait</string>
 </resources>

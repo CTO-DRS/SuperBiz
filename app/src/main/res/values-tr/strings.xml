@@ -2670,4 +2670,15 @@
     <string name="f3_duel_step">%1$d gün içinde</string>
     <string name="f3_duel_cuts">Düello kesme noktaları: %1$d</string>
     <string name="f3_duel_statistical_only">Öğrenen çizgi bu düelloda değerlendirilmedi — yerleşik istatistik çizgisi benimsendi</string>
+    <string name="pl_title">Dönem kapatma</string>
+    <string name="pl_locked_through">Şu tarihe kadar kilitli: %1$s</string>
+    <string name="pl_not_locked">Kilitli dönem yok</string>
+    <string name="pl_close_prev_month">Geçen ayın sonuna kadar kapat</string>
+    <string name="pl_reopen">Bir ayı yeniden aç (sahip)</string>
+    <string name="pl_reason_hint">Yeniden açma nedeni (zorunlu)</string>
+    <string name="pl_confirm">Onayla</string>
+    <string name="pl_cancel">İptal</string>
+    <string name="pl_owner_only">Bunu yalnızca sahip yapabilir</string>
+    <string name="pl_rejected">Yapılamadı: kapatma yalnızca ileriye gider ve geçerli dönemi içermez</string>
+    <string name="pl_done">Tamam</string>
 </resources>
