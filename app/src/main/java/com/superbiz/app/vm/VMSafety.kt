@@ -44,6 +44,15 @@ fun ViewModel.launchSafe(
                 vm.getApplication<Application>().getString(com.superbiz.app.R.string.rbac_denied_title)
             }
             ErrorCenter.warn("RBAC", e.message ?: "role denied", userMsg)
+        } catch (e: com.superbiz.app.domain.algo.PeriodLockedException) {
+            // [Phase 2] فترة مقفلة — رسالة مفهومة للمستخدم بدل الخطأ التقني الصامت
+            val userMsg = (this as? androidx.lifecycle.AndroidViewModel)?.let { vm ->
+                vm.getApplication<Application>().getString(
+                    com.superbiz.app.R.string.pl_blocked,
+                    java.time.LocalDate.ofEpochDay(e.lockedThrough).toString()
+                )
+            }
+            ErrorCenter.warn("PeriodLock", e.message ?: "period locked", userMsg)
         } catch (e: Exception) {
             // تُبتلع بوعي لمنع انهيار التطبيق — لكن بأثر مسجَّل في Logcat
             // (نفس سياسة بقية مسارات المشروع: Widgets / BackupRepo / ExportDialog)
