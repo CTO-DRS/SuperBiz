@@ -52,6 +52,7 @@ class LedgerRepo(private val db: AppDatabase) {
     /** ترحيل قيد مزدوج إلى دفتر اليومية — ذرّي: القيد + أسطره معاً أو لا شيء */
     suspend fun post(draft: JournalDraft): Long {
         require(draft.balanced) { "unbalanced journal: ${draft.totalDebit} != ${draft.totalCredit}" }
+        com.superbiz.app.domain.algo.PeriodLockGuard.require(draft.date)
         var entryId = 0L
         db.withTransaction {
             entryId = db.journal().insertEntry(
@@ -208,6 +209,7 @@ class LedgerRepo(private val db: AppDatabase) {
     /** ترحيل داخلي بلا إشعار ويدجت — يُستدعى داخل معاملات أكبر (نفس الحزمة) */
     internal suspend fun postInternal(draft: JournalDraft): Long {
         require(draft.balanced) { "unbalanced journal: ${draft.totalDebit} != ${draft.totalCredit}" }
+        com.superbiz.app.domain.algo.PeriodLockGuard.require(draft.date)
         val entryId = db.journal().insertEntry(
             JournalEntry(date = draft.date, memo = draft.memo, refType = draft.refType, refId = draft.refId)
         )
