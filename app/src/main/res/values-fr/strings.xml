@@ -1673,6 +1673,13 @@
     <string name="acc_export_trial">Balance CSV</string>
     <string name="acc_export_branches">Exporter la comparaison des succursales (CSV)</string>
     <string name="acc_export_statements">Exporter les états financiers (CSV)</string>
+    <string name="bank_rec_title">Rapprochement bancaire</string>
+    <string name="bank_rec_import">Importer le relevé bancaire (CSV)</string>
+    <string name="bank_rec_bad_file">Lecture impossible : il faut une colonne date et une colonne montant (ou débit/crédit)</string>
+    <string name="bank_rec_summary">Rapprochés : %1$d · relevé seul : %2$d · livres seuls : %3$d</string>
+    <string name="bank_rec_bank_only_total">Écritures du relevé absentes des livres : %1$s</string>
+    <string name="bank_rec_book_only_total">Écritures des livres absentes du relevé : %1$s</string>
+    <string name="bank_rec_skipped">Lignes ignorées : %1$d</string>
     <string name="acc_export_failed">Échec de l\'export</string>
     <string name="rp_title">Permissions des rôles</string>
     <string name="rp_hint">Activez ou désactivez chaque opération par rôle. Le rôle propriétaire est fixe. Chaque changement est consigné dans le journal d\'audit.</string>

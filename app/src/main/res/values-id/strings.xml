@@ -1674,6 +1674,13 @@
     <string name="acc_export_trial">Neraca saldo CSV</string>
     <string name="acc_export_branches">Ekspor perbandingan cabang (CSV)</string>
     <string name="acc_export_statements">Ekspor laporan keuangan (CSV)</string>
+    <string name="bank_rec_title">Rekonsiliasi bank</string>
+    <string name="bank_rec_import">Impor mutasi bank (CSV)</string>
+    <string name="bank_rec_bad_file">Berkas tidak terbaca: perlu kolom tanggal dan kolom jumlah (atau debit/kredit)</string>
+    <string name="bank_rec_summary">Cocok: %1$d · hanya di mutasi: %2$d · hanya di pembukuan: %3$d</string>
+    <string name="bank_rec_bank_only_total">Item mutasi yang belum ada di pembukuan: %1$s</string>
+    <string name="bank_rec_book_only_total">Item pembukuan yang belum ada di mutasi: %1$s</string>
+    <string name="bank_rec_skipped">Baris diabaikan: %1$d</string>
     <string name="acc_export_failed">Ekspor gagal</string>
     <string name="rp_title">Izin peran</string>
     <string name="rp_hint">Aktifkan atau nonaktifkan tiap operasi per peran. Peran pemilik tetap. Setiap perubahan dicatat di log audit.</string>

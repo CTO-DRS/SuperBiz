@@ -1761,6 +1761,13 @@
     <string name="acc_export_trial">ميزان المراجعة CSV</string>
     <string name="acc_export_branches">تصدير مقارنة الفروع CSV</string>
     <string name="acc_export_statements">تصدير القوائم المالية CSV (دخل + ميزانية)</string>
+    <string name="bank_rec_title">تسوية بنكية</string>
+    <string name="bank_rec_import">استيراد كشف الحساب البنكي (CSV)</string>
+    <string name="bank_rec_bad_file">تعذّر قراءة الملف: يلزم عمود تاريخ وعمود مبلغ (أو مدين/دائن)</string>
+    <string name="bank_rec_summary">مطابق: %1$d · في الكشف فقط: %2$d · في الدفتر فقط: %3$d</string>
+    <string name="bank_rec_bank_only_total">صافي الكشف غير المسجَّل في الدفتر: %1$s</string>
+    <string name="bank_rec_book_only_total">صافي الدفتر غير الظاهر في الكشف: %1$s</string>
+    <string name="bank_rec_skipped">صفوف تم تجاهلها: %1$d</string>
     <string name="acc_export_failed">فشل التصدير</string>
     <string name="rp_title">صلاحيات الأدوار</string>
     <string name="rp_hint">فعّل أو عطّل كل عملية لكل دور. دور المالك ثابت ولا يُعدَّل. كل تغيير يُسجَّل في سجل التدقيق.</string>

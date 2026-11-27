@@ -1674,6 +1674,13 @@
     <string name="acc_export_trial">Mizan CSV</string>
     <string name="acc_export_branches">Şube karşılaştırmasını dışa aktar (CSV)</string>
     <string name="acc_export_statements">Mali tabloları dışa aktar (CSV)</string>
+    <string name="bank_rec_title">Banka mutabakatı</string>
+    <string name="bank_rec_import">Banka ekstresini içe aktar (CSV)</string>
+    <string name="bank_rec_bad_file">Dosya okunamadı: tarih ve tutar (veya borç/alacak) sütunu gerekir</string>
+    <string name="bank_rec_summary">Eşleşen: %1$d · yalnız ekstrede: %2$d · yalnız defterde: %3$d</string>
+    <string name="bank_rec_bank_only_total">Defterde olmayan ekstre kalemleri: %1$s</string>
+    <string name="bank_rec_book_only_total">Ekstrede görünmeyen defter kalemleri: %1$s</string>
+    <string name="bank_rec_skipped">Yok sayılan satır: %1$d</string>
     <string name="acc_export_failed">Dışa aktarma başarısız</string>
     <string name="rp_title">Rol izinleri</string>
     <string name="rp_hint">Her işlemi rol bazında açın veya kapatın. Sahip rolü sabittir. Her değişiklik denetim günlüğüne yazılır.</string>
