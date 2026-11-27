@@ -2804,4 +2804,5 @@
     <string name="pl_owner_only">هذا الإجراء للمالك فقط</string>
     <string name="pl_rejected">تعذّر التنفيذ: الإقفال يتقدم للأمام فقط ولا يشمل الفترة الجارية</string>
     <string name="pl_done">تم</string>
+    <string name="pl_blocked">هذه الفترة مقفلة حتى %1$s. أعد فتحها من التقارير (للمالك) ثم أعد المحاولة</string>
 </resources>

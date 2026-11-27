@@ -2804,4 +2804,5 @@
     <string name="pl_owner_only">Only the owner can do this</string>
     <string name="pl_rejected">Not possible: closing only moves forward and cannot include the current period</string>
     <string name="pl_done">Done</string>
+    <string name="pl_blocked">This period is closed through %1$s. Reopen it from Reports (owner) and try again</string>
 </resources>

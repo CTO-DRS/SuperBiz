@@ -2687,4 +2687,5 @@
     <string name="pl_owner_only">Réservé au propriétaire</string>
     <string name="pl_rejected">Impossible : la clôture avance uniquement et exclut la période en cours</string>
     <string name="pl_done">Fait</string>
+    <string name="pl_blocked">Cette période est clôturée jusqu\'au %1$s. Rouvrez-la depuis les rapports (propriétaire) puis réessayez</string>
 </resources>
