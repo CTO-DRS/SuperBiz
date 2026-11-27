@@ -1673,6 +1673,7 @@
     <string name="acc_export_ledger">کھاتہ CSV</string>
     <string name="acc_export_trial">ٹرائل بیلنس CSV</string>
     <string name="acc_export_branches">برانچ موازنہ ایکسپورٹ (CSV)</string>
+    <string name="acc_export_statements">مالی گوشوارے ایکسپورٹ (CSV)</string>
     <string name="acc_export_failed">برآمد ناکام</string>
     <string name="rp_title">کردار کی اجازتیں</string>
     <string name="rp_hint">ہر عمل کو ہر کردار کے لیے آن یا آف کریں۔ مالک کا کردار مستقل ہے۔ ہر تبدیلی آڈٹ لاگ میں درج ہوتی ہے۔</string>

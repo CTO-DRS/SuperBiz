@@ -1673,6 +1673,7 @@
     <string name="acc_export_ledger">Defteri kebir CSV</string>
     <string name="acc_export_trial">Mizan CSV</string>
     <string name="acc_export_branches">Şube karşılaştırmasını dışa aktar (CSV)</string>
+    <string name="acc_export_statements">Mali tabloları dışa aktar (CSV)</string>
     <string name="acc_export_failed">Dışa aktarma başarısız</string>
     <string name="rp_title">Rol izinleri</string>
     <string name="rp_hint">Her işlemi rol bazında açın veya kapatın. Sahip rolü sabittir. Her değişiklik denetim günlüğüne yazılır.</string>

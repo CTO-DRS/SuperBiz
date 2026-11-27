@@ -1760,6 +1760,7 @@
     <string name="acc_export_ledger">دفتر الأستاذ CSV</string>
     <string name="acc_export_trial">ميزان المراجعة CSV</string>
     <string name="acc_export_branches">تصدير مقارنة الفروع CSV</string>
+    <string name="acc_export_statements">تصدير القوائم المالية CSV (دخل + ميزانية)</string>
     <string name="acc_export_failed">فشل التصدير</string>
     <string name="rp_title">صلاحيات الأدوار</string>
     <string name="rp_hint">فعّل أو عطّل كل عملية لكل دور. دور المالك ثابت ولا يُعدَّل. كل تغيير يُسجَّل في سجل التدقيق.</string>
