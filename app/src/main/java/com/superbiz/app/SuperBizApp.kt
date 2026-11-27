@@ -48,6 +48,7 @@ class AppGraph(val context: android.content.Context) {
             .build()
     }
     val settings by lazy { SettingsRepo(context) }
+    val periodLock by lazy { com.superbiz.app.data.repo.PeriodLockStore(context) }
     val ledger by lazy {
         LedgerRepo(db).also { repo ->
             // أي قيد محاسبي جديد يجدد ويدجت رصيد الذمم تلقائياً
@@ -1138,6 +1139,8 @@ class SuperBizApp : Application() {
         val seedHandler = kotlinx.coroutines.CoroutineExceptionHandler { _, e ->
             android.util.Log.e("SuperBizApp", "seedIfFirstRun failed after retries", e)
         }
+        // إقفال الفترات: يُحمَّل آخر يوم مقفل إلى الحارس مبكراً (الافتراضي بلا إقفال)
+        graph.appScope.launch { runCatching { graph.periodLock.loadIntoGuard() } }
         graph.appScope.launch(seedHandler) {
             try { com.superbiz.app.domain.rbac.RolePermissionCache.replaceAll(graph.db.rolePermissions().all()) } catch (e: Exception) { android.util.Log.e("SuperBizApp", "permission cache load failed", e) }
             try { graph.settings.currentBranchId() } catch (e: Exception) { android.util.Log.e("SuperBizApp", "current branch load failed", e) }

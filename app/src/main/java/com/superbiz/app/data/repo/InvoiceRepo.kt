@@ -249,6 +249,7 @@ class InvoiceRepo(
 
     private suspend fun postJournal(draft: com.superbiz.app.domain.JournalDraft): Long {
         require(draft.balanced)
+        com.superbiz.app.domain.algo.PeriodLockGuard.require(draft.date)
         val entryId = db.journal().insertEntry(
             com.superbiz.app.data.db.JournalEntry(
                 date = draft.date, memo = draft.memo,
