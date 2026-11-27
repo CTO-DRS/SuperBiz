@@ -2670,4 +2670,15 @@
     <string name="f3_duel_step">%1$d دن میں</string>
     <string name="f3_duel_cuts">مقابلے کے کاٹ پوائنٹس: %1$d</string>
     <string name="f3_duel_statistical_only">سیکھی لکیر کا اس مقابلے میں جائزہ نہیں لیا گیا — مستقل شماریاتی لکیر اپنائی گئی</string>
+    <string name="pl_title">مدت کی بندش</string>
+    <string name="pl_locked_through">اس تاریخ تک مقفل: %1$s</string>
+    <string name="pl_not_locked">کوئی مدت مقفل نہیں</string>
+    <string name="pl_close_prev_month">پچھلے مہینے کے آخر تک بند کریں</string>
+    <string name="pl_reopen">ایک مہینہ دوبارہ کھولیں (مالک)</string>
+    <string name="pl_reason_hint">دوبارہ کھولنے کی وجہ (لازمی)</string>
+    <string name="pl_confirm">تصدیق</string>
+    <string name="pl_cancel">منسوخ</string>
+    <string name="pl_owner_only">یہ صرف مالک کر سکتا ہے</string>
+    <string name="pl_rejected">ممکن نہیں: بندش صرف آگے بڑھتی ہے اور موجودہ مدت شامل نہیں</string>
+    <string name="pl_done">ہو گیا</string>
 </resources>

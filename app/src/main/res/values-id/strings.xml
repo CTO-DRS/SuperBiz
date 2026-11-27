@@ -2670,4 +2670,15 @@
     <string name="f3_duel_step">Dalam %1$d hari</string>
     <string name="f3_duel_cuts">Titik potong duel: %1$d</string>
     <string name="f3_duel_statistical_only">Garis terlatih tidak dievaluasi pada duel ini — garis statistik mapan yang diadopsi</string>
+    <string name="pl_title">Penutupan periode</string>
+    <string name="pl_locked_through">Terkunci sampai: %1$s</string>
+    <string name="pl_not_locked">Tidak ada periode yang terkunci</string>
+    <string name="pl_close_prev_month">Tutup sampai akhir bulan lalu</string>
+    <string name="pl_reopen">Buka kembali satu bulan (pemilik)</string>
+    <string name="pl_reason_hint">Alasan membuka kembali (wajib)</string>
+    <string name="pl_confirm">Konfirmasi</string>
+    <string name="pl_cancel">Batal</string>
+    <string name="pl_owner_only">Hanya pemilik yang dapat melakukan ini</string>
+    <string name="pl_rejected">Tidak bisa: penutupan hanya maju dan tidak mencakup periode berjalan</string>
+    <string name="pl_done">Selesai</string>
 </resources>

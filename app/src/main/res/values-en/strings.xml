@@ -2793,4 +2793,15 @@
     <string name="f3_duel_step">In %1$d day(s)</string>
     <string name="f3_duel_cuts">Duel cut points: %1$d</string>
     <string name="f3_duel_statistical_only">The learned line was not evaluated this duel — the standing statistical line is adopted</string>
+    <string name="pl_title">Period close</string>
+    <string name="pl_locked_through">Locked through: %1$s</string>
+    <string name="pl_not_locked">No period is locked</string>
+    <string name="pl_close_prev_month">Close through end of last month</string>
+    <string name="pl_reopen">Reopen one month (owner)</string>
+    <string name="pl_reason_hint">Reason for reopening (required)</string>
+    <string name="pl_confirm">Confirm</string>
+    <string name="pl_cancel">Cancel</string>
+    <string name="pl_owner_only">Only the owner can do this</string>
+    <string name="pl_rejected">Not possible: closing only moves forward and cannot include the current period</string>
+    <string name="pl_done">Done</string>
 </resources>

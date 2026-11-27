@@ -2793,4 +2793,15 @@
     <string name="f3_duel_step">بعد %1$d يوم</string>
     <string name="f3_duel_cuts">نقاط قص المبارزة: %1$d</string>
     <string name="f3_duel_statistical_only">لم يُقيَّم خط التعلّم في هذه المبارزة — المعتمد هو الخط الإحصائي القائم</string>
+    <string name="pl_title">إقفال الفترات</string>
+    <string name="pl_locked_through">مقفلة حتى: %1$s</string>
+    <string name="pl_not_locked">لا توجد فترة مقفلة</string>
+    <string name="pl_close_prev_month">إقفال حتى نهاية الشهر الماضي</string>
+    <string name="pl_reopen">إعادة فتح شهر (للمالك)</string>
+    <string name="pl_reason_hint">سبب إعادة الفتح (إلزامي)</string>
+    <string name="pl_confirm">تأكيد</string>
+    <string name="pl_cancel">إلغاء</string>
+    <string name="pl_owner_only">هذا الإجراء للمالك فقط</string>
+    <string name="pl_rejected">تعذّر التنفيذ: الإقفال يتقدم للأمام فقط ولا يشمل الفترة الجارية</string>
+    <string name="pl_done">تم</string>
 </resources>
