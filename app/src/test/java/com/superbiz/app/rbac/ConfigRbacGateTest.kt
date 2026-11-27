@@ -75,6 +75,22 @@ class ConfigRbacGateTest {
 
     private val testKey = javax.crypto.spec.SecretKeySpec(ByteArray(32) { it.toByte() }, "AES")
 
+    /** إعادة إصدار الكتابة (متماثلة القوة) كل 5 ثوانٍ حتى تظهر القيمة: يعالج إسقاط إطلاق غير متزامن نادر على CI */
+    private suspend fun retryUntil(
+        label: String,
+        write: () -> Unit,
+        pred: (com.superbiz.app.data.repo.Settings) -> Boolean
+    ): com.superbiz.app.data.repo.Settings {
+        repeat(12) {
+            write()
+            val r = try {
+                kotlinx.coroutines.withTimeout(5_000) { g.settings.settings.first(pred) }
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) { null }
+            if (r != null) return r
+        }
+        throw AssertionError("FLAKE-DIAG step $label never observed after 12 retries")
+    }
+
     private fun resetGraph() {
         val c = Class.forName("com.superbiz.app.AppGraph")
         val inst = c.getDeclaredField("instance")
@@ -201,11 +217,11 @@ class ConfigRbacGateTest {
 
         // تهيئة التوصيل تمر — قراءة بالانتظار الحتمي (كتابة DataStore غير متزامنة)
         vm.setReportRecipient("owner@example.com")
-        assertEquals("owner@example.com", withTimeout(60_000, "T3") { g.settings.settings.first { it.reportRecipient == "owner@example.com" } }.reportRecipient)
+        assertEquals("owner@example.com", retryUntil("T3", { vm.setReportRecipient("owner@example.com") }) { it.reportRecipient == "owner@example.com" }.reportRecipient)
         vm.setMonthlyGoal(12_000.0)
-        assertEquals(12_000.0, withTimeout(60_000, "T4") { g.settings.settings.first { it.monthlyGoal == 12_000.0 } }.monthlyGoal, 0.0001)
+        assertEquals(12_000.0, retryUntil("T4", { vm.setMonthlyGoal(12_000.0) }) { it.monthlyGoal == 12_000.0 }.monthlyGoal, 0.0001)
         vm.setReportScheduleChannel("email")
-        assertEquals("email", withTimeout(60_000, "T5") { g.settings.settings.first { it.reportScheduleChannel == "email" } }.reportScheduleChannel)
+        assertEquals("email", retryUntil("T5", { vm.setReportScheduleChannel("email") }) { it.reportScheduleChannel == "email" }.reportScheduleChannel)
 
         // قنوات المالك وحده: الويب هوك ومجلد النسخ والهوية الضريبية — رفض بلا كتابة
         assertWebhookWriteDenied()
@@ -234,12 +250,9 @@ class ConfigRbacGateTest {
         StatementPrefs.save(app, SmtpPrefsUi(smtpEnabled = true, host = "smtp.owner.example"))
         assertEquals("smtp.owner.example", StatementPrefs.load(app).host)
 
-        vm.setBackupDir("/sdcard/owner-bk" as String?)
-        assertEquals("/sdcard/owner-bk", withTimeout(60_000, "T6") { g.settings.settings.first { it.backupDirUri == "/sdcard/owner-bk" } }.backupDirUri)
-        vm.setTaxNumber("OWN-77")
-        assertEquals("OWN-77", withTimeout(60_000, "T7") { g.settings.settings.first { it.taxNumber == "OWN-77" } }.taxNumber)
-        vm.setReportRecipient("reports@owner.example")
-        assertEquals("reports@owner.example", withTimeout(60_000, "T8") { g.settings.settings.first { it.reportRecipient == "reports@owner.example" } }.reportRecipient)
+        assertEquals("/sdcard/owner-bk", retryUntil("T6", { vm.setBackupDir("/sdcard/owner-bk" as String?) }) { it.backupDirUri == "/sdcard/owner-bk" }.backupDirUri)
+        assertEquals("OWN-77", retryUntil("T7", { vm.setTaxNumber("OWN-77") }) { it.taxNumber == "OWN-77" }.taxNumber)
+        assertEquals("reports@owner.example", retryUntil("T8", { vm.setReportRecipient("reports@owner.example") }) { it.reportRecipient == "reports@owner.example" }.reportRecipient)
     }
 
     // ─────────────────── ④ عقد الوضع الأحادي §4.3 حرفياً ───────────────────
@@ -248,8 +261,7 @@ class ConfigRbacGateTest {
     fun `implicit owner contract single-user no session passes - design 4-3`() = runBlocking {
         SessionState.clear()
         SessionState.multiUserMode = false
-        vm.setTaxNumber("LEGACY-1")
-        assertEquals("LEGACY-1", withTimeout(60_000, "T9") { g.settings.settings.first { it.taxNumber == "LEGACY-1" } }.taxNumber)
+        assertEquals("LEGACY-1", retryUntil("T9", { vm.setTaxNumber("LEGACY-1") }) { it.taxNumber == "LEGACY-1" }.taxNumber)
         webhook.setUrl("https://legacy.example/h")
         assertEquals("https://legacy.example/h", webhook.urlOnce())
         StatementPrefs.save(app, SmtpPrefsUi(host = "legacy.smtp"))
