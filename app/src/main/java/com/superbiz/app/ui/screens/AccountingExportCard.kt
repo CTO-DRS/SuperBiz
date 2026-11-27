@@ -84,6 +84,21 @@ fun AccountingExportCard() {
             }
             OutlinedButton(
                 onClick = {
+                    export("financial-statements-$stamp.csv") { g ->
+                        val yearStart = java.util.Calendar.getInstance().apply {
+                            set(java.util.Calendar.DAY_OF_YEAR, 1); set(java.util.Calendar.HOUR_OF_DAY, 0)
+                            set(java.util.Calendar.MINUTE, 0); set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+                        }.timeInMillis
+                        val inc = com.superbiz.app.domain.algo.FinancialStatementsCsv.income(
+                            g.db.journal().accountSumsBetween(yearStart, Long.MAX_VALUE), ::nameOf)
+                        val bal = com.superbiz.app.domain.algo.FinancialStatementsCsv.balance(g.db.journal().accountSums(), ::nameOf)
+                        com.superbiz.app.domain.algo.FinancialStatementsCsv.build(inc, bal)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(stringResource(R.string.acc_export_statements), maxLines = 1) }
+            OutlinedButton(
+                onClick = {
                     export("branches-$stamp.csv") { g ->
                         val dao = g.db.branches()
                         val rows = dao.activeOnce().map { b ->

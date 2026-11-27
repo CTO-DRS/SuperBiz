@@ -1672,6 +1672,7 @@
     <string name="acc_export_ledger">Grand livre CSV</string>
     <string name="acc_export_trial">Balance CSV</string>
     <string name="acc_export_branches">Exporter la comparaison des succursales (CSV)</string>
+    <string name="acc_export_statements">Exporter les états financiers (CSV)</string>
     <string name="acc_export_failed">Échec de l\'export</string>
     <string name="rp_title">Permissions des rôles</string>
     <string name="rp_hint">Activez ou désactivez chaque opération par rôle. Le rôle propriétaire est fixe. Chaque changement est consigné dans le journal d\'audit.</string>

@@ -1760,6 +1760,7 @@
     <string name="acc_export_ledger">Ledger CSV</string>
     <string name="acc_export_trial">Trial balance CSV</string>
     <string name="acc_export_branches">Export branch comparison (CSV)</string>
+    <string name="acc_export_statements">Export financial statements (CSV)</string>
     <string name="acc_export_failed">Export failed</string>
     <string name="rp_title">Role permissions</string>
     <string name="rp_hint">Turn each operation on or off per role. The owner role is fixed. Every change is written to the audit log.</string>
