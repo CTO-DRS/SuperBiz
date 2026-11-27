@@ -1675,6 +1675,10 @@
     <string name="rp_title">Izin peran</string>
     <string name="rp_hint">Aktifkan atau nonaktifkan tiap operasi per peran. Peran pemilik tetap. Setiap perubahan dicatat di log audit.</string>
     <string name="rp_open">Atur izin peran</string>
+    <string name="rp_group_sales">Penjualan dan pelanggan</string>
+    <string name="rp_group_inventory">Stok</string>
+    <string name="rp_group_finance">Keuangan dan pajak</string>
+    <string name="rp_group_admin">Administrasi dan sistem</string>
     <string name="portal_title">Akun pelanggan</string>
     <string name="portal_col_date">Tanggal</string>
     <string name="portal_col_memo">Keterangan</string>

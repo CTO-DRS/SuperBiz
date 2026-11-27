@@ -46,7 +46,12 @@ fun RolePermissionsScreen(onBack: () -> Unit) {
         Text(stringResource(R.string.rp_hint), color = g.textSecondary, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(8.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(Op.entries.toList(), key = { it.name }) { op ->
+            permGroups.forEach { (titleRes, ops) ->
+              item(key = "h_" + titleRes) {
+                Text(stringResource(titleRes), color = g.accent, style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 8.dp))
+              }
+              items(ops, key = { it.name }) { op ->
                 GlassCard(corner = 16.dp) {
                     Column(Modifier.fillMaxWidth().padding(12.dp)) {
                         Text(stringResource(opLabel(op)), color = g.textPrimary, style = MaterialTheme.typography.labelLarge)
@@ -58,9 +63,24 @@ fun RolePermissionsScreen(onBack: () -> Unit) {
                         }
                     }
                 }
+              }
             }
         }
     }
+}
+
+/** [D2] تجميع العمليات في أقسام للقراءة؛ أي عملية جديدة غير مدرجة تقع تلقائياً في «الإدارة» */
+private val permGroups: List<Pair<Int, List<Op>>> = run {
+    val sales = listOf(Op.POS_SELL, Op.INVOICE_SHARE, Op.INVOICE_CANCEL, Op.PARTY_PRODUCT_EDIT, Op.COLLECTION, Op.LOYALTY_APPLY, Op.LOYALTY_MANAGE)
+    val inventory = listOf(Op.INVENTORY_READ, Op.INVENTORY_MANAGE, Op.TRANSFER_APPROVE)
+    val finance = listOf(Op.FINANCIAL_REPORTS, Op.TAX_RETURN_VIEW, Op.TAX_OWNER_DATA, Op.EXPENSES_CHECKS_INSTALLMENTS, Op.DEBT_WRITE)
+    val admin = Op.entries.filter { it !in sales && it !in inventory && it !in finance }
+    listOf(
+        R.string.rp_group_sales to sales,
+        R.string.rp_group_inventory to inventory,
+        R.string.rp_group_finance to finance,
+        R.string.rp_group_admin to admin,
+    )
 }
 
 

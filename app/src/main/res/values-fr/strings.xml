@@ -1674,6 +1674,10 @@
     <string name="rp_title">Permissions des rôles</string>
     <string name="rp_hint">Activez ou désactivez chaque opération par rôle. Le rôle propriétaire est fixe. Chaque changement est consigné dans le journal d\'audit.</string>
     <string name="rp_open">Personnaliser les permissions</string>
+    <string name="rp_group_sales">Ventes et clients</string>
+    <string name="rp_group_inventory">Stock</string>
+    <string name="rp_group_finance">Finance et fiscalité</string>
+    <string name="rp_group_admin">Administration et système</string>
     <string name="portal_title">Compte client</string>
     <string name="portal_col_date">Date</string>
     <string name="portal_col_memo">Détails</string>

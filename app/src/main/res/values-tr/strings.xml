@@ -1675,6 +1675,10 @@
     <string name="rp_title">Rol izinleri</string>
     <string name="rp_hint">Her işlemi rol bazında açın veya kapatın. Sahip rolü sabittir. Her değişiklik denetim günlüğüne yazılır.</string>
     <string name="rp_open">Rol izinlerini özelleştir</string>
+    <string name="rp_group_sales">Satış ve müşteriler</string>
+    <string name="rp_group_inventory">Stok</string>
+    <string name="rp_group_finance">Finans ve vergi</string>
+    <string name="rp_group_admin">Yönetim ve sistem</string>
     <string name="portal_title">Müşteri hesabı</string>
     <string name="portal_col_date">Tarih</string>
     <string name="portal_col_memo">Açıklama</string>
