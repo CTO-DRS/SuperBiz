@@ -1762,6 +1762,10 @@
     <string name="rp_title">Role permissions</string>
     <string name="rp_hint">Turn each operation on or off per role. The owner role is fixed. Every change is written to the audit log.</string>
     <string name="rp_open">Customize role permissions</string>
+    <string name="rp_group_sales">Sales and customers</string>
+    <string name="rp_group_inventory">Inventory</string>
+    <string name="rp_group_finance">Finance and tax</string>
+    <string name="rp_group_admin">Administration and system</string>
     <string name="portal_title">Customer account</string>
     <string name="portal_col_date">Date</string>
     <string name="portal_col_memo">Details</string>

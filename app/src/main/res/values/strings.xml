@@ -1762,6 +1762,10 @@
     <string name="rp_title">صلاحيات الأدوار</string>
     <string name="rp_hint">فعّل أو عطّل كل عملية لكل دور. دور المالك ثابت ولا يُعدَّل. كل تغيير يُسجَّل في سجل التدقيق.</string>
     <string name="rp_open">تخصيص صلاحيات الأدوار</string>
+    <string name="rp_group_sales">المبيعات والعملاء</string>
+    <string name="rp_group_inventory">المخزون</string>
+    <string name="rp_group_finance">المالية والضرائب</string>
+    <string name="rp_group_admin">الإدارة والنظام</string>
     <string name="portal_title">بوابة العميل</string>
     <string name="portal_col_date">التاريخ</string>
     <string name="portal_col_memo">البيان</string>
