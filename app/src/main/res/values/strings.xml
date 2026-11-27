@@ -640,6 +640,7 @@
     <string name="budget_monthly_target">الهدف الشهري</string>
     <string name="budget_save">حفظ</string>
     <string name="budget_cancel">إلغاء</string>
+    <string name="budget_alert_summary">%1$d فئة بلغت 80%% من هدفها أو تجاوزته</string>
     <!-- [P43-D1] جولة 4 — الدفتر التفصيلي (تصدير عميق): صفوف لكل بند بأعمدة الضريبة v11 -->
     <string name="rep_deep_title">الدفتر التفصيلي (تصدير عميق)</string>
     <string name="rep_deep_none">لا بنود داخل نافذة الفترة</string>

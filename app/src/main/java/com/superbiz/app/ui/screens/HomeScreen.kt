@@ -497,7 +497,7 @@ fun HomeScreen(appVM: AppVM, settingsVM: com.superbiz.app.vm.SettingsVM, nav: Na
                             .clickable { showCashIn = true },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Rounded.Add, null, tint = Color.White)
+                        Icon(Icons.Rounded.Add, androidx.compose.ui.res.stringResource(com.superbiz.app.R.string.add), tint = Color.White)
                     }
                 }
             }

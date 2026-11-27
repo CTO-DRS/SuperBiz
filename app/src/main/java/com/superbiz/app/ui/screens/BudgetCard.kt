@@ -78,10 +78,13 @@ fun BudgetCard(symbol: String) {
                     Text(row.category.ifBlank { "-" }, modifier = Modifier.weight(1f))
                     val pct = row.usedPct
                     Text(
-                        if (pct != null) Money.formatP(row.actual, symbol) + " / " + Money.formatP(row.budget, symbol) + "  (" + pct + "%" + (if (row.over) " ⚠" else "") + ")"
+                        if (pct != null) Money.formatP(row.actual, symbol) + " / " + Money.formatP(row.budget, symbol) + "  (" + pct + "%" + (if (row.over) " ⛔" else if (row.warn) " ⚠" else "") + ")"
                         else Money.formatP(row.actual, symbol) + "  " + stringResource(R.string.budget_none)
                     )
                 }
+            }
+            if (r.warnCount > 0) {
+                Text(stringResource(R.string.budget_alert_summary, r.warnCount))
             }
             if (r.totalBudget > 0L) {
                 Text(stringResource(R.string.budget_total, Money.formatP(r.totalBudgetedActual, symbol), Money.formatP(r.totalBudget, symbol)))

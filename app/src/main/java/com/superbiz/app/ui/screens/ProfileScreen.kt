@@ -259,7 +259,7 @@ fun ProfileScreen(appVM: AppVM, settingsVM: SettingsVM, nav: NavHostController) 
                                 },
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Rounded.CameraAlt, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Rounded.CameraAlt, androidx.compose.ui.res.stringResource(com.superbiz.app.R.string.profile_photo), tint = Color.White, modifier = Modifier.size(16.dp))
                         }
                     }
                     Spacer(Modifier.width(14.dp))

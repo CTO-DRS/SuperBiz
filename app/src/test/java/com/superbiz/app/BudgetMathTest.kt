@@ -23,5 +23,8 @@ class BudgetMathTest {
         assertEquals(85_000L, r.totalActual)
         assertEquals(80_000L, r.totalBudgetedActual)
         assertEquals(1, r.overCount)
+        assertEquals(1, r.warnCount)
+        assertTrue(BudgetMath.Row("x", 100L, 80L).warn)
+        assertFalse(BudgetMath.Row("x", 100L, 79L).warn)
     }
 }

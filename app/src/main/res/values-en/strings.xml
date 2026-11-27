@@ -640,6 +640,7 @@
     <string name="budget_monthly_target">Monthly target</string>
     <string name="budget_save">Save</string>
     <string name="budget_cancel">Cancel</string>
+    <string name="budget_alert_summary">%1$d categories reached 80%% of target or went over</string>
     <!-- [P43-D1] Round 4 — deep register (line-level export with v11 tax columns) -->
     <string name="rep_deep_title">Deep register (line-level export)</string>
     <string name="rep_deep_none">No items within the period window</string>
