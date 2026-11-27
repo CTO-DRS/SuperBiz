@@ -442,7 +442,7 @@ fun SubHeader(title: String, onBack: (() -> Unit)? = null, trailing: (@Composabl
         if (onBack != null) {
             IconButton(onClick = onBack) {
                 // AutoMirrored — كان السهم يشير بالاتجاه الخاطئ في الوضع العربي RTL
-                Icon(Icons.AutoMirrored.Rounded.ArrowBackIos, null, tint = g.textPrimary)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBackIos, androidx.compose.ui.res.stringResource(com.superbiz.app.R.string.cd_back), tint = g.textPrimary)
             }
         }
         Text(

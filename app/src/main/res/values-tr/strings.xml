@@ -843,6 +843,8 @@
     <string name="ins_cust_eta_days">~%1$d gün içinde</string>
     <string name="ins_pos_guard">⚖️ İndirim, güvenlik marjını zorluyor (Güvenli sınır %1$d%%)</string>
     <string name="cd_expense_alert">Gider Limiti Uyarısı</string>
+    <string name="cd_back">Geri</string>
+    <string name="cd_copy">Kopyala</string>
     <string name="perm_open_settings_failed">Sistem ayarları açılamadı</string>
     <string name="whatsapp_open_failed">WhatsApp açılamadı</string>
     <string name="r9_hint_generic">Nasıl hesaplanır? Gerçek verilerinizden — Kart, verisiz gizlenir</string>

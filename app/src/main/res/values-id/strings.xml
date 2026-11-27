@@ -843,6 +843,8 @@
     <string name="ins_cust_eta_days">Dalam ~%1$d hari</string>
     <string name="ins_pos_guard">⚠ Potongan mengancam margin keamanan (batas aman %1$d%%)</string>
     <string name="cd_expense_alert">Peringatan Batas Pengeluaran</string>
+    <string name="cd_back">Kembali</string>
+    <string name="cd_copy">Salin</string>
     <string name="perm_open_settings_failed">Gagal membuka pengaturan sistem</string>
     <string name="whatsapp_open_failed">Gagal membuka WhatsApp</string>
     <string name="r9_hint_generic">Bagaimana dihitung? Dari data Anda yang nyata — kartu disembunyikan tanpa data</string>

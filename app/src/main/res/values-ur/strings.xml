@@ -843,6 +843,8 @@
     <string name="ins_cust_eta_days">~%1$d دن کے اندر</string>
     <string name="ins_pos_guard">⚠ ڈسکاؤنٹ سیکیورٹی مارجن کو دبا رہا ہے (محفوظ حد %1$d%%)</string>
     <string name="cd_expense_alert">خرچ کی حد کی اطلاع</string>
+    <string name="cd_back">واپس</string>
+    <string name="cd_copy">کاپی</string>
     <string name="perm_open_settings_failed">سیٹنگس کو نہیں کھولا جا سکا</string>
     <string name="whatsapp_open_failed">وٹس اپ کو نہیں کھولا جا سکا</string>
     <string name="r9_hint_generic">کیا حساب کیا جاتا ہے؟ آپ کی اصل ڈیٹا سے — اور کارڈ کو بغیر ڈیٹا کے چھپایا جاتا ہے</string>

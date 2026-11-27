@@ -922,6 +922,8 @@
     <string name="ins_cust_eta_days">In ~%1$d days</string>
     <string name="ins_pos_guard">⚠ Discount squeezes safety margin (safe cap %1$d%%)</string>
     <string name="cd_expense_alert">Expense limit alert</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_copy">Copy</string>
     <string name="perm_open_settings_failed">Could not open system settings</string>
     <string name="whatsapp_open_failed">Could not open WhatsApp</string>
     <string name="r9_hint_generic">How it works: computed from your real data — hidden when empty</string>
