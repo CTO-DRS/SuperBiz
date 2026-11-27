@@ -218,7 +218,7 @@ fun StatementScreen(appVM: AppVM, partyId: Long, nav: NavHostController) {
         Column(Modifier.fillMaxSize().padding(horizontal = 16.dp).padding(top = 12.dp)) {
         SubHeader(stringResourceCompat(R.string.st_title), onBack = { nav.popBackStack() }) {
             IconButton(onClick = { nav.navigate(Routes.STATEMENT_TEMPLATES + "?select=0") }) {
-                Icon(Icons.Rounded.Palette, null, tint = Vio)
+                Icon(Icons.Rounded.Palette, stringResourceCompat(R.string.st_template), tint = Vio)
             }
         }
 

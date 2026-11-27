@@ -531,7 +531,7 @@ fun ReportsScreen(appVM: AppVM, nav: NavHostController) {
                             android.widget.Toast.LENGTH_SHORT
                         ).show()
                     }) {
-                        Icon(Icons.Rounded.ContentCopy, null, tint = g.accent2)
+                        Icon(Icons.Rounded.ContentCopy, androidx.compose.ui.res.stringResource(R.string.cd_copy), tint = g.accent2)
                     }
                     IconButton(onClick = {
                         val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
@@ -540,7 +540,7 @@ fun ReportsScreen(appVM: AppVM, nav: NavHostController) {
                         }
                         startIntentSafe(activity, android.content.Intent.createChooser(send, null))
                     }) {
-                        Icon(Icons.Rounded.Summarize, null, tint = g.accent)
+                        Icon(Icons.Rounded.Summarize, androidx.compose.ui.res.stringResource(R.string.share), tint = g.accent)
                     }
                 }
             }

@@ -131,7 +131,7 @@ private fun LegalDocScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBackIos, null, tint = g.textPrimary)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBackIos, androidx.compose.ui.res.stringResource(com.superbiz.app.R.string.cd_back), tint = g.textPrimary)
             }
             Text(
                 title,

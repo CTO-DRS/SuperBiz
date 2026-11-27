@@ -842,6 +842,8 @@
     <string name="ins_cust_eta_days">Dans ~%1$d jours</string>
     <string name="ins_pos_guard">⚠ La remise réduit la marge de sécurité (plafond sûr %1$d%%)</string>
     <string name="cd_expense_alert">Alerte limite de dépenses</string>
+    <string name="cd_back">Retour</string>
+    <string name="cd_copy">Copier</string>
     <string name="perm_open_settings_failed">Impossible d\'ouvrir les paramètres système</string>
     <string name="whatsapp_open_failed">Impossible d\'ouvrir WhatsApp</string>
     <string name="r9_hint_generic">Fonctionnement : calculé à partir de vos données réelles — masqué si vide</string>

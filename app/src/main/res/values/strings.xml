@@ -922,6 +922,8 @@
     <string name="ins_cust_eta_days">خلال ~%1$d يوماً</string>
     <string name="ins_pos_guard">⚠ الخصم يضغط هامش الأمان (الحد الآمن %1$d%%)</string>
     <string name="cd_expense_alert">تنبيه حد المصروفات</string>
+    <string name="cd_back">رجوع</string>
+    <string name="cd_copy">نسخ</string>
     <string name="perm_open_settings_failed">تعذر فتح إعدادات النظام</string>
     <string name="whatsapp_open_failed">تعذر فتح واتساب</string>
     <string name="r9_hint_generic">كيف تُحسب؟ من بياناتك الحقيقية — وتُخفى البطاقة بلا بيانات</string>
