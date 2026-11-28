@@ -582,6 +582,7 @@
     <string name="cf_hint">Dari akun kas di buku besar: 6 bulan terakhir</string>
     <string name="cf_row">Masuk %1$s · Keluar %2$s · Bersih %3$s</string>
     <string name="cf_closing">Saldo akhir: %1$s</string>
+    <string name="cf_export">Ekspor arus kas (CSV)</string>
     <string name="yoy_title">Pengeluaran tahun ke tahun</string>
     <string name="yoy_hint">1 Jan sampai hari ini: tahun ini / tahun lalu</string>
     <string name="yoy_total">Total: %1$s / %2$s</string>
