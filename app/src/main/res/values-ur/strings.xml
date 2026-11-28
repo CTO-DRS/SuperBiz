@@ -578,6 +578,10 @@
     <string name="budget_none">بجٹ نہیں</string>
     <string name="budget_total">بجٹ کے اندر: %1$s از %2$s</string>
     <string name="budget_annual_title">سال کے آخر کا اندازہ</string>
+    <string name="cf_title">ماہانہ نقد بہاؤ</string>
+    <string name="cf_hint">کھاتے میں نقد اکاؤنٹ سے: آخری 6 مہینے</string>
+    <string name="cf_row">آمد %1$s · خرچ %2$s · خالص %3$s</string>
+    <string name="cf_closing">اختتامی بیلنس: %1$s</string>
     <string name="budget_annual_row">%1$s متوقع از سالانہ %2$s</string>
     <string name="budget_annual_over">⚠ متوقع تجاوز: %1$s</string>
     <string name="budget_annual_target">سالانہ ہدف (0 = ماہانہ × 12 پر واپس)</string>

@@ -639,6 +639,10 @@
     <string name="budget_none">no budget</string>
     <string name="budget_total">Within budget: %1$s of %2$s</string>
     <string name="budget_annual_title">Year-end projection</string>
+    <string name="cf_title">Monthly cash flow</string>
+    <string name="cf_hint">From the cash account in the ledger: last 6 months</string>
+    <string name="cf_row">In %1$s · Out %2$s · Net %3$s</string>
+    <string name="cf_closing">Closing balance: %1$s</string>
     <string name="budget_annual_row">%1$s projected of %2$s yearly</string>
     <string name="budget_annual_over">⚠ Projected over: %1$s</string>
     <string name="budget_annual_target">Yearly target (0 = back to monthly × 12)</string>

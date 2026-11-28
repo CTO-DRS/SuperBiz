@@ -549,6 +549,7 @@ fun ReportsScreen(appVM: AppVM, nav: NavHostController) {
         BankReconcileCard() // [Phase 2]
         PeriodLockCard() // [Phase 2]
         BudgetCard(symbol) // [D4]
+        CashFlowCard(symbol) // [Reports-3]
             },
             com.superbiz.app.ui.insights.insightsGroup("compare") {
         // ══ : وظيفة 16 — مقارنة هذا الشهر × الشهر الماضي (إخفاء صادق بلا بيانات) ══
