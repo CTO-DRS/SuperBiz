@@ -69,7 +69,7 @@ class ScreenshotCaptureTest {
 
     private fun shot(name: String) {
         runCatching {
-            compose.waitForIdle()
+            compose.mainClock.advanceTimeBy(1500)
             val bmp = compose.onRoot().captureToImage().asAndroidBitmap()
             File(outDir, "$name.png").outputStream().use {
                 bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
@@ -81,6 +81,7 @@ class ScreenshotCaptureTest {
     @Test
     fun roleTemplates() {
         runCatching {
+            compose.mainClock.autoAdvance = false
             compose.setContent { SuperBizTheme("light") { RolePermissionsScreen(onBack = {}) } }
             shot("role-permissions")
         }.onFailure { log("FAIL roleTemplates: $it") }
@@ -91,6 +92,7 @@ class ScreenshotCaptureTest {
         runCatching {
             val vm = InvoicesVM(app)
             vm.editorItems.value = listOf(InvoicesVM.EditorItem(null, "صنف تجريبي", "2", "150"))
+            compose.mainClock.autoAdvance = false
             compose.setContent { SuperBizTheme("light") { InvoiceEditor(vm, AppVM(app)) } }
             shot("invoice-editor")
         }.onFailure { log("FAIL invoiceEditor: $it") }
