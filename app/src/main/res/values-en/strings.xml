@@ -1790,6 +1790,13 @@
     <string name="acc_export_failed">Export failed</string>
     <string name="rp_title">Role permissions</string>
     <string name="rp_hint">Turn each operation on or off per role. The owner role is fixed. Every change is written to the audit log.</string>
+    <string name="rp_search">Search permissions</string>
+    <string name="rp_tpl_title">Role templates</string>
+    <string name="rp_tpl_default">Default</string>
+    <string name="rp_tpl_sales">Sales only</string>
+    <string name="rp_tpl_finance_view">Finance view</string>
+    <string name="rp_tpl_confirm">All permissions of the «%1$s» role will be set to the «%2$s» template. No template grants owner-only permissions. Continue?</string>
+    <string name="rp_tpl_apply">Apply</string>
     <string name="rp_open">Customize role permissions</string>
     <string name="rp_group_sales">Sales and customers</string>
     <string name="rp_group_inventory">Inventory</string>

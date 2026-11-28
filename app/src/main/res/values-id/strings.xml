@@ -1703,6 +1703,13 @@
     <string name="acc_export_failed">Ekspor gagal</string>
     <string name="rp_title">Izin peran</string>
     <string name="rp_hint">Aktifkan atau nonaktifkan tiap operasi per peran. Peran pemilik tetap. Setiap perubahan dicatat di log audit.</string>
+    <string name="rp_search">Cari izin</string>
+    <string name="rp_tpl_title">Templat peran</string>
+    <string name="rp_tpl_default">Bawaan</string>
+    <string name="rp_tpl_sales">Hanya penjualan</string>
+    <string name="rp_tpl_finance_view">Tampilan keuangan</string>
+    <string name="rp_tpl_confirm">Semua izin peran «%1$s» akan diatur ke templat «%2$s». Tidak ada templat yang memberi izin khusus pemilik. Lanjutkan?</string>
+    <string name="rp_tpl_apply">Terapkan</string>
     <string name="rp_open">Atur izin peran</string>
     <string name="rp_group_sales">Penjualan dan pelanggan</string>
     <string name="rp_group_inventory">Stok</string>

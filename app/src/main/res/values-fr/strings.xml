@@ -1702,6 +1702,13 @@
     <string name="acc_export_failed">Échec de l\'export</string>
     <string name="rp_title">Permissions des rôles</string>
     <string name="rp_hint">Activez ou désactivez chaque opération par rôle. Le rôle propriétaire est fixe. Chaque changement est consigné dans le journal d\'audit.</string>
+    <string name="rp_search">Rechercher des autorisations</string>
+    <string name="rp_tpl_title">Modèles de rôles</string>
+    <string name="rp_tpl_default">Par défaut</string>
+    <string name="rp_tpl_sales">Ventes seules</string>
+    <string name="rp_tpl_finance_view">Vue financière</string>
+    <string name="rp_tpl_confirm">Toutes les autorisations du rôle «%1$s» passeront au modèle «%2$s». Aucun modèle n\'accorde les droits réservés au propriétaire. Continuer ?</string>
+    <string name="rp_tpl_apply">Appliquer</string>
     <string name="rp_open">Personnaliser les permissions</string>
     <string name="rp_group_sales">Ventes et clients</string>
     <string name="rp_group_inventory">Stock</string>

@@ -1703,6 +1703,13 @@
     <string name="acc_export_failed">Dışa aktarma başarısız</string>
     <string name="rp_title">Rol izinleri</string>
     <string name="rp_hint">Her işlemi rol bazında açın veya kapatın. Sahip rolü sabittir. Her değişiklik denetim günlüğüne yazılır.</string>
+    <string name="rp_search">İzinlerde ara</string>
+    <string name="rp_tpl_title">Rol şablonları</string>
+    <string name="rp_tpl_default">Varsayılan</string>
+    <string name="rp_tpl_sales">Yalnız satış</string>
+    <string name="rp_tpl_finance_view">Mali görünüm</string>
+    <string name="rp_tpl_confirm">«%1$s» rolünün tüm izinleri «%2$s» şablonuna ayarlanacak. Hiçbir şablon yalnızca sahibe özel izin vermez. Devam?</string>
+    <string name="rp_tpl_apply">Uygula</string>
     <string name="rp_open">Rol izinlerini özelleştir</string>
     <string name="rp_group_sales">Satış ve müşteriler</string>
     <string name="rp_group_inventory">Stok</string>
