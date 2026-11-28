@@ -632,6 +632,7 @@
     <string name="rep_vatr_net">Net VAT due</string>
     <string name="rep_vatr_refund">Negative net = VAT refundable or carried forward</string>
     <string name="rep_vatr_export">Export VAT return (CSV)</string>
+    <string name="rep_vatr_check_warn">⚠ Return is inconsistent (%1$s) — review the figures before filing</string>
     <string name="budget_title">Monthly expense budget (current branch)</string>
     <string name="budget_hint">Tap a category to set its monthly target</string>
     <string name="budget_empty">No expenses this month yet</string>

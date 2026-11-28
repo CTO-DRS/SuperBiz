@@ -632,6 +632,7 @@
     <string name="rep_vatr_net">صافي الضريبة المستحق</string>
     <string name="rep_vatr_refund">صافٍ سالب = ضريبة قابلة للاسترداد أو الترحيل للفترة القادمة</string>
     <string name="rep_vatr_export">تصدير الإقرار الضريبي CSV</string>
+    <string name="rep_vatr_check_warn">⚠ الإقرار غير متسق (%1$s) — راجع الأرقام قبل التقديم</string>
     <string name="budget_title">ميزانية المصروفات الشهرية (الفرع الحالي)</string>
     <string name="budget_hint">اضغط أي فئة لتحديد هدفها الشهري</string>
     <string name="budget_empty">لا مصروفات هذا الشهر بعد</string>

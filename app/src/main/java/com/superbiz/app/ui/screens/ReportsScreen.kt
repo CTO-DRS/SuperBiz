@@ -873,6 +873,13 @@ fun ReportsScreen(appVM: AppVM, nav: NavHostController) {
                             color = g.textSecondary, fontSize = 12.sp
                         )
                     }
+                    val vatIssues = com.superbiz.app.domain.algo.VatReturnCheck.issues(vr)
+                    if (vatIssues.isNotEmpty()) {
+                        Text(
+                            stringResourceCompat(R.string.rep_vatr_check_warn, vatIssues.joinToString(",")),
+                            color = g.textSecondary, fontSize = 12.sp
+                        )
+                    }
                     // [VAT-export] مشاركة الإقرار الدوري CSV
                     val vatCtx = androidx.compose.ui.platform.LocalContext.current
                     val vatLabel = stringResourceCompat(R.string.rep_vatr_export)
