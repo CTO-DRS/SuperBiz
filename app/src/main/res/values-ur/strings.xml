@@ -571,6 +571,7 @@
     <string name="rep_vatr_net">اٹھانا ہوئی ٹیک کا صاف</string>
     <string name="rep_vatr_refund">منفی صاف = واپس لینے یا اگلے دورہ منتقل کرنے کے قابل ٹیک</string>
     <string name="rep_vatr_export">ویٹ ریٹرن ایکسپورٹ (CSV)</string>
+    <string name="rep_vatr_check_warn">⚠ گوشوارہ غیر مطابق ہے (%1$s) — جمع کرانے سے پہلے اعداد دیکھ لیں</string>
     <string name="budget_title">ماہانہ اخراجات کا بجٹ (موجودہ برانچ)</string>
     <string name="budget_hint">ماہانہ ہدف مقرر کرنے کے لیے زمرے پر ٹیپ کریں</string>
     <string name="budget_empty">اس ماہ ابھی تک کوئی خرچ نہیں</string>

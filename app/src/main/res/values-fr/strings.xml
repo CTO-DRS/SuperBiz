@@ -570,6 +570,7 @@
     <string name="rep_vatr_net">TVA nette due</string>
     <string name="rep_vatr_refund">TVA nette négative = remboursement ou report</string>
     <string name="rep_vatr_export">Exporter la déclaration de TVA (CSV)</string>
+    <string name="rep_vatr_check_warn">⚠ Déclaration incohérente (%1$s) — vérifiez les chiffres avant dépôt</string>
     <string name="budget_title">Budget mensuel des dépenses (succursale actuelle)</string>
     <string name="budget_hint">Touchez une catégorie pour fixer son objectif mensuel</string>
     <string name="budget_empty">Aucune dépense ce mois-ci</string>
