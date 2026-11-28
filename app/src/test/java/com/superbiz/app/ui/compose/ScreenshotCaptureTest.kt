@@ -1,6 +1,7 @@
 package com.superbiz.app.ui.compose
 
 import android.app.Application
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -64,7 +65,7 @@ class ScreenshotCaptureTest {
         Dispatchers.resetMain()
     }
 
-    private fun log(msg: String) = File(outDir, "capture-log.txt").appendText(msg + "\n")
+    private fun log(msg: String): Unit = File(outDir, "capture-log.txt").appendText(msg + "\n")
 
     private fun shot(name: String) {
         runCatching {
