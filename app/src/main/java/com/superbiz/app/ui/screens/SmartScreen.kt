@@ -240,6 +240,15 @@ private fun AnswerBubble(answer: SmartChat.ChatAnswer?, symbol: String) {
                     KVRow(stringResource(R.string.ans_profits_sales, Money.format(answer.numbers.getOrElse(1) { 0.0 }, symbol)))
                     KVRow(stringResource(R.string.ans_profits_expenses, Money.format(answer.numbers.getOrElse(2) { 0.0 }, symbol)))
                 }
+                "ans_expenses" -> {
+                    BubbleTitle(stringResource(R.string.ans_expenses_title), com.superbiz.app.ui.theme.Amber)
+                    KVRow(stringResource(R.string.ans_expenses_total, Money.format(answer.numbers.getOrElse(0) { 0.0 }, symbol)))
+                    KVRow(stringResource(R.string.ans_profits_sales, Money.format(answer.numbers.getOrElse(1) { 0.0 }, symbol)))
+                }
+                "ans_cash" -> {
+                    BubbleTitle(stringResource(R.string.ans_cash_title), Cyan)
+                    KVRow(stringResource(R.string.ans_cash_now, Money.format(answer.numbers.getOrElse(0) { 0.0 }, symbol)))
+                }
                 "ans_receivables" -> {
                     BubbleTitle(stringResource(R.string.ans_receivables_title), com.superbiz.app.ui.theme.Amber)
                     KVRow(stringResource(R.string.ans_receivables_overdue, Money.format(answer.numbers.getOrElse(0) { 0.0 }, symbol)))

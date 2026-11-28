@@ -2579,6 +2579,10 @@
     <string name="ans_profits_expenses">Expenses: %1$s</string>
     <string name="ans_receivables_title">Receivables &amp; overdue</string>
     <string name="ans_receivables_overdue">Total overdue: %1$s</string>
+    <string name="ans_expenses_title">Expenses in the period</string>
+    <string name="ans_expenses_total">Total expenses: %1$s</string>
+    <string name="ans_cash_title">Cash and liquidity</string>
+    <string name="ans_cash_now">Cash available now: %1$s</string>
     <string name="ans_aging_0">Overdue 0–30 days: %1$s</string>
     <string name="ans_aging_1">Overdue 30–60 days: %1$s</string>
     <string name="ans_aging_2">Overdue 60–90 days: %1$s</string>

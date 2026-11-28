@@ -452,7 +452,7 @@ object EwmaAlertMath {
 object QueryParseMath {
 
     /** النوايا الأربعة المعلنة — خارجها فشل صادق مهذّب */
-    enum class Intent { SALES, PROFITS, RECEIVABLES, INVENTORY }
+    enum class Intent { SALES, PROFITS, RECEIVABLES, INVENTORY, EXPENSES, CASH }
 
     /** الفترات الزمنية المعلنة */
     enum class Range { TODAY, YESTERDAY, THIS_WEEK, THIS_MONTH, LAST_MONTH, LAST_N_DAYS }
@@ -477,7 +477,9 @@ object QueryParseMath {
         Intent.SALES to listOf("مبيعات", "بيع", "sales", "revenue", "مبيع", "بيعت"),
         Intent.PROFITS to listOf("ارباح", "ربح", "profits", "profit", "هامش", "margin"),
         Intent.RECEIVABLES to listOf("ذمم", "مديونيات", "متاخرات", "مستحق", "ديون", "debts", "receivables", "owed"),
-        Intent.INVENTORY to listOf("مخزون", "بضاعه", "اصناف", "inventory", "stock", "مخزني")
+        Intent.INVENTORY to listOf("مخزون", "بضاعه", "اصناف", "inventory", "stock", "مخزني"),
+        Intent.EXPENSES to listOf("مصروف", "مصاريف", "expenses", "expense", "spending"),
+        Intent.CASH to listOf("سيوله", "الكاش", "رصيد الصندوق", "cash", "liquidity")
     )
 
     /** مفاتيح الفترات الثابتة — «آخر N يوم» يُلتقط بجوار رقمه حصراً (انظر parseRange) */

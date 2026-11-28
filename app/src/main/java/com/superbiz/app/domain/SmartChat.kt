@@ -105,6 +105,18 @@ object SmartChat {
                     basis = "profit=${trim(it.profitTotal)} sales=${trim(it.salesTotal)} expenses=${trim(it.expensesTotal)}"
                 )
             } ?: ChatAnswer("ans_nodata", emptyList(), basis = "no ranged snapshot")
+            QueryParseMath.Intent.EXPENSES -> ranged?.let {
+                if (it.expensesTotal <= 0.0)
+                    ChatAnswer("ans_nodata", emptyList(), basis = "no expenses in range")
+                else ChatAnswer(
+                    "ans_expenses",
+                    listOf(it.expensesTotal, it.salesTotal),
+                    basis = "expenses=${trim(it.expensesTotal)} sales=${trim(it.salesTotal)}"
+                )
+            } ?: ChatAnswer("ans_nodata", emptyList(), basis = "no ranged snapshot")
+            QueryParseMath.Intent.CASH -> global?.let {
+                ChatAnswer("ans_cash", listOf(it.cashNow), basis = "cash=${trim(it.cashNow)}")
+            } ?: ChatAnswer("ans_nodata", emptyList(), basis = "no global snapshot")
             QueryParseMath.Intent.RECEIVABLES -> global?.let {
                 if (it.overdueTotal <= 0.0 && it.aging.all { a -> a <= 0.0 })
                     ChatAnswer("ans_nodata", emptyList(), basis = "no open receivables")
