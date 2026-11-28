@@ -38,6 +38,21 @@ object BankReconcileMath {
         return Result(matched, bankOnly, free)
     }
 
+    /** حركة كشف ستُسجَّل مصروفاً: المبلغ موجب بالقروش، اليوم epoch day، والبيان نص المصروف */
+    data class ExpenseDraft(val day: Long, val amount: Long, val note: String)
+    data class ImportPlan(val expenses: List<ExpenseDraft>, val inflowsSkipped: Int)
+
+    /**
+     * خطة استيراد الحركات غير المطابقة: الخارج (سالب) يصبح مصروفاً؛ الداخل (موجب) يُترك لأنه يحتاج فاتورة/تحصيلاً
+     * ولا يُخمَّن مصدره. إعادة المطابقة بعد الاستيراد تجد المصروف في النقدية فلا يتكرر الاستيراد.
+     */
+    fun importPlan(bankOnly: List<BankTx>): ImportPlan {
+        val out = bankOnly.filter { it.amount < 0L }
+            .sortedWith(compareBy({ it.day }, { it.index }))
+            .map { ExpenseDraft(it.day, -it.amount, it.description.trim()) }
+        return ImportPlan(out, bankOnly.count { it.amount > 0L })
+    }
+
     /** رصيد الدفتر المعدّل = رصيد الدفتر + صافي غير المطابق من الكشف − صافي غير المطابق من الدفتر.
      *  يساوي رصيد الكشف حين تكتمل التسوية: الفرق المتبقي = 0. */
     fun remainingDifference(bookBalance: Long, bankBalance: Long, r: Result): Long =

@@ -1685,6 +1685,12 @@
     <string name="bank_rec_bank_only_total">اسٹیٹمنٹ کی وہ مدیں جو کھاتوں میں نہیں: %1$s</string>
     <string name="bank_rec_book_only_total">کھاتوں کی وہ مدیں جو اسٹیٹمنٹ میں نہیں: %1$s</string>
     <string name="bank_rec_skipped">نظر انداز قطاریں: %1$d</string>
+    <string name="bank_rec_add_expenses">غیر مطابق اخراجات کو خرچ کے طور پر شامل کریں (%1$d)</string>
+    <string name="bank_rec_inflows_skipped">%1$d آمدنی (جمع) چھوڑی گئی: انوائس یا وصولی سے درج کریں</string>
+    <string name="bank_rec_add_confirm_title">اسٹیٹمنٹ سے اخراجات شامل کریں</string>
+    <string name="bank_rec_add_confirm_body">%1$d خرچ، کل %2$s درج ہوں گے (دوہرا اندراج، نقد)۔ جاری رکھیں؟</string>
+    <string name="bank_rec_add_confirm">شامل کریں</string>
+    <string name="bank_rec_add_done">%1$d شامل ہوئے، %2$d ناکام (بند مدت یا خرابی)</string>
     <string name="acc_export_failed">برآمد ناکام</string>
     <string name="rp_title">کردار کی اجازتیں</string>
     <string name="rp_hint">ہر عمل کو ہر کردار کے لیے آن یا آف کریں۔ مالک کا کردار مستقل ہے۔ ہر تبدیلی آڈٹ لاگ میں درج ہوتی ہے۔</string>

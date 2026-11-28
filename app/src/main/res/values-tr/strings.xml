@@ -1685,6 +1685,12 @@
     <string name="bank_rec_bank_only_total">Defterde olmayan ekstre kalemleri: %1$s</string>
     <string name="bank_rec_book_only_total">Ekstrede görünmeyen defter kalemleri: %1$s</string>
     <string name="bank_rec_skipped">Yok sayılan satır: %1$d</string>
+    <string name="bank_rec_add_expenses">Eşleşmeyen çıkışları gider olarak ekle (%1$d)</string>
+    <string name="bank_rec_inflows_skipped">%1$d gelen işlem (yatırma) bırakıldı: fatura veya tahsilatla kaydedin</string>
+    <string name="bank_rec_add_confirm_title">Ekstreden gider ekle</string>
+    <string name="bank_rec_add_confirm_body">%1$d gider, toplam %2$s kaydedilecek (çift kayıt, nakit). Devam?</string>
+    <string name="bank_rec_add_confirm">Ekle</string>
+    <string name="bank_rec_add_done">%1$d eklendi, %2$d eklenemedi (kapalı dönem veya hata)</string>
     <string name="acc_export_failed">Dışa aktarma başarısız</string>
     <string name="rp_title">Rol izinleri</string>
     <string name="rp_hint">Her işlemi rol bazında açın veya kapatın. Sahip rolü sabittir. Her değişiklik denetim günlüğüne yazılır.</string>
