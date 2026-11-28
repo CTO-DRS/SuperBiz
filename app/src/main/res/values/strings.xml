@@ -1774,6 +1774,16 @@
     <string name="acc_export_trial">ميزان المراجعة CSV</string>
     <string name="acc_export_branches">تصدير مقارنة الفروع CSV</string>
     <string name="acc_export_statements">تصدير القوائم المالية CSV (دخل + ميزانية)</string>
+    <string name="acc_export_statements_pdf">تصدير القوائم المالية PDF</string>
+    <string name="a4_stmt_title">القوائم المالية من الدفتر</string>
+    <string name="a4_stmt_income">قائمة الدخل (السنة الحالية)</string>
+    <string name="a4_stmt_balance">الميزانية العمومية</string>
+    <string name="a4_stmt_costs">التكاليف والمصروفات</string>
+    <string name="a4_stmt_assets">الأصول</string>
+    <string name="a4_stmt_liabilities">الالتزامات</string>
+    <string name="a4_stmt_equity">حقوق الملكية</string>
+    <string name="a4_stmt_earnings">أرباح محتجزة (محسوبة)</string>
+    <string name="a4_stmt_total">الإجمالي</string>
     <string name="bank_rec_title">تسوية بنكية</string>
     <string name="bank_rec_import">استيراد كشف الحساب البنكي (CSV)</string>
     <string name="bank_rec_bad_file">تعذّر قراءة الملف: يلزم عمود تاريخ وعمود مبلغ (أو مدين/دائن)</string>

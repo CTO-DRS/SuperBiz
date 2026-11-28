@@ -1687,6 +1687,16 @@
     <string name="acc_export_trial">Neraca saldo CSV</string>
     <string name="acc_export_branches">Ekspor perbandingan cabang (CSV)</string>
     <string name="acc_export_statements">Ekspor laporan keuangan (CSV)</string>
+    <string name="acc_export_statements_pdf">Ekspor laporan keuangan PDF</string>
+    <string name="a4_stmt_title">Laporan keuangan dari buku besar</string>
+    <string name="a4_stmt_income">Laporan laba rugi (tahun berjalan)</string>
+    <string name="a4_stmt_balance">Neraca</string>
+    <string name="a4_stmt_costs">Biaya dan beban</string>
+    <string name="a4_stmt_assets">Aset</string>
+    <string name="a4_stmt_liabilities">Liabilitas</string>
+    <string name="a4_stmt_equity">Ekuitas</string>
+    <string name="a4_stmt_earnings">Laba ditahan (dihitung)</string>
+    <string name="a4_stmt_total">Total</string>
     <string name="bank_rec_title">Rekonsiliasi bank</string>
     <string name="bank_rec_import">Impor mutasi bank (CSV)</string>
     <string name="bank_rec_bad_file">Berkas tidak terbaca: perlu kolom tanggal dan kolom jumlah (atau debit/kredit)</string>

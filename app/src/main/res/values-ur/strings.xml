@@ -1687,6 +1687,16 @@
     <string name="acc_export_trial">ٹرائل بیلنس CSV</string>
     <string name="acc_export_branches">برانچ موازنہ ایکسپورٹ (CSV)</string>
     <string name="acc_export_statements">مالی گوشوارے ایکسپورٹ (CSV)</string>
+    <string name="acc_export_statements_pdf">مالی گوشوارے PDF برآمد کریں</string>
+    <string name="a4_stmt_title">کھاتے سے مالی گوشوارے</string>
+    <string name="a4_stmt_income">آمدنی کا گوشوارہ (موجودہ سال)</string>
+    <string name="a4_stmt_balance">بیلنس شیٹ</string>
+    <string name="a4_stmt_costs">اخراجات و لاگت</string>
+    <string name="a4_stmt_assets">اثاثے</string>
+    <string name="a4_stmt_liabilities">واجبات</string>
+    <string name="a4_stmt_equity">ملکیتی حصہ</string>
+    <string name="a4_stmt_earnings">محفوظ منافع (حسابی)</string>
+    <string name="a4_stmt_total">کل</string>
     <string name="bank_rec_title">بینک مفاہمت</string>
     <string name="bank_rec_import">بینک اسٹیٹمنٹ درآمد کریں (CSV)</string>
     <string name="bank_rec_bad_file">فائل پڑھی نہ جا سکی: تاریخ اور رقم (یا ڈیبٹ/کریڈٹ) کا کالم درکار ہے</string>

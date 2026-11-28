@@ -1774,6 +1774,16 @@
     <string name="acc_export_trial">Trial balance CSV</string>
     <string name="acc_export_branches">Export branch comparison (CSV)</string>
     <string name="acc_export_statements">Export financial statements (CSV)</string>
+    <string name="acc_export_statements_pdf">Export financial statements PDF</string>
+    <string name="a4_stmt_title">Financial statements from the ledger</string>
+    <string name="a4_stmt_income">Income statement (current year)</string>
+    <string name="a4_stmt_balance">Balance sheet</string>
+    <string name="a4_stmt_costs">Costs and expenses</string>
+    <string name="a4_stmt_assets">Assets</string>
+    <string name="a4_stmt_liabilities">Liabilities</string>
+    <string name="a4_stmt_equity">Equity</string>
+    <string name="a4_stmt_earnings">Retained earnings (computed)</string>
+    <string name="a4_stmt_total">Total</string>
     <string name="bank_rec_title">Bank reconciliation</string>
     <string name="bank_rec_import">Import bank statement (CSV)</string>
     <string name="bank_rec_bad_file">Could not read the file: it needs a date column and an amount (or debit/credit) column</string>

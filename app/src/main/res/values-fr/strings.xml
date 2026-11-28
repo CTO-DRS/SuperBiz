@@ -1686,6 +1686,16 @@
     <string name="acc_export_trial">Balance CSV</string>
     <string name="acc_export_branches">Exporter la comparaison des succursales (CSV)</string>
     <string name="acc_export_statements">Exporter les états financiers (CSV)</string>
+    <string name="acc_export_statements_pdf">Exporter les états financiers PDF</string>
+    <string name="a4_stmt_title">États financiers issus du grand livre</string>
+    <string name="a4_stmt_income">Compte de résultat (année en cours)</string>
+    <string name="a4_stmt_balance">Bilan</string>
+    <string name="a4_stmt_costs">Coûts et charges</string>
+    <string name="a4_stmt_assets">Actifs</string>
+    <string name="a4_stmt_liabilities">Passifs</string>
+    <string name="a4_stmt_equity">Capitaux propres</string>
+    <string name="a4_stmt_earnings">Résultats non distribués (calculés)</string>
+    <string name="a4_stmt_total">Total</string>
     <string name="bank_rec_title">Rapprochement bancaire</string>
     <string name="bank_rec_import">Importer le relevé bancaire (CSV)</string>
     <string name="bank_rec_bad_file">Lecture impossible : il faut une colonne date et une colonne montant (ou débit/crédit)</string>
