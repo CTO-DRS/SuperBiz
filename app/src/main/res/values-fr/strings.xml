@@ -2455,6 +2455,10 @@
     <string name="ans_profits_expenses">Dépenses : %1$s</string>
     <string name="ans_receivables_title">Créances &amp; retards</string>
     <string name="ans_receivables_overdue">Total en retard : %1$s</string>
+    <string name="ans_expenses_title">Charges de la période</string>
+    <string name="ans_expenses_total">Total des charges : %1$s</string>
+    <string name="ans_cash_title">Trésorerie et liquidités</string>
+    <string name="ans_cash_now">Trésorerie disponible : %1$s</string>
     <string name="ans_aging_0">En retard de 0–30 jours : %1$s</string>
     <string name="ans_aging_1">En retard de 30–60 jours : %1$s</string>
     <string name="ans_aging_2">En retard de 60–90 jours : %1$s</string>

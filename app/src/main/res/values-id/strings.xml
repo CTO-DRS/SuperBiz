@@ -2456,6 +2456,10 @@
     <string name="ans_profits_expenses">Pengeluaran: %1$s</string>
     <string name="ans_receivables_title">Piutang dan tunggakan</string>
     <string name="ans_receivables_overdue">Total terlambat: %1$s</string>
+    <string name="ans_expenses_title">Pengeluaran dalam periode</string>
+    <string name="ans_expenses_total">Total pengeluaran: %1$s</string>
+    <string name="ans_cash_title">Kas dan likuiditas</string>
+    <string name="ans_cash_now">Kas tersedia sekarang: %1$s</string>
     <string name="ans_aging_0">Terlambat 0–30 hari: %1$s</string>
     <string name="ans_aging_1">Terlambat 30–60 hari: %1$s</string>
     <string name="ans_aging_2">Terlambat 60–90 hari: %1$s</string>

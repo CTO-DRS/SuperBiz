@@ -2456,6 +2456,10 @@
     <string name="ans_profits_expenses">مصروفات: %1$s</string>
     <string name="ans_receivables_title">ذمہ داریاں اور متأخرات</string>
     <string name="ans_receivables_overdue">کل متأخر: %1$s</string>
+    <string name="ans_expenses_title">مدت کے اخراجات</string>
+    <string name="ans_expenses_total">کل اخراجات: %1$s</string>
+    <string name="ans_cash_title">نقد اور سیولت</string>
+    <string name="ans_cash_now">اس وقت دستیاب نقد: %1$s</string>
     <string name="ans_aging_0">متأخر 0–30 دن: %1$s</string>
     <string name="ans_aging_1">متأخر 30–60 دن: %1$s</string>
     <string name="ans_aging_2">متأخر 60–90 دن: %1$s</string>

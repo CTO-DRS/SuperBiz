@@ -2456,6 +2456,10 @@
     <string name="ans_profits_expenses">Giderler: %1$s</string>
     <string name="ans_receivables_title">Alacaklar ve Gecikmeler</string>
     <string name="ans_receivables_overdue">Toplam gecikme: %1$s</string>
+    <string name="ans_expenses_title">Dönemdeki giderler</string>
+    <string name="ans_expenses_total">Toplam gider: %1$s</string>
+    <string name="ans_cash_title">Nakit ve likidite</string>
+    <string name="ans_cash_now">Şu an mevcut nakit: %1$s</string>
     <string name="ans_aging_0">0–30 gün gecikmiş: %1$s</string>
     <string name="ans_aging_1">30–60 gün gecikmiş: %1$s</string>
     <string name="ans_aging_2">60–90 gün gecikmiş: %1$s</string>

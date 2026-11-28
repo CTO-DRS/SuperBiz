@@ -2579,6 +2579,10 @@
     <string name="ans_profits_expenses">المصروفات: %1$s</string>
     <string name="ans_receivables_title">الذمم والمتأخرات</string>
     <string name="ans_receivables_overdue">إجمالي المتأخر: %1$s</string>
+    <string name="ans_expenses_title">المصروفات في الفترة</string>
+    <string name="ans_expenses_total">إجمالي المصروفات: %1$s</string>
+    <string name="ans_cash_title">النقد والسيولة</string>
+    <string name="ans_cash_now">النقد المتاح الآن: %1$s</string>
     <string name="ans_aging_0">متأخر 0–30 يوماً: %1$s</string>
     <string name="ans_aging_1">متأخر 30–60 يوماً: %1$s</string>
     <string name="ans_aging_2">متأخر 60–90 يوماً: %1$s</string>

@@ -549,6 +549,8 @@ class R16SmartTest {
         assertEquals("ans_profits", SmartChat.answer(parse("ارباح هذا الشهر"), ranged, global, null, null).key)
         assertEquals("ans_receivables", SmartChat.answer(parse("الذمم"), ranged, global, null, null).key)
         assertEquals("ans_inventory", SmartChat.answer(parse("مخزون"), ranged, global, null, null).key)
+        assertEquals("ans_expenses", SmartChat.answer(parse("مصروفات هذا الشهر"), ranged, global, null, null).key)
+        assertEquals("ans_cash", SmartChat.answer(parse("كم السيولة"), ranged, global, null, null).key)
         // الصدق: فترة بلا حركة ⇒ لا بيانات كافية
         val empty = SmartChat.RangedFacts(0.0, 0.0, 0.0, 0)
         assertEquals("ans_nodata", SmartChat.answer(parse("مبيعات امس"), empty, global, null, null).key)
