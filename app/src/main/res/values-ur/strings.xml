@@ -580,6 +580,7 @@
     <string name="budget_annual_title">سال کے آخر کا اندازہ</string>
     <string name="budget_annual_row">%1$s متوقع از سالانہ %2$s</string>
     <string name="budget_annual_over">⚠ متوقع تجاوز: %1$s</string>
+    <string name="budget_annual_target">سالانہ ہدف (0 = ماہانہ × 12 پر واپس)</string>
     <string name="budget_monthly_target">ماہانہ ہدف</string>
     <string name="budget_save">محفوظ کریں</string>
     <string name="budget_cancel">منسوخ</string>

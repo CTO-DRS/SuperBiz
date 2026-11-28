@@ -24,4 +24,18 @@ class BudgetStoreBackupTest {
         assertEquals(mapOf("rent" to 100_00L), s.all(0L))
         assertEquals(mapOf("fuel" to 50_00L), s.all(2L))
     }
+
+    @Test
+    fun `yearly targets are separate, editable and survive backup`() {
+        val s = BudgetStore(ApplicationProvider.getApplicationContext())
+        s.setYear(0L, 2026, "rent", 1200_00L)
+        s.setYear(0L, 2027, "rent", 900_00L)
+        assertEquals(mapOf("rent" to 1200_00L), s.allYear(0L, 2026))
+        assertEquals(emptyMap<String, Long>(), s.all(0L))
+        val dumped = s.dump()
+        s.setYear(0L, 2026, "rent", 0L)
+        s.restore(dumped)
+        assertEquals(mapOf("rent" to 1200_00L), s.allYear(0L, 2026))
+        assertEquals(mapOf("rent" to 900_00L), s.allYear(0L, 2027))
+    }
 }

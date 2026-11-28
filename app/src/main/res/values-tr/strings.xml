@@ -580,6 +580,7 @@
     <string name="budget_annual_title">Yıl sonu tahmini</string>
     <string name="budget_annual_row">%1$s tahmin / yıllık %2$s</string>
     <string name="budget_annual_over">⚠ Aşım bekleniyor: %1$s</string>
+    <string name="budget_annual_target">Yıllık hedef (0 = aylık × 12\'ye dön)</string>
     <string name="budget_monthly_target">Aylık hedef</string>
     <string name="budget_save">Kaydet</string>
     <string name="budget_cancel">İptal</string>

@@ -641,6 +641,7 @@
     <string name="budget_annual_title">توقع نهاية السنة</string>
     <string name="budget_annual_row">%1$s متوقع من %2$s سنوياً</string>
     <string name="budget_annual_over">⚠ متوقع تجاوز: %1$s</string>
+    <string name="budget_annual_target">الهدف السنوي (اتركه صفراً للرجوع إلى الشهري × 12)</string>
     <string name="budget_monthly_target">الهدف الشهري</string>
     <string name="budget_save">حفظ</string>
     <string name="budget_cancel">إلغاء</string>

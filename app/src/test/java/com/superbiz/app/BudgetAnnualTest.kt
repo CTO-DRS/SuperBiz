@@ -22,4 +22,13 @@ class BudgetAnnualTest {
         assertEquals(1440L, r.single().projected)
         assertFalse(r.single().projectedOver)
     }
+
+    @Test fun yearlyOverrideWinsOverMonthlyTimes12() {
+        val r = BudgetMath.annualProjection(mapOf("fuel" to 100L), mapOf("fuel" to 500L), 3, mapOf("fuel" to 5000L))
+        assertEquals(5000L, r.single().annualBudget)
+        assertFalse(r.single().projectedOver)
+        val onlyOverride = BudgetMath.annualProjection(emptyMap(), emptyMap(), 6, mapOf("tax" to 700L))
+        assertEquals(700L, onlyOverride.single().annualBudget)
+        assertEquals(0L, onlyOverride.single().projected)
+    }
 }
