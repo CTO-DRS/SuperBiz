@@ -151,6 +151,7 @@ fun InventoryScreen(appVM: AppVM, nav: NavHostController) {
     var labelFor by remember { mutableStateOf<Product?>(null) }
     // وظيفة 15 — نص المشاركة المعلّق (يُنفَّذ عبر LaunchedEffect الآمن)
     var pendingShopShare by remember { mutableStateOf(false) }
+    var pendingShopPdf by remember { mutableStateOf(false) }
     // [P7-L8 إصلاح]: حوار تأكيد الحذف — كان vm.deleteProduct بلا أي واجهة في القائمة
     var confirmDelete by remember { mutableStateOf<Product?>(null) }
 
@@ -192,6 +193,26 @@ fun InventoryScreen(appVM: AppVM, nav: NavHostController) {
             putExtra(android.content.Intent.EXTRA_TEXT, text)
         }
         startIntentSafe(context, android.content.Intent.createChooser(send, null))
+    }
+
+    LaunchedEffect(pendingShopPdf) {
+        if (!pendingShopPdf) return@LaunchedEffect
+        pendingShopPdf = false
+        val rows = insights.filter { it.reorderQty > 0 }
+        if (rows.isEmpty()) return@LaunchedEffect
+        val avatar = appVM.avatarBitmap()
+        runCatching {
+            val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                com.superbiz.app.pdf.A4Report.purchaseOrder(
+                    context,
+                    com.superbiz.app.AppGraph.from(context.applicationContext).settings.snapshot().businessName.ifBlank { context.getString(R.string.business_default) },
+                    avatar,
+                    rows.map { com.superbiz.app.pdf.A4Report.PoRow(it.product.name, it.product.unit, it.product.stockQty, it.reorderQty) },
+                    java.io.File(context.cacheDir, "shared").apply { mkdirs() }
+                )
+            }
+            com.superbiz.app.pdf.DocPdf.share(context, file, context.getString(R.string.a4_po_title))
+        }
     }
 
     val insightById = remember(insights) { insights.associateBy { it.product.id } }
@@ -377,6 +398,14 @@ fun InventoryScreen(appVM: AppVM, nav: NavHostController) {
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(10.dp))
                                         .clickable { pendingShopShare = true }
+                                        .padding(6.dp)
+                                )
+                                Text(
+                                    stringResourceCompat(R.string.inv_shop_pdf),
+                                    fontSize = 12.sp, color = g.accent2, fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .clickable { pendingShopPdf = true }
                                         .padding(6.dp)
                                 )
                             }
