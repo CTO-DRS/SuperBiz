@@ -1,10 +1,7 @@
 package com.superbiz.app.ui.compose
 
 import android.app.Application
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.superbiz.app.AppGraph
@@ -37,7 +34,7 @@ import java.io.File
 class ScreenshotCaptureTest {
 
     @get:Rule
-    val compose = createComposeRule()
+    val compose = createAndroidComposeRule<androidx.activity.ComponentActivity>()
 
     private lateinit var app: Application
     private val testMain = UnconfinedTestDispatcher()
@@ -70,7 +67,16 @@ class ScreenshotCaptureTest {
     private fun shot(name: String) {
         runCatching {
             compose.mainClock.advanceTimeBy(1500)
-            val bmp = compose.onRoot().captureToImage().asAndroidBitmap()
+            val v = compose.activity.window.decorView
+            val w = v.width.takeIf { it > 0 } ?: 1080
+            val h = v.height.takeIf { it > 0 } ?: 2400
+            if (v.width <= 0) {
+                v.measure(android.view.View.MeasureSpec.makeMeasureSpec(w, android.view.View.MeasureSpec.EXACTLY),
+                    android.view.View.MeasureSpec.makeMeasureSpec(h, android.view.View.MeasureSpec.EXACTLY))
+                v.layout(0, 0, w, h)
+            }
+            val bmp = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+            v.draw(android.graphics.Canvas(bmp))
             File(outDir, "$name.png").outputStream().use {
                 bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
             }
