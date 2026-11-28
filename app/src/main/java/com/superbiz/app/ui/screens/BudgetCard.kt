@@ -42,6 +42,7 @@ fun BudgetCard(symbol: String) {
     val scope = rememberCoroutineScope()
     var tick by remember { mutableIntStateOf(0) }
     var report by remember { mutableStateOf<BudgetMath.Report?>(null) }
+    var annual by remember { mutableStateOf<List<BudgetMath.Annual>>(emptyList()) }
     var branch by remember { mutableStateOf(0L) }
     var editing by remember { mutableStateOf<BudgetMath.Row?>(null) }
     var input by remember { mutableStateOf("") }
@@ -59,7 +60,16 @@ fun BudgetCard(symbol: String) {
                 val actual = g.db.expenses().byCategoryBetweenBranch(from, Long.MAX_VALUE, b)
                     .associate { it.category to it.total }
                 branch = b
-                BudgetMath.compare(BudgetStore(context).all(b), actual)
+                val ycal = Calendar.getInstance().apply {
+                    set(Calendar.MONTH, Calendar.JANUARY); set(Calendar.DAY_OF_MONTH, 1); set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                }
+                val ytd = g.db.expenses().byCategoryBetweenBranch(ycal.timeInMillis, Long.MAX_VALUE, b)
+                    .associate { it.category to it.total }
+                val budgets = BudgetStore(context).all(b)
+                annual = BudgetMath.annualProjection(budgets, ytd, Calendar.getInstance().get(Calendar.MONTH) + 1)
+                    .filter { it.annualBudget > 0L }
+                BudgetMath.compare(budgets, actual)
             }
         }.getOrNull()
     }
@@ -88,6 +98,20 @@ fun BudgetCard(symbol: String) {
             }
             if (r.totalBudget > 0L) {
                 Text(stringResource(R.string.budget_total, Money.formatP(r.totalBudgetedActual, symbol), Money.formatP(r.totalBudget, symbol)))
+            }
+            if (annual.isNotEmpty()) {
+                Text(stringResource(R.string.budget_annual_title))
+                annual.forEach { a ->
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(a.category.ifBlank { "-" }, modifier = Modifier.weight(1f))
+                        Text(
+                            stringResource(R.string.budget_annual_row, Money.formatP(a.projected, symbol), Money.formatP(a.annualBudget, symbol)) +
+                                (if (a.projectedOver) " ⛔" else "")
+                        )
+                    }
+                }
+                val overs = annual.filter { it.projectedOver }
+                if (overs.isNotEmpty()) Text(stringResource(R.string.budget_annual_over, overs.joinToString("، ") { it.category }))
             }
         }
     }

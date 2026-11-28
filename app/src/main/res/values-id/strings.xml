@@ -576,6 +576,9 @@
     <string name="budget_empty">Belum ada biaya bulan ini</string>
     <string name="budget_none">tanpa anggaran</string>
     <string name="budget_total">Dalam anggaran: %1$s dari %2$s</string>
+    <string name="budget_annual_title">Proyeksi akhir tahun</string>
+    <string name="budget_annual_row">%1$s diproyeksikan dari %2$s per tahun</string>
+    <string name="budget_annual_over">⚠ Diproyeksikan melebihi: %1$s</string>
     <string name="budget_monthly_target">Target bulanan</string>
     <string name="budget_save">Simpan</string>
     <string name="budget_cancel">Batal</string>
