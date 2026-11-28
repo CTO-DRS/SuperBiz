@@ -575,6 +575,9 @@
     <string name="budget_empty">Aucune dépense ce mois-ci</string>
     <string name="budget_none">sans budget</string>
     <string name="budget_total">Dans le budget : %1$s sur %2$s</string>
+    <string name="budget_annual_title">Projection fin d\'année</string>
+    <string name="budget_annual_row">%1$s prévus sur %2$s par an</string>
+    <string name="budget_annual_over">⚠ Dépassement prévu : %1$s</string>
     <string name="budget_monthly_target">Objectif mensuel</string>
     <string name="budget_save">Enregistrer</string>
     <string name="budget_cancel">Annuler</string>

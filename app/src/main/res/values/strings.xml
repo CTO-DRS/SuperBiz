@@ -637,6 +637,9 @@
     <string name="budget_empty">لا مصروفات هذا الشهر بعد</string>
     <string name="budget_none">بلا ميزانية</string>
     <string name="budget_total">المصروف ضمن الميزانية: %1$s من %2$s</string>
+    <string name="budget_annual_title">توقع نهاية السنة</string>
+    <string name="budget_annual_row">%1$s متوقع من %2$s سنوياً</string>
+    <string name="budget_annual_over">⚠ متوقع تجاوز: %1$s</string>
     <string name="budget_monthly_target">الهدف الشهري</string>
     <string name="budget_save">حفظ</string>
     <string name="budget_cancel">إلغاء</string>

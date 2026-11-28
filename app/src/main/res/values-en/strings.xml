@@ -637,6 +637,9 @@
     <string name="budget_empty">No expenses this month yet</string>
     <string name="budget_none">no budget</string>
     <string name="budget_total">Within budget: %1$s of %2$s</string>
+    <string name="budget_annual_title">Year-end projection</string>
+    <string name="budget_annual_row">%1$s projected of %2$s yearly</string>
+    <string name="budget_annual_over">⚠ Projected over: %1$s</string>
     <string name="budget_monthly_target">Monthly target</string>
     <string name="budget_save">Save</string>
     <string name="budget_cancel">Cancel</string>
