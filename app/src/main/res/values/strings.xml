@@ -639,6 +639,10 @@
     <string name="budget_none">بلا ميزانية</string>
     <string name="budget_total">المصروف ضمن الميزانية: %1$s من %2$s</string>
     <string name="budget_annual_title">توقع نهاية السنة</string>
+    <string name="cf_title">التدفق النقدي الشهري</string>
+    <string name="cf_hint">من حساب النقدية في الدفتر: آخر 6 أشهر</string>
+    <string name="cf_row">قبض %1$s · صرف %2$s · صافي %3$s</string>
+    <string name="cf_closing">الرصيد الختامي: %1$s</string>
     <string name="budget_annual_row">%1$s متوقع من %2$s سنوياً</string>
     <string name="budget_annual_over">⚠ متوقع تجاوز: %1$s</string>
     <string name="budget_monthly_target">الهدف الشهري</string>

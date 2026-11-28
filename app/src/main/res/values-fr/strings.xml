@@ -577,6 +577,10 @@
     <string name="budget_none">sans budget</string>
     <string name="budget_total">Dans le budget : %1$s sur %2$s</string>
     <string name="budget_annual_title">Projection fin d\'année</string>
+    <string name="cf_title">Flux de trésorerie mensuel</string>
+    <string name="cf_hint">D\'après le compte de caisse du grand livre : 6 derniers mois</string>
+    <string name="cf_row">Entrées %1$s · Sorties %2$s · Net %3$s</string>
+    <string name="cf_closing">Solde de clôture : %1$s</string>
     <string name="budget_annual_row">%1$s prévus sur %2$s par an</string>
     <string name="budget_annual_over">⚠ Dépassement prévu : %1$s</string>
     <string name="budget_monthly_target">Objectif mensuel</string>
