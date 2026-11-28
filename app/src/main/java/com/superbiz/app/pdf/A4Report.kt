@@ -345,6 +345,55 @@ object A4Report {
         return d.finish(File(context.filesDir, "pdfs"), "receivables-${System.currentTimeMillis()}.pdf")
     }
 
+    // ═══════════════════ القوائم المالية من الدفتر (دخل + ميزانية) ═══════════════════
+
+    fun ledgerStatements(
+        context: Context, businessName: String, currencySymbol: String, avatar: Bitmap?,
+        inc: com.superbiz.app.domain.algo.FinancialStatementsCsv.Income,
+        bal: com.superbiz.app.domain.algo.FinancialStatementsCsv.Balance,
+        dir: File
+    ): File {
+        val d = Doc(
+            context,
+            title = context.getString(R.string.a4_stmt_title),
+            subtitle = businessName,
+            dateLine = context.getString(R.string.date) + ": " + Dates.short(System.currentTimeMillis()),
+            avatar = avatar
+        )
+        fun section(title: String, lines: List<com.superbiz.app.domain.algo.FinancialStatementsCsv.Line>, total: Long) {
+            d.sectionTitle(title)
+            val rows = lines.map { l ->
+                listOf(
+                    Doc.TCell(l.code + "  " + l.name.take(34)),
+                    Doc.TCell(Money.numP(l.amount), ink, center = true)
+                ) 
+            } + listOf(
+                listOf(
+                    Doc.TCell(context.getString(R.string.a4_stmt_total), ink, bold = true),
+                    Doc.TCell(Money.numP(total), ink, bold = true, center = true)
+                )
+            )
+            d.table(
+                listOf(Doc.TCol(context.getString(R.string.name), 380f), Doc.TCol(currencySymbol, 125f, center = true)),
+                rows
+            )
+            d.gap(8f)
+        }
+        section(context.getString(R.string.a4_revenue), inc.revenue, inc.totalRevenue)
+        section(context.getString(R.string.a4_stmt_costs), inc.costs, inc.totalCosts)
+        d.keyValue(context.getString(R.string.kpi_profit), Money.formatP(inc.net, currencySymbol), if (inc.net >= 0L) green else red, bold = true)
+        d.gap(14f)
+        d.sectionTitle(context.getString(R.string.a4_stmt_balance))
+        section(context.getString(R.string.a4_stmt_assets), bal.assets, bal.totalAssets)
+        section(context.getString(R.string.a4_stmt_liabilities), bal.liabilities, bal.totalLiabilities)
+        section(
+            context.getString(R.string.a4_stmt_equity),
+            bal.equity + com.superbiz.app.domain.algo.FinancialStatementsCsv.Line("", context.getString(R.string.a4_stmt_earnings), bal.earnings),
+            bal.totalEquity
+        )
+        return d.finish(dir, "financial-statements-${System.currentTimeMillis()}.pdf")
+    }
+
     // ═══════════════════ 2) التقرير المالي الكامل ═══════════════════
 
     fun financial(

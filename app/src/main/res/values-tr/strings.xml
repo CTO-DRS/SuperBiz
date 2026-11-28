@@ -1687,6 +1687,16 @@
     <string name="acc_export_trial">Mizan CSV</string>
     <string name="acc_export_branches">Şube karşılaştırmasını dışa aktar (CSV)</string>
     <string name="acc_export_statements">Mali tabloları dışa aktar (CSV)</string>
+    <string name="acc_export_statements_pdf">Mali tabloları PDF olarak dışa aktar</string>
+    <string name="a4_stmt_title">Defterden mali tablolar</string>
+    <string name="a4_stmt_income">Gelir tablosu (cari yıl)</string>
+    <string name="a4_stmt_balance">Bilanço</string>
+    <string name="a4_stmt_costs">Maliyetler ve giderler</string>
+    <string name="a4_stmt_assets">Varlıklar</string>
+    <string name="a4_stmt_liabilities">Yükümlülükler</string>
+    <string name="a4_stmt_equity">Özkaynaklar</string>
+    <string name="a4_stmt_earnings">Dağıtılmamış kârlar (hesaplanan)</string>
+    <string name="a4_stmt_total">Toplam</string>
     <string name="bank_rec_title">Banka mutabakatı</string>
     <string name="bank_rec_import">Banka ekstresini içe aktar (CSV)</string>
     <string name="bank_rec_bad_file">Dosya okunamadı: tarih ve tutar (veya borç/alacak) sütunu gerekir</string>
