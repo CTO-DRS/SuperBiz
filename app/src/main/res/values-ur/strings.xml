@@ -1703,6 +1703,13 @@
     <string name="acc_export_failed">برآمد ناکام</string>
     <string name="rp_title">کردار کی اجازتیں</string>
     <string name="rp_hint">ہر عمل کو ہر کردار کے لیے آن یا آف کریں۔ مالک کا کردار مستقل ہے۔ ہر تبدیلی آڈٹ لاگ میں درج ہوتی ہے۔</string>
+    <string name="rp_search">اجازتوں میں تلاش</string>
+    <string name="rp_tpl_title">کردار کے سانچے</string>
+    <string name="rp_tpl_default">ڈیفالٹ</string>
+    <string name="rp_tpl_sales">صرف فروخت</string>
+    <string name="rp_tpl_finance_view">مالی منظر</string>
+    <string name="rp_tpl_confirm">کردار «%1$s» کی تمام اجازتیں سانچے «%2$s» پر سیٹ ہوں گی۔ کوئی سانچہ صرف مالک کی اجازت نہیں دیتا۔ جاری رکھیں؟</string>
+    <string name="rp_tpl_apply">لاگو کریں</string>
     <string name="rp_open">کرداروں کی اجازتیں ترتیب دیں</string>
     <string name="rp_group_sales">فروخت اور گاہک</string>
     <string name="rp_group_inventory">اسٹاک</string>

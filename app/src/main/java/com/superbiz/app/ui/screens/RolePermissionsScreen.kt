@@ -11,11 +11,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -45,8 +52,38 @@ fun RolePermissionsScreen(onBack: () -> Unit) {
         SubHeader(stringResource(R.string.rp_title), onBack = onBack)
         Text(stringResource(R.string.rp_hint), color = g.textSecondary, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(8.dp))
+        val opLabels = Op.entries.associateWith { stringResource(opLabel(it)) }
+        var query by remember { mutableStateOf("") }
+        var pending by remember { mutableStateOf<Pair<Role, com.superbiz.app.domain.rbac.RoleTemplates.Template>?>(null) }
+        val tplNames = mapOf(
+            com.superbiz.app.domain.rbac.RoleTemplates.Template.DEFAULT to stringResource(R.string.rp_tpl_default),
+            com.superbiz.app.domain.rbac.RoleTemplates.Template.SALES_ONLY to stringResource(R.string.rp_tpl_sales),
+            com.superbiz.app.domain.rbac.RoleTemplates.Template.FINANCE_VIEW to stringResource(R.string.rp_tpl_finance_view)
+        )
+        OutlinedTextField(
+            value = query, onValueChange = { query = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.rp_search)) }
+        )
+        Spacer(Modifier.height(8.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            permGroups.forEach { (titleRes, ops) ->
+            item(key = "tpl") {
+                GlassCard(corner = 16.dp) {
+                    Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(stringResource(R.string.rp_tpl_title), color = g.textPrimary, style = MaterialTheme.typography.labelLarge)
+                        roles.forEach { role ->
+                            Text(roleNames[role] ?: "", color = g.textSecondary)
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                tplNames.forEach { (t, name) ->
+                                    OutlinedButton(onClick = { pending = role to t }, modifier = Modifier.weight(1f)) { Text(name, maxLines = 1) }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            permGroups.forEach { (titleRes, allOps) ->
+              val ops = allOps.filter { op -> query.isBlank() || (opLabels[op] ?: "").contains(query.trim(), ignoreCase = true) }
+              if (ops.isEmpty()) return@forEach
               item(key = "h_" + titleRes) {
                 Text(stringResource(titleRes), color = g.accent, style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(top = 8.dp))
@@ -65,6 +102,15 @@ fun RolePermissionsScreen(onBack: () -> Unit) {
                 }
               }
             }
+        }
+        pending?.let { (role, t) ->
+            AlertDialog(
+                onDismissRequest = { pending = null },
+                title = { Text(stringResource(R.string.rp_tpl_title)) },
+                text = { Text(stringResource(R.string.rp_tpl_confirm, roleNames[role] ?: "", tplNames[t] ?: "")) },
+                confirmButton = { TextButton(onClick = { vm.applyTemplate(role, t); pending = null }) { Text(stringResource(R.string.rp_tpl_apply)) } },
+                dismissButton = { TextButton(onClick = { pending = null }) { Text(stringResource(R.string.budget_cancel)) } }
+            )
         }
     }
 }

@@ -43,4 +43,22 @@ class RolePermsVM(app: Application) : AndroidViewModel(app) {
         )
         version.value++
     }
+
+    /** [Phase 1.3] تطبيق قالب جاهز على دور غير المالك: صفوف role_permissions كلها دفعة واحدة وسطر تدقيق واحد */
+    fun applyTemplate(role: Role, template: com.superbiz.app.domain.rbac.RoleTemplates.Template) = launchSafe {
+        val session = RoleGate.require(SessionState.effective(), Op.USERS_MANAGE)
+        if (role == Role.OWNER) return@launchSafe
+        com.superbiz.app.domain.rbac.RoleTemplates.plan(role, template).forEach { (op, allowed) ->
+            g.db.rolePermissions().upsert(RolePermissionEntity(role.id, op.name, allowed))
+        }
+        RolePermissionCache.replaceAll(g.db.rolePermissions().all())
+        g.db.auditLog().insert(
+            AuditLogEntity(
+                actor = session.name, action = "ROLE_TEMPLATE_APPLIED",
+                details = "${role.name}:${template.name}",
+                actorId = session.userId.takeIf { it != 0L }, actorRole = session.role.id
+            )
+        )
+        version.value++
+    }
 }
