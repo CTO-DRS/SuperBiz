@@ -581,6 +581,7 @@
     <string name="cf_hint">D\'après le compte de caisse du grand livre : 6 derniers mois</string>
     <string name="cf_row">Entrées %1$s · Sorties %2$s · Net %3$s</string>
     <string name="cf_closing">Solde de clôture : %1$s</string>
+    <string name="cf_export">Exporter les flux de trésorerie (CSV)</string>
     <string name="yoy_title">Dépenses d\'une année à l\'autre</string>
     <string name="yoy_hint">Du 1er janvier à aujourd\'hui : cette année / l\'an dernier</string>
     <string name="yoy_total">Total : %1$s / %2$s</string>

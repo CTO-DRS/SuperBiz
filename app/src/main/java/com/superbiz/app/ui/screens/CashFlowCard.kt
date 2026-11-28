@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +23,7 @@ import com.superbiz.app.domain.Accounts
 import com.superbiz.app.domain.algo.CashFlowStatement
 import com.superbiz.app.ui.components.GlassCard
 import com.superbiz.app.util.Money
+import com.superbiz.app.util.startIntentSafe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -47,6 +49,25 @@ fun CashFlowCard(symbol: String) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.cf_title))
             Text(stringResource(R.string.cf_hint))
+            val shareLabel = stringResource(R.string.cf_export)
+            OutlinedButton(
+                onClick = {
+                    runCatching {
+                        val csv = com.superbiz.app.domain.algo.CashFlowCsv.build(list)
+                        val dir = java.io.File(context.cacheDir, "shared").apply { mkdirs() }
+                        val f = java.io.File(dir, "cash-flow-" + java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date()) + ".csv")
+                        f.writeBytes(csv.toByteArray(Charsets.UTF_8))
+                        val uri = androidx.core.content.FileProvider.getUriForFile(context, "com.superbiz.app.fileprovider", f)
+                        val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/csv"
+                            putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        startIntentSafe(context, android.content.Intent.createChooser(send, shareLabel).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION))
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(shareLabel, maxLines = 1) }
             list.reversed().forEach { m ->
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text("%04d-%02d".format(m.year, m.month))
