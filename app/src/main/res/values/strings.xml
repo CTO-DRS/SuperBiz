@@ -1772,6 +1772,12 @@
     <string name="bank_rec_bank_only_total">صافي الكشف غير المسجَّل في الدفتر: %1$s</string>
     <string name="bank_rec_book_only_total">صافي الدفتر غير الظاهر في الكشف: %1$s</string>
     <string name="bank_rec_skipped">صفوف تم تجاهلها: %1$d</string>
+    <string name="bank_rec_add_expenses">إضافة الخارج غير المسجَّل كمصروفات (%1$d)</string>
+    <string name="bank_rec_inflows_skipped">تُترك %1$d حركات داخلة (إيداعات): سجّلها بفاتورة أو تحصيل</string>
+    <string name="bank_rec_add_confirm_title">إضافة المصروفات من الكشف</string>
+    <string name="bank_rec_add_confirm_body">سيتم تسجيل %1$d مصروفاً بإجمالي %2$s (قيد نقدية مزدوج). متابعة؟</string>
+    <string name="bank_rec_add_confirm">إضافة</string>
+    <string name="bank_rec_add_done">تمت إضافة %1$d، وتعذّر %2$d (فترة مقفلة أو خطأ)</string>
     <string name="acc_export_failed">فشل التصدير</string>
     <string name="rp_title">صلاحيات الأدوار</string>
     <string name="rp_hint">فعّل أو عطّل كل عملية لكل دور. دور المالك ثابت ولا يُعدَّل. كل تغيير يُسجَّل في سجل التدقيق.</string>

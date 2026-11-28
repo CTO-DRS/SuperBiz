@@ -1685,6 +1685,12 @@
     <string name="bank_rec_bank_only_total">Item mutasi yang belum ada di pembukuan: %1$s</string>
     <string name="bank_rec_book_only_total">Item pembukuan yang belum ada di mutasi: %1$s</string>
     <string name="bank_rec_skipped">Baris diabaikan: %1$d</string>
+    <string name="bank_rec_add_expenses">Tambahkan pengeluaran yang belum cocok sebagai biaya (%1$d)</string>
+    <string name="bank_rec_inflows_skipped">%1$d transaksi masuk (setoran) dibiarkan: catat lewat faktur atau pembayaran</string>
+    <string name="bank_rec_add_confirm_title">Tambah biaya dari rekening koran</string>
+    <string name="bank_rec_add_confirm_body">Ini akan mencatat %1$d biaya senilai %2$s (jurnal kas ganda). Lanjutkan?</string>
+    <string name="bank_rec_add_confirm">Tambah</string>
+    <string name="bank_rec_add_done">%1$d ditambahkan, %2$d gagal (periode ditutup atau galat)</string>
     <string name="acc_export_failed">Ekspor gagal</string>
     <string name="rp_title">Izin peran</string>
     <string name="rp_hint">Aktifkan atau nonaktifkan tiap operasi per peran. Peran pemilik tetap. Setiap perubahan dicatat di log audit.</string>

@@ -1684,6 +1684,12 @@
     <string name="bank_rec_bank_only_total">Écritures du relevé absentes des livres : %1$s</string>
     <string name="bank_rec_book_only_total">Écritures des livres absentes du relevé : %1$s</string>
     <string name="bank_rec_skipped">Lignes ignorées : %1$d</string>
+    <string name="bank_rec_add_expenses">Ajouter les sorties non rapprochées comme dépenses (%1$d)</string>
+    <string name="bank_rec_inflows_skipped">%1$d entrées (dépôts) laissées : enregistrez-les via une facture ou un encaissement</string>
+    <string name="bank_rec_add_confirm_title">Ajouter les dépenses du relevé</string>
+    <string name="bank_rec_add_confirm_body">Cela enregistrera %1$d dépenses pour %2$s (écriture double en caisse). Continuer ?</string>
+    <string name="bank_rec_add_confirm">Ajouter</string>
+    <string name="bank_rec_add_done">%1$d ajoutées, %2$d impossibles (période clôturée ou erreur)</string>
     <string name="acc_export_failed">Échec de l\'export</string>
     <string name="rp_title">Permissions des rôles</string>
     <string name="rp_hint">Activez ou désactivez chaque opération par rôle. Le rôle propriétaire est fixe. Chaque changement est consigné dans le journal d\'audit.</string>

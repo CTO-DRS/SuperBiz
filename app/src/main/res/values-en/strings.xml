@@ -1772,6 +1772,12 @@
     <string name="bank_rec_bank_only_total">Statement items not in the books: %1$s</string>
     <string name="bank_rec_book_only_total">Book items not on the statement: %1$s</string>
     <string name="bank_rec_skipped">Rows ignored: %1$d</string>
+    <string name="bank_rec_add_expenses">Add unmatched outflows as expenses (%1$d)</string>
+    <string name="bank_rec_inflows_skipped">%1$d incoming transactions (deposits) left alone: record them with an invoice or payment</string>
+    <string name="bank_rec_add_confirm_title">Add expenses from statement</string>
+    <string name="bank_rec_add_confirm_body">This will record %1$d expenses totalling %2$s (double-entry cash). Continue?</string>
+    <string name="bank_rec_add_confirm">Add</string>
+    <string name="bank_rec_add_done">Added %1$d, could not add %2$d (closed period or error)</string>
     <string name="acc_export_failed">Export failed</string>
     <string name="rp_title">Role permissions</string>
     <string name="rp_hint">Turn each operation on or off per role. The owner role is fixed. Every change is written to the audit log.</string>
