@@ -47,4 +47,18 @@ class PeriodLockGuardTest {
         PeriodLockGuard.require(t, riyadh)
         assertTrue(true)
     }
+
+    @Test fun requireAllSkipsLookupWhenNothingLocked() {
+        var called = false
+        PeriodLockGuard.lockedThrough = null
+        PeriodLockGuard.requireAll { called = true; listOf(0L) }
+        assertEquals(false, called)
+    }
+
+    @Test fun requireAllChecksEveryDate() {
+        val end = PeriodLock.endOfMonthDay(2025, 3)
+        PeriodLockGuard.lockedThrough = end
+        PeriodLockGuard.requireAll { listOf((end + 5) * day, (end + 9) * day) }
+        try { PeriodLockGuard.requireAll { listOf((end + 5) * day, (end - 2) * day) }; fail() } catch (_: PeriodLockedException) {}
+    }
 }

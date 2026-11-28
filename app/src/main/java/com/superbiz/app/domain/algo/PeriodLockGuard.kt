@@ -16,6 +16,12 @@ object PeriodLockGuard {
     /** epoch day لزمن ملّي ثانية في منطقة بإزاحة [offsetMillis] عن UTC. */
     fun dayOf(millis: Long, offsetMillis: Long): Long = Math.floorDiv(millis + offsetMillis, 86_400_000L)
 
+    /** يفحص عدة تواريخ؛ يتخطى كل شيء فوراً حين لا يوجد إقفال. */
+    inline fun requireAll(dates: () -> List<Long>) {
+        if (lockedThrough == null) return
+        dates().forEach { require(it) }
+    }
+
     fun require(dateMillis: Long, offsetMillis: Long = TimeZone.getDefault().getOffset(dateMillis).toLong()) {
         val c = PeriodLock.check(dayOf(dateMillis, offsetMillis), lockedThrough)
         if (c is PeriodLock.Check.Blocked) throw PeriodLockedException(c.day, c.lockedThrough)

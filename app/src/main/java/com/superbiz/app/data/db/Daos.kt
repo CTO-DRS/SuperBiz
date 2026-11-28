@@ -86,6 +86,10 @@ interface JournalDao {
     @Query("DELETE FROM journal WHERE refType = :refType AND refId = :refId")
     suspend fun deleteEntriesByRef(refType: String, refId: Long)
 
+    /** تواريخ قيود مرجع معيّن — لحارس إقفال الفترات قبل الحذف */
+    @Query("SELECT date FROM journal WHERE refType = :refType AND refId = :refId")
+    suspend fun entryDatesByRef(refType: String, refId: Long): List<Long>
+
     @Query(
         """SELECT l.account AS account, SUM(l.debit) AS d, SUM(l.credit) AS c
            FROM journal_lines l GROUP BY l.account"""
