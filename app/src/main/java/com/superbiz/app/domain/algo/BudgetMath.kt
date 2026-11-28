@@ -27,4 +27,22 @@ object BudgetMath {
             .sortedWith(compareByDescending<Row> { it.over }.thenByDescending { it.usedPct ?: -1 }.thenBy { it.category })
         return Report(rows, rows.sumOf { it.budget }, rows.sumOf { it.actual })
     }
+
+    /**
+     * توقع نهاية السنة لفئة: monthlyBudget × 12 هو الميزانية السنوية؛ المتوقع = الفعلي منذ بداية السنة
+     * ÷ الأشهر المنقضية × 12. monthsElapsed بين 1 و12 (يُقيَّد). نقي.
+     */
+    data class Annual(val category: String, val annualBudget: Long, val ytdActual: Long, val projected: Long) {
+        val projectedOver: Boolean get() = annualBudget > 0L && projected > annualBudget
+        val projectedGap: Long get() = annualBudget - projected
+    }
+
+    fun annualProjection(monthlyBudgets: Map<String, Long>, ytdActual: Map<String, Long>, monthsElapsed: Int): List<Annual> {
+        val m = monthsElapsed.coerceIn(1, 12).toLong()
+        val cats = (monthlyBudgets.keys + ytdActual.keys).filter { it.isNotBlank() }.toSortedSet()
+        return cats.map {
+            val a = ytdActual[it] ?: 0L
+            Annual(it, (monthlyBudgets[it] ?: 0L) * 12L, a, a * 12L / m)
+        }.sortedWith(compareByDescending<Annual> { it.projectedOver }.thenBy { it.category })
+    }
 }
