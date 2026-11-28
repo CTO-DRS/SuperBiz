@@ -643,6 +643,9 @@
     <string name="cf_hint">من حساب النقدية في الدفتر: آخر 6 أشهر</string>
     <string name="cf_row">قبض %1$s · صرف %2$s · صافي %3$s</string>
     <string name="cf_closing">الرصيد الختامي: %1$s</string>
+    <string name="yoy_title">المصروفات سنة بسنة</string>
+    <string name="yoy_hint">من 1 يناير حتى اليوم: هذه السنة / السنة الماضية</string>
+    <string name="yoy_total">الإجمالي: %1$s / %2$s</string>
     <string name="budget_annual_row">%1$s متوقع من %2$s سنوياً</string>
     <string name="budget_annual_over">⚠ متوقع تجاوز: %1$s</string>
     <string name="budget_annual_target">الهدف السنوي (اتركه صفراً للرجوع إلى الشهري × 12)</string>

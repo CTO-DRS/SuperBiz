@@ -582,6 +582,9 @@
     <string name="cf_hint">Defterdeki kasa hesabından: son 6 ay</string>
     <string name="cf_row">Giriş %1$s · Çıkış %2$s · Net %3$s</string>
     <string name="cf_closing">Kapanış bakiyesi: %1$s</string>
+    <string name="yoy_title">Yıllık gider karşılaştırması</string>
+    <string name="yoy_hint">1 Ocak\'tan bugüne: bu yıl / geçen yıl</string>
+    <string name="yoy_total">Toplam: %1$s / %2$s</string>
     <string name="budget_annual_row">%1$s tahmin / yıllık %2$s</string>
     <string name="budget_annual_over">⚠ Aşım bekleniyor: %1$s</string>
     <string name="budget_annual_target">Yıllık hedef (0 = aylık × 12\'ye dön)</string>

@@ -582,6 +582,9 @@
     <string name="cf_hint">کھاتے میں نقد اکاؤنٹ سے: آخری 6 مہینے</string>
     <string name="cf_row">آمد %1$s · خرچ %2$s · خالص %3$s</string>
     <string name="cf_closing">اختتامی بیلنس: %1$s</string>
+    <string name="yoy_title">سال بہ سال اخراجات</string>
+    <string name="yoy_hint">یکم جنوری سے آج تک: اس سال / پچھلے سال</string>
+    <string name="yoy_total">کل: %1$s / %2$s</string>
     <string name="budget_annual_row">%1$s متوقع از سالانہ %2$s</string>
     <string name="budget_annual_over">⚠ متوقع تجاوز: %1$s</string>
     <string name="budget_annual_target">سالانہ ہدف (0 = ماہانہ × 12 پر واپس)</string>

@@ -643,6 +643,9 @@
     <string name="cf_hint">From the cash account in the ledger: last 6 months</string>
     <string name="cf_row">In %1$s · Out %2$s · Net %3$s</string>
     <string name="cf_closing">Closing balance: %1$s</string>
+    <string name="yoy_title">Expenses year over year</string>
+    <string name="yoy_hint">Jan 1 to today: this year / last year</string>
+    <string name="yoy_total">Total: %1$s / %2$s</string>
     <string name="budget_annual_row">%1$s projected of %2$s yearly</string>
     <string name="budget_annual_over">⚠ Projected over: %1$s</string>
     <string name="budget_annual_target">Yearly target (0 = back to monthly × 12)</string>
