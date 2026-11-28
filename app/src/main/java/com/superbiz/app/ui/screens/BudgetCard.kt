@@ -45,6 +45,8 @@ fun BudgetCard(symbol: String) {
     var annual by remember { mutableStateOf<List<BudgetMath.Annual>>(emptyList()) }
     var branch by remember { mutableStateOf(0L) }
     var editing by remember { mutableStateOf<BudgetMath.Row?>(null) }
+    var editingYear by remember { mutableStateOf<BudgetMath.Annual?>(null) }
+    var yearInput by remember { mutableStateOf("") }
     var input by remember { mutableStateOf("") }
 
     LaunchedEffect(tick) {
@@ -67,7 +69,8 @@ fun BudgetCard(symbol: String) {
                 val ytd = g.db.expenses().byCategoryBetweenBranch(ycal.timeInMillis, Long.MAX_VALUE, b)
                     .associate { it.category to it.total }
                 val budgets = BudgetStore(context).all(b)
-                annual = BudgetMath.annualProjection(budgets, ytd, Calendar.getInstance().get(Calendar.MONTH) + 1)
+                val nowCal = Calendar.getInstance()
+                annual = BudgetMath.annualProjection(budgets, ytd, nowCal.get(Calendar.MONTH) + 1, BudgetStore(context).allYear(b, nowCal.get(Calendar.YEAR)))
                     .filter { it.annualBudget > 0L }
                 BudgetMath.compare(budgets, actual)
             }
@@ -102,7 +105,10 @@ fun BudgetCard(symbol: String) {
             if (annual.isNotEmpty()) {
                 Text(stringResource(R.string.budget_annual_title))
                 annual.forEach { a ->
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        Modifier.fillMaxWidth().clickable { editingYear = a; yearInput = Money.fromPiasters(a.annualBudget).toString() },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(a.category.ifBlank { "-" }, modifier = Modifier.weight(1f))
                         Text(
                             stringResource(R.string.budget_annual_row, Money.formatP(a.projected, symbol), Money.formatP(a.annualBudget, symbol)) +
@@ -135,6 +141,30 @@ fun BudgetCard(symbol: String) {
                 }) { Text(stringResource(R.string.budget_save)) }
             },
             dismissButton = { TextButton(onClick = { editing = null }) { Text(stringResource(R.string.budget_cancel)) } }
+        )
+    }
+
+    editingYear?.let { a ->
+        AlertDialog(
+            onDismissRequest = { editingYear = null },
+            title = { Text(a.category.ifBlank { "-" }) },
+            text = {
+                OutlinedTextField(
+                    value = yearInput, onValueChange = { yearInput = it }, singleLine = true,
+                    label = { Text(stringResource(R.string.budget_annual_target)) }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val p = Money.parseToPiasters(yearInput)
+                    val cat = a.category
+                    editingYear = null
+                    scope.launch(Dispatchers.IO) {
+                        BudgetStore(context).setYear(branch, Calendar.getInstance().get(Calendar.YEAR), cat, p); tick++
+                    }
+                }) { Text(stringResource(R.string.budget_save)) }
+            },
+            dismissButton = { TextButton(onClick = { editingYear = null }) { Text(stringResource(R.string.budget_cancel)) } }
         )
     }
 }

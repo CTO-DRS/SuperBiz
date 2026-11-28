@@ -641,6 +641,7 @@
     <string name="budget_annual_title">Year-end projection</string>
     <string name="budget_annual_row">%1$s projected of %2$s yearly</string>
     <string name="budget_annual_over">⚠ Projected over: %1$s</string>
+    <string name="budget_annual_target">Yearly target (0 = back to monthly × 12)</string>
     <string name="budget_monthly_target">Monthly target</string>
     <string name="budget_save">Save</string>
     <string name="budget_cancel">Cancel</string>

@@ -37,12 +37,17 @@ object BudgetMath {
         val projectedGap: Long get() = annualBudget - projected
     }
 
-    fun annualProjection(monthlyBudgets: Map<String, Long>, ytdActual: Map<String, Long>, monthsElapsed: Int): List<Annual> {
+    fun annualProjection(
+        monthlyBudgets: Map<String, Long>,
+        ytdActual: Map<String, Long>,
+        monthsElapsed: Int,
+        yearlyOverrides: Map<String, Long> = emptyMap()
+    ): List<Annual> {
         val m = monthsElapsed.coerceIn(1, 12).toLong()
-        val cats = (monthlyBudgets.keys + ytdActual.keys).filter { it.isNotBlank() }.toSortedSet()
+        val cats = (monthlyBudgets.keys + ytdActual.keys + yearlyOverrides.keys).filter { it.isNotBlank() }.toSortedSet()
         return cats.map {
             val a = ytdActual[it] ?: 0L
-            Annual(it, (monthlyBudgets[it] ?: 0L) * 12L, a, a * 12L / m)
+            Annual(it, yearlyOverrides[it]?.takeIf { v -> v > 0L } ?: ((monthlyBudgets[it] ?: 0L) * 12L), a, a * 12L / m)
         }.sortedWith(compareByDescending<Annual> { it.projectedOver }.thenBy { it.category })
     }
 }
