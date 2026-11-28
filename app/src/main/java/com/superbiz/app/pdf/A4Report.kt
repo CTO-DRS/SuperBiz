@@ -394,6 +394,38 @@ object A4Report {
         return d.finish(dir, "financial-statements-${System.currentTimeMillis()}.pdf")
     }
 
+    // ═══════════════════ أمر شراء مقترح (PDF للمورد، بموافقة المالك عند المشاركة) ═══════════════════
+
+    data class PoRow(val name: String, val unit: String, val stock: Double, val qty: Double)
+
+    fun purchaseOrder(context: Context, businessName: String, avatar: Bitmap?, rows: List<PoRow>, dir: File): File {
+        val d = Doc(
+            context,
+            title = context.getString(R.string.a4_po_title),
+            subtitle = businessName,
+            dateLine = context.getString(R.string.date) + ": " + Dates.short(System.currentTimeMillis()),
+            avatar = avatar
+        )
+        d.sectionTitle(context.getString(R.string.share_shop_count, rows.size))
+        d.table(
+            listOf(
+                Doc.TCol(context.getString(R.string.name), 250f),
+                Doc.TCol(context.getString(R.string.unit), 75f, center = true),
+                Doc.TCol(context.getString(R.string.share_shop_available), 90f, center = true),
+                Doc.TCol(context.getString(R.string.share_shop_suggested), 90f, center = true)
+            ),
+            rows.map { r ->
+                listOf(
+                    Doc.TCell(r.name.take(40)),
+                    Doc.TCell(r.unit.take(12), ink, center = true),
+                    Doc.TCell(Money.num(r.stock), ink, center = true),
+                    Doc.TCell(Money.num(r.qty), ink, bold = true, center = true)
+                )
+            }
+        )
+        return d.finish(dir, "purchase-order-${System.currentTimeMillis()}.pdf")
+    }
+
     // ═══════════════════ 2) التقرير المالي الكامل ═══════════════════
 
     fun financial(

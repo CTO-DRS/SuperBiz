@@ -677,6 +677,7 @@
     <string name="inv_shop_empty">Şimdi satın alınacak bir şey yok — Tüm ürünler yeniden sipariş seviyesinin üzerinde</string>
     <string name="inv_shop_count">Ürünler: %1$d</string>
     <string name="inv_shop_share">Listeyi paylaş</string>
+    <string name="inv_shop_pdf">Satın alma siparişi PDF</string>
     <string name="inv_suggest_apply">Önerilen siparişi uygula</string>
     <string name="inv_suggest_applied">Satış kaydı oluşturuldu: %1$s %2$s</string>
     <string name="inv_suggest_failed">Satış kaydı oluşturulamadı</string>
@@ -1689,6 +1690,7 @@
     <string name="acc_export_statements">Mali tabloları dışa aktar (CSV)</string>
     <string name="acc_export_statements_pdf">Mali tabloları PDF olarak dışa aktar</string>
     <string name="a4_stmt_title">Defterden mali tablolar</string>
+    <string name="a4_po_title">Önerilen satın alma siparişi</string>
     <string name="a4_stmt_income">Gelir tablosu (cari yıl)</string>
     <string name="a4_stmt_balance">Bilanço</string>
     <string name="a4_stmt_costs">Maliyetler ve giderler</string>
