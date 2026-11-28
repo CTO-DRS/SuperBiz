@@ -148,6 +148,7 @@ class InvoiceRepo(
                 }
                 // حذف قيود الفاتورة القديمة — قيود التحصيل/الدفعات (refType=payment) تبقى
                 // سليمة: سجل السداد الحقيقي لا يُمحى عند تعديل الرأس
+                com.superbiz.app.domain.algo.PeriodLockGuard.requireAll { db.journal().entryDatesByRef("invoice", invoice.id) }
                 db.journal().deleteLinesByRef("invoice", invoice.id)
                 db.journal().deleteEntriesByRef("invoice", invoice.id)
             }
@@ -283,11 +284,13 @@ class InvoiceRepo(
             val fresh = db.invoices().byId(inv.id) ?: return@withTransaction
             if (fresh.status >= 3) return@withTransaction
             db.invoices().voidInvoice(fresh.id)
-            db.journal().deleteLinesByRef("invoice", fresh.id)
+            com.superbiz.app.domain.algo.PeriodLockGuard.requireAll { db.journal().entryDatesByRef("invoice", fresh.id) }
+                db.journal().deleteLinesByRef("invoice", fresh.id)
             db.journal().deleteEntriesByRef("invoice", fresh.id)
             // إلغاء فاتورة مدفوعة كان يترك قيد سند التحصيل (refType=payment)
             // وصفوف الدفعات حية — تضخّم النقد وتُبقي الذمم سالبة. تُعكس الآن داخل نفس المعاملة.
-            db.journal().deleteLinesByRef("payment", fresh.id)
+            com.superbiz.app.domain.algo.PeriodLockGuard.requireAll { db.journal().entryDatesByRef("payment", fresh.id) }
+                db.journal().deleteLinesByRef("payment", fresh.id)
             db.journal().deleteEntriesByRef("payment", fresh.id)
             db.payments().deleteByInvoiceId(fresh.id)
             // [Z2-أ V 1.5.0]: الفاتورة الملغاة تخرج من قائمة الربط (zatcaStatus=0)

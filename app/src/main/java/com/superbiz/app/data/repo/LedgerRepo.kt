@@ -74,6 +74,7 @@ class LedgerRepo(private val db: AppDatabase) {
 
     suspend fun unpost(refType: String, refId: Long) {
         db.withTransaction {
+            guardDelete(refType, refId)
             db.journal().deleteLinesByRef(refType, refId)
             db.journal().deleteEntriesByRef(refType, refId)
         }
@@ -206,6 +207,12 @@ class LedgerRepo(private val db: AppDatabase) {
         return entryId
     }
 
+    /** [Phase 2] لا يُحذف قيد داخل فترة مقفلة (يتخطى فوراً إن لم يكن هناك إقفال) */
+    internal suspend fun guardDelete(refType: String, refId: Long) {
+        if (com.superbiz.app.domain.algo.PeriodLockGuard.lockedThrough == null) return
+        db.journal().entryDatesByRef(refType, refId).forEach { com.superbiz.app.domain.algo.PeriodLockGuard.require(it) }
+    }
+
     /** ترحيل داخلي بلا إشعار ويدجت — يُستدعى داخل معاملات أكبر (نفس الحزمة) */
     internal suspend fun postInternal(draft: JournalDraft): Long {
         require(draft.balanced) { "unbalanced journal: ${draft.totalDebit} != ${draft.totalCredit}" }
@@ -227,6 +234,7 @@ class LedgerRepo(private val db: AppDatabase) {
 
     /** إلغاء ترحيل داخلي بلا إشعار — يُستدعى داخل معاملات أكبر (نفس الحزمة) */
     internal suspend fun unpostInternal(refType: String, refId: Long) {
+        guardDelete(refType, refId)
         db.journal().deleteLinesByRef(refType, refId)
         db.journal().deleteEntriesByRef(refType, refId)
     }
